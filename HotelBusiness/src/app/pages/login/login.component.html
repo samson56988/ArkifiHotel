@@ -1,0 +1,70 @@
+<div class="auth-page">
+  <div class="auth-page__bg" aria-hidden="true"></div>
+
+  <header class="auth-header">
+    <div class="auth-header__inner">
+      <a routerLink="/" class="auth-logo" aria-label="ArkifiHub home">
+        <span class="auth-logo__mark">A</span>
+        <span class="auth-logo__text">ArkifiHub</span>
+      </a>
+      <a routerLink="/register" class="auth-header__link">Create account</a>
+    </div>
+  </header>
+
+  <main class="auth-main">
+    <div class="auth-panel">
+      <p class="auth-eyebrow">Welcome back</p>
+      <h1 class="auth-title">Sign in to your hotel</h1>
+      <p class="auth-lead">
+        Access your storefront, bookings, and payouts in one dashboard.
+      </p>
+
+      <form class="auth-form" [formGroup]="form" (ngSubmit)="onSubmit()" novalidate>
+        <div class="auth-field">
+          <label class="auth-label" for="login-email">Email</label>
+          <input
+            id="login-email"
+            class="auth-input"
+            type="email"
+            formControlName="email"
+            autocomplete="email"
+            placeholder="you@hotel.com"
+          />
+          @if (showError('email')) {
+            <p class="auth-error">Enter a valid email address.</p>
+          }
+        </div>
+
+        <div class="auth-field">
+          <label class="auth-label" for="login-password">Password</label>
+          <input
+            id="login-password"
+            class="auth-input"
+            type="password"
+            formControlName="password"
+            autocomplete="current-password"
+            placeholder="••••••••"
+          />
+          @if (showError('password')) {
+            <p class="auth-error">At least 8 characters.</p>
+          }
+        </div>
+
+        <div class="auth-row">
+          <label class="auth-check">
+            <input type="checkbox" formControlName="rememberMe" />
+            <span>Remember me</span>
+          </label>
+          <button type="button" class="auth-forgot">Forgot password?</button>
+        </div>
+
+        <button type="submit" class="auth-submit">Sign in</button>
+      </form>
+
+      <p class="auth-footer-text">
+        New to ArkifiHub?
+        <a routerLink="/register">Register your property</a>
+      </p>
+    </div>
+  </main>
+</div>

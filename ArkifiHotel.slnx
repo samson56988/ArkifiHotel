@@ -1,0 +1,18 @@
+<Solution>
+  <Folder Name="/Admin/">
+    <Project Path="Admin.Data/Admin.Data.csproj" />
+    <Project Path="Admin.Infrastructure/Admin.Infrastructure.csproj" />
+    <Project Path="Admin.Services/Admin.Services.csproj" />
+    <Project Path="ArkifiHotel/ArkifiHotel.csproj" />
+  </Folder>
+  <Folder Name="/HotelServices/">
+    <Project Path="Hotel.API/Hotel.API.csproj" />
+    <Project Path="Hotel.Data/Hotel.Data.csproj" />
+    <Project Path="Hotel.Infrastructure/Hotel.Infrastructure.csproj" />
+    <Project Path="Hotel.Service/Hotel.Service.csproj" />
+  </Folder>
+  <Folder Name="/Shared/">
+    <Project Path="Shared.Data/Shared.Data.csproj" Id="7f5af741-a432-42f2-b62e-ae13790e93eb" />
+    <Project Path="Shared.Services/Shared.Services.csproj" Id="851b41e9-1890-4434-9079-09c1b5e2d522" />
+  </Folder>
+</Solution>

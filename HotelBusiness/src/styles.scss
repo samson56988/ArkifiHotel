@@ -1,0 +1,57 @@
+/* ArkifiHub — hospitality commerce theme (linen, midnight, brushed gold, sage) */
+:root {
+  --font-sans: "Outfit", system-ui, -apple-system, sans-serif;
+  --font-display: "Cormorant Garamond", "Georgia", "Times New Roman", serif;
+
+  --color-bg: #e8e2d8;
+  --color-bg-deep: #ddd6c9;
+  --color-surface: #f6f2eb;
+  --color-surface-elevated: #fdfaf6;
+  --color-sage-soft: #e6ebe7;
+
+  --color-text: #2c3340;
+  --color-heading: #141a22;
+  --color-muted: #5a6270;
+
+  --color-border: #cfc6b8;
+  --color-border-strong: #b0a797;
+
+  --color-ink: #141a22;
+  --color-midnight: #1a2330;
+  --color-midnight-deep: #121820;
+
+  /* Brushed gold — primary actions & highlights */
+  --color-accent: #b6916a;
+  --color-accent-light: #d4bc96;
+  --color-accent-dark: #8a6e4d;
+
+  /* Lobby sage — secondary / trust */
+  --color-teal: #4a5f54;
+  --color-sage: #4a5f54;
+}
+
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+}
+
+html {
+  scroll-behavior: smooth;
+}
+
+body {
+  margin: 0;
+  font-family: var(--font-sans);
+  font-size: 16px;
+  line-height: 1.55;
+  font-weight: 400;
+  color: var(--color-text);
+  background: var(--color-bg);
+  -webkit-font-smoothing: antialiased;
+}
+
+::selection {
+  background: color-mix(in srgb, var(--color-accent) 35%, transparent);
+  color: var(--color-heading);
+}

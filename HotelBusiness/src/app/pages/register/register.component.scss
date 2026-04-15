@@ -1,0 +1,41 @@
+@use '../auth/auth-shared';
+
+.auth-panel--wide {
+  width: min(100%, 480px);
+}
+
+.auth-field-grid {
+  display: grid;
+  gap: 1.1rem;
+}
+
+@media (min-width: 520px) {
+  .auth-field-grid {
+    grid-template-columns: 1fr 1fr;
+    gap: 1rem 1.1rem;
+  }
+}
+
+.auth-check--block {
+  align-items: flex-start;
+  line-height: 1.45;
+}
+
+.auth-check--block input {
+  margin-top: 0.2rem;
+}
+
+.auth-inline-link {
+  font-weight: 600;
+  color: var(--color-sage);
+  text-decoration: none;
+}
+
+.auth-inline-link:hover {
+  text-decoration: underline;
+  text-underline-offset: 3px;
+}
+
+.auth-error--terms {
+  margin: -0.5rem 0 0;
+}
