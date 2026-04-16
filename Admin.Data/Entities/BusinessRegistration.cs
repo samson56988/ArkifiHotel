@@ -12,6 +12,10 @@ public class BusinessRegistration
     /// <summary>Legal or trading / property name shown to guests.</summary>
     public string BusinessName { get; set; } = null!;
 
+    public string FirstName { get; set; } = null!;
+
+    public string LastName { get; set; } = null!;
+
     /// <summary>Primary contact email for the account.</summary>
     public string ContactEmail { get; set; } = null!;
 
@@ -21,7 +25,7 @@ public class BusinessRegistration
     /// <summary>Whether the contact email has been verified.</summary>
     public bool IsEmailVerified { get; set; }
 
-    public string? ContactPhone { get; set; }
+    public string PhoneNumber { get; set; } = null!;
 
     public BusinessRegistrationStatus Status { get; set; }
 

@@ -1,0 +1,28 @@
+<div class="dashboard">
+  <aside class="sidebar">
+    <a class="brand" routerLink="/">
+      <span class="brand__mark">A</span>
+      <span class="brand__text">ArkifiHub</span>
+    </a>
+
+    <nav class="menu">
+      <a
+        class="menu__item"
+        routerLink="/dashboard"
+        routerLinkActive="menu__item--active"
+        [routerLinkActiveOptions]="{ exact: true }"
+        >Overview</a
+      >
+      <a class="menu__item" routerLink="/rooms" routerLinkActive="menu__item--active">Rooms</a>
+      <a class="menu__item" routerLink="/facilities" routerLinkActive="menu__item--active">Facilities</a>
+      <a class="menu__item" href="javascript:void(0)">Bookings</a>
+      <a class="menu__item" href="javascript:void(0)">Payments</a>
+      <a class="menu__item" href="javascript:void(0)">Customers</a>
+      <a class="menu__item" routerLink="/">Marketing site</a>
+    </nav>
+  </aside>
+
+  <main class="content">
+    <ng-content />
+  </main>
+</div>

@@ -7,6 +7,10 @@ public sealed class BusinessRegistrationDto
 
     public string BusinessName { get; set; } = string.Empty;
 
+    public string FirstName { get; set; } = string.Empty;
+
+    public string LastName { get; set; } = string.Empty;
+
     public string ContactEmail { get; set; } = string.Empty;
 
     public bool IsEmailVerified { get; set; }
@@ -18,7 +22,7 @@ public sealed class BusinessRegistrationDto
 
     public DateTimeOffset TermsAcceptedAt { get; set; }
 
-    public string? ContactPhone { get; set; }
+    public string PhoneNumber { get; set; } = string.Empty;
 
     public string? Slug { get; set; }
 }

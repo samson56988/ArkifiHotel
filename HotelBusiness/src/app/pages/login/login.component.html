@@ -43,7 +43,7 @@
             type="password"
             formControlName="password"
             autocomplete="current-password"
-            placeholder="â€¢â€¢â€¢â€¢â€¢â€¢â€¢â€¢"
+            placeholder="••••••••"
           />
           @if (showError('password')) {
             <p class="auth-error">At least 8 characters.</p>
@@ -58,7 +58,13 @@
           <button type="button" class="auth-forgot">Forgot password?</button>
         </div>
 
-        <button type="submit" class="auth-submit">Sign in</button>
+        <button type="submit" class="auth-submit" [disabled]="loading">
+          {{ loading ? 'Signing in...' : 'Sign in' }}
+        </button>
+
+        @if (apiError) {
+          <p class="auth-alert auth-alert--error">{{ apiError }}</p>
+        }
       </form>
 
       <p class="auth-footer-text">

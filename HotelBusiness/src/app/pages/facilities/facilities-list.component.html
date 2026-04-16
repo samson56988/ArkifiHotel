@@ -1,0 +1,50 @@
+<app-business-workspace>
+  <header class="page-head">
+    <div>
+      <p class="eyebrow">Property</p>
+      <h1>Shared facilities</h1>
+      <p class="lead">
+        Add hotel-wide spaces like a swimming pool, gym, or lounge — each with its own photo gallery for guests.
+      </p>
+    </div>
+    <a routerLink="/facilities/new" class="btn btn--primary">Add facility</a>
+  </header>
+
+  @if (loading) {
+    <p class="muted">Loading…</p>
+  } @else if (error) {
+    <p class="alert">{{ error }}</p>
+  } @else if (facilities.length === 0) {
+    <p class="muted">No facilities yet. Add swimming pool, gym, lounge, or any shared space with photos.</p>
+  } @else {
+    <div class="table-wrap">
+      <table>
+        <thead>
+          <tr>
+            <th>Facility</th>
+            <th>Photos</th>
+            <th></th>
+          </tr>
+        </thead>
+        <tbody>
+          @for (f of facilities; track f.id) {
+            <tr>
+              <td>
+                <div class="cell">
+                  @if (f.primaryImageUrl) {
+                    <img [src]="imageUrl(f.primaryImageUrl)" width="48" height="48" alt="" class="thumb" />
+                  } @else {
+                    <span class="thumb thumb--placeholder" aria-hidden="true"></span>
+                  }
+                  <span>{{ f.name }}</span>
+                </div>
+              </td>
+              <td>{{ f.imageCount }}</td>
+              <td><a class="link" [routerLink]="['/facilities', f.id]">Edit</a></td>
+            </tr>
+          }
+        </tbody>
+      </table>
+    </div>
+  }
+</app-business-workspace>

@@ -1,0 +1,65 @@
+<app-business-workspace>
+  <header class="page-head">
+    <div>
+      <p class="eyebrow">Property</p>
+      <h1>{{ isCreateMode ? 'Add shared facility' : 'Edit facility' }}</h1>
+      <p class="lead">
+        Examples: swimming pool, gym, lounge, spa, rooftop. Save first, then upload multiple photos.
+      </p>
+    </div>
+    <a routerLink="/facilities" class="btn btn--ghost">Back to list</a>
+  </header>
+
+  @if (loading) {
+    <p class="muted">Loading…</p>
+  } @else {
+    <form class="layout" [formGroup]="form" (ngSubmit)="onSubmit()" novalidate>
+      <section class="panel">
+        <h2>Details</h2>
+        <div class="field">
+          <label for="fname">Name</label>
+          <input id="fname" class="input" type="text" formControlName="name" placeholder="e.g. Rooftop infinity pool" />
+          @if (form.controls.name.touched && form.controls.name.invalid) {
+            <p class="field-error">Enter a name (2–200 characters).</p>
+          }
+        </div>
+        <div class="field">
+          <label for="fdesc">Description</label>
+          <textarea id="fdesc" class="input input--area" rows="4" formControlName="description" placeholder="Hours, rules, what guests can expect…"></textarea>
+        </div>
+        <button type="submit" class="btn btn--primary" [disabled]="saving">
+          {{ saving ? 'Saving…' : isCreateMode ? 'Create facility' : 'Save changes' }}
+        </button>
+      </section>
+
+      <section class="panel">
+        <h2>Photos</h2>
+        @if (isCreateMode) {
+          <p class="hint">Create the facility, then return here (or stay on this page) to upload images.</p>
+        } @else {
+          <label class="file-label">
+            <input type="file" accept="image/*" multiple (change)="onFilesSelected($event)" [disabled]="saving" />
+            <span>Upload images</span>
+          </label>
+          @if (uploadMessage) {
+            <p class="upload-msg">{{ uploadMessage }}</p>
+          }
+          <div class="gallery">
+            @for (img of images; track img.id) {
+              <figure class="photo">
+                <img [src]="imageUrl(img)" [alt]="img.originalFileName ?? 'Facility photo'" />
+                <figcaption>
+                  <button type="button" class="link danger" (click)="removeImage(img)" [disabled]="saving">Remove</button>
+                </figcaption>
+              </figure>
+            }
+          </div>
+        }
+      </section>
+    </form>
+  }
+
+  @if (error) {
+    <p class="alert">{{ error }}</p>
+  }
+</app-business-workspace>

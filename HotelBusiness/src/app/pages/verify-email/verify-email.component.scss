@@ -1,0 +1,7 @@
+@use '../auth/auth-shared';
+
+.auth-input--otp {
+  text-align: center;
+  letter-spacing: 0.35em;
+  font-weight: 700;
+}

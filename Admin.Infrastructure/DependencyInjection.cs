@@ -31,8 +31,12 @@ public static class DependencyInjection
 
         services.Configure<JwtOptions>(configuration.GetSection(JwtOptions.SectionName));
 
+        services.AddScoped<IBusinessEmailVerificationService, BusinessEmailVerificationService>();
         services.AddScoped<IBusinessRegistrationService, BusinessRegistrationService>();
         services.AddScoped<IBusinessAuthService, BusinessAuthService>();
+        services.AddScoped<IBusinessAmenityService, BusinessAmenityService>();
+        services.AddScoped<IBusinessRoomService, BusinessRoomService>();
+        services.AddScoped<IBusinessPropertyFacilityService, BusinessPropertyFacilityService>();
 
         return services;
     }

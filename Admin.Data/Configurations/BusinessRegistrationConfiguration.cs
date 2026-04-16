@@ -17,6 +17,14 @@ public class BusinessRegistrationConfiguration : IEntityTypeConfiguration<Busine
             .IsRequired()
             .HasMaxLength(256);
 
+        builder.Property(e => e.FirstName)
+            .IsRequired()
+            .HasMaxLength(100);
+
+        builder.Property(e => e.LastName)
+            .IsRequired()
+            .HasMaxLength(100);
+
         builder.Property(e => e.ContactEmail)
             .IsRequired()
             .HasMaxLength(320);
@@ -29,8 +37,9 @@ public class BusinessRegistrationConfiguration : IEntityTypeConfiguration<Busine
             .IsRequired()
             .HasDefaultValue(false);
 
-        builder.Property(e => e.ContactPhone)
-            .HasMaxLength(64);
+        builder.Property(e => e.PhoneNumber)
+            .IsRequired()
+            .HasMaxLength(32);
 
         builder.Property(e => e.Status)
             .IsRequired()

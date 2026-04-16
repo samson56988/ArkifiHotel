@@ -35,6 +35,37 @@
           }
         </div>
 
+        <div class="auth-field-grid">
+          <div class="auth-field">
+            <label class="auth-label" for="reg-first-name">First name</label>
+            <input
+              id="reg-first-name"
+              class="auth-input"
+              type="text"
+              formControlName="firstName"
+              autocomplete="given-name"
+              placeholder="John"
+            />
+            @if (showError('firstName')) {
+              <p class="auth-error">Enter your first name.</p>
+            }
+          </div>
+          <div class="auth-field">
+            <label class="auth-label" for="reg-last-name">Last name</label>
+            <input
+              id="reg-last-name"
+              class="auth-input"
+              type="text"
+              formControlName="lastName"
+              autocomplete="family-name"
+              placeholder="Doe"
+            />
+            @if (showError('lastName')) {
+              <p class="auth-error">Enter your last name.</p>
+            }
+          </div>
+        </div>
+
         <div class="auth-field">
           <label class="auth-label" for="reg-email">Work email</label>
           <input
@@ -47,6 +78,21 @@
           />
           @if (showError('email')) {
             <p class="auth-error">Enter a valid email address.</p>
+          }
+        </div>
+
+        <div class="auth-field">
+          <label class="auth-label" for="reg-phone">Phone number</label>
+          <input
+            id="reg-phone"
+            class="auth-input"
+            type="tel"
+            formControlName="phoneNumber"
+            autocomplete="tel"
+            placeholder="+234 801 234 5678"
+          />
+          @if (showError('phoneNumber')) {
+            <p class="auth-error">Enter a valid phone number.</p>
           }
         </div>
 
@@ -98,7 +144,16 @@
           <p class="auth-error auth-error--terms">Please accept the terms to continue.</p>
         }
 
-        <button type="submit" class="auth-submit">Create account</button>
+        <button type="submit" class="auth-submit" [disabled]="loading">
+          {{ loading ? 'Creating account...' : 'Create account' }}
+        </button>
+
+        @if (apiError) {
+          <p class="auth-alert auth-alert--error">{{ apiError }}</p>
+        }
+        @if (apiSuccess) {
+          <p class="auth-alert auth-alert--success">{{ apiSuccess }}</p>
+        }
       </form>
 
       <p class="auth-footer-text">

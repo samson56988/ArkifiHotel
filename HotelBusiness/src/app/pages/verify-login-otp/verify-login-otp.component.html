@@ -1,0 +1,58 @@
+<div class="auth-page">
+  <div class="auth-page__bg" aria-hidden="true"></div>
+
+  <header class="auth-header">
+    <div class="auth-header__inner">
+      <a routerLink="/" class="auth-logo" aria-label="ArkifiHub home">
+        <span class="auth-logo__mark">A</span>
+        <span class="auth-logo__text">ArkifiHub</span>
+      </a>
+      <a routerLink="/login" class="auth-header__link">Back to sign in</a>
+    </div>
+  </header>
+
+  <main class="auth-main">
+    <div class="auth-panel">
+      <p class="auth-eyebrow">Two-factor authentication</p>
+      <h1 class="auth-title">Verify your login</h1>
+      <p class="auth-lead">Enter the 6-digit OTP we sent to your email.</p>
+
+      <form class="auth-form" [formGroup]="form" (ngSubmit)="onSubmit()" novalidate>
+        <input type="hidden" formControlName="challengeId" />
+        <input type="hidden" formControlName="rememberMe" />
+
+        <div class="auth-field">
+          <label class="auth-label" for="login2fa-email">Email</label>
+          <input id="login2fa-email" class="auth-input" type="email" formControlName="email" readonly />
+          @if (showError('email')) {
+            <p class="auth-error">Email is required.</p>
+          }
+        </div>
+
+        <div class="auth-field">
+          <label class="auth-label" for="login2fa-otp">OTP code</label>
+          <input
+            id="login2fa-otp"
+            class="auth-input auth-input--otp"
+            type="text"
+            maxlength="6"
+            autocomplete="one-time-code"
+            formControlName="otp"
+            placeholder="123456"
+          />
+          @if (showError('otp')) {
+            <p class="auth-error">Enter a valid 6-digit code.</p>
+          }
+        </div>
+
+        <button type="submit" class="auth-submit" [disabled]="loading">
+          {{ loading ? 'Verifying...' : 'Complete login' }}
+        </button>
+
+        @if (apiError) {
+          <p class="auth-alert auth-alert--error">{{ apiError }}</p>
+        }
+      </form>
+    </div>
+  </main>
+</div>

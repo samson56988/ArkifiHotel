@@ -1,0 +1,98 @@
+<app-business-workspace>
+  <header class="topbar">
+    <div>
+      <p class="eyebrow">Business Dashboard</p>
+      <h1>Welcome back, Marina Suites</h1>
+    </div>
+    <div class="topbar__actions">
+      <button type="button" class="btn btn--ghost">Export report</button>
+      <a routerLink="/rooms/new" class="btn btn--primary">Add room</a>
+    </div>
+  </header>
+
+  <section class="kpi-grid">
+    @for (kpi of kpis; track kpi.label) {
+      <article class="kpi-card">
+        <p class="kpi-card__label">{{ kpi.label }}</p>
+        <p class="kpi-card__value">{{ kpi.value }}</p>
+        <p class="kpi-card__delta" [class.is-down]="kpi.trend === 'down'">{{ kpi.delta }} vs last month</p>
+      </article>
+    }
+  </section>
+
+  <section class="panel-grid">
+    <article class="panel panel--wide">
+      <header class="panel__head">
+        <h2>Recent bookings</h2>
+        <a href="javascript:void(0)">View all</a>
+      </header>
+      <div class="table-wrap">
+        <table>
+          <thead>
+            <tr>
+              <th>Guest</th>
+              <th>Unit</th>
+              <th>Check-in</th>
+              <th>Nights</th>
+              <th>Status</th>
+            </tr>
+          </thead>
+          <tbody>
+            @for (booking of bookings; track booking.guest) {
+              <tr>
+                <td>{{ booking.guest }}</td>
+                <td>{{ booking.unit }}</td>
+                <td>{{ booking.checkIn }}</td>
+                <td>{{ booking.nights }}</td>
+                <td><span class="status">{{ booking.status }}</span></td>
+              </tr>
+            }
+          </tbody>
+        </table>
+      </div>
+    </article>
+
+    <article class="panel">
+      <header class="panel__head">
+        <h2>Payment split</h2>
+      </header>
+      <ul class="chips">
+        <li><strong>Paystack</strong><span>48%</span></li>
+        <li><strong>Flutterwave</strong><span>32%</span></li>
+        <li><strong>Monnify</strong><span>20%</span></li>
+      </ul>
+    </article>
+
+    <article class="panel">
+      <header class="panel__head">
+        <h2>Top performing units</h2>
+      </header>
+      <ul class="units">
+        @for (unit of units; track unit.name) {
+          <li>
+            <div class="units__row">
+              <strong>{{ unit.name }}</strong>
+              <span>{{ unit.revenue }}</span>
+            </div>
+            <div class="bar">
+              <span [style.width.%]="unit.occupancy"></span>
+            </div>
+          </li>
+        }
+      </ul>
+    </article>
+
+    <article class="panel">
+      <header class="panel__head">
+        <h2>Quick actions</h2>
+      </header>
+      <div class="quick-actions">
+        <a routerLink="/rooms" class="quick quick--link">Manage rooms</a>
+        <a routerLink="/facilities" class="quick quick--link">Pool, gym &amp; shared spaces</a>
+        <button type="button" class="quick">Create promo code</button>
+        <button type="button" class="quick">Send customer campaign</button>
+        <button type="button" class="quick">Payout summary</button>
+      </div>
+    </article>
+  </section>
+</app-business-workspace>

@@ -1,0 +1,52 @@
+<app-business-workspace>
+  <header class="page-head">
+    <div>
+      <p class="eyebrow">Inventory</p>
+      <h1>Rooms</h1>
+      <p class="lead">Create rooms, upload photos, and tag amenities guests care about.</p>
+    </div>
+    <a routerLink="/rooms/new" class="btn btn--primary">Add room</a>
+  </header>
+
+  @if (loading) {
+    <p class="muted">Loading rooms…</p>
+  } @else if (error) {
+    <p class="alert">{{ error }}</p>
+  } @else if (rooms.length === 0) {
+    <p class="muted">No rooms yet. Add your first room to get started.</p>
+  } @else {
+    <div class="table-wrap">
+      <table>
+        <thead>
+          <tr>
+            <th>Room</th>
+            <th>Guests</th>
+            <th>Price / night</th>
+            <th>Amenities</th>
+            <th></th>
+          </tr>
+        </thead>
+        <tbody>
+          @for (r of rooms; track r.id) {
+            <tr>
+              <td>
+                <div class="room-cell">
+                  @if (r.primaryImageUrl) {
+                    <img [src]="imageUrl(r.primaryImageUrl)" width="48" height="48" alt="" class="thumb" />
+                  } @else {
+                    <span class="thumb thumb--placeholder" aria-hidden="true"></span>
+                  }
+                  <span>{{ r.name }}</span>
+                </div>
+              </td>
+              <td>{{ r.maxOccupancy }}</td>
+              <td>{{ r.basePricePerNight | number: '1.2-2' }}</td>
+              <td>{{ r.amenityCount }}</td>
+              <td><a class="link" [routerLink]="['/rooms', r.id]">Edit</a></td>
+            </tr>
+          }
+        </tbody>
+      </table>
+    </div>
+  }
+</app-business-workspace>
