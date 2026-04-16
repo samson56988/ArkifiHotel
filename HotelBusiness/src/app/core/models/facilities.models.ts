@@ -12,6 +12,7 @@ export interface PropertyFacilitySummaryDto {
   name: string;
   primaryImageUrl: string | null;
   imageCount: number;
+  isArchived: boolean;
 }
 
 export interface PropertyFacilityDetailDto {
@@ -19,6 +20,7 @@ export interface PropertyFacilityDetailDto {
   name: string;
   description: string | null;
   images: FacilityImageDto[];
+  isArchived: boolean;
 }
 
 export interface CreatePropertyFacilityRequest {

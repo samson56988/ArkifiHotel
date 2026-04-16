@@ -3,6 +3,7 @@ import { FormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
 import { ActivatedRoute, Router, RouterLink } from '@angular/router';
 import { finalize } from 'rxjs/operators';
 import { AuthApiService } from '../../core/services/auth-api.service';
+import { ToastService } from '../../core/services/toast.service';
 
 @Component({
   selector: 'app-verify-email',
@@ -16,6 +17,7 @@ export class VerifyEmailComponent {
   private readonly route = inject(ActivatedRoute);
   private readonly router = inject(Router);
   private readonly authApi = inject(AuthApiService);
+  private readonly toast = inject(ToastService);
 
   readonly form = this.fb.nonNullable.group({
     email: ['', [Validators.required, Validators.email]],
@@ -24,8 +26,6 @@ export class VerifyEmailComponent {
 
   submitted = false;
   loading = false;
-  apiError: string | null = null;
-  apiSuccess: string | null = null;
 
   constructor() {
     const email = this.route.snapshot.queryParamMap.get('email');
@@ -36,9 +36,6 @@ export class VerifyEmailComponent {
 
   onSubmit(): void {
     this.submitted = true;
-    this.apiError = null;
-    this.apiSuccess = null;
-
     if (this.form.invalid) {
       this.form.markAllAsTouched();
       return;
@@ -48,16 +45,21 @@ export class VerifyEmailComponent {
     this.authApi
       .verifyEmailOtp(this.form.getRawValue())
       .pipe(finalize(() => (this.loading = false)))
-      .subscribe((result) => {
-        if (result.success) {
-          this.apiSuccess = result.message ?? 'Email verified successfully.';
-          setTimeout(() => {
-            void this.router.navigateByUrl('/login');
-          }, 900);
-          return;
-        }
+      .subscribe({
+        next: (result) => {
+          if (result.success) {
+            this.toast.success(result.message ?? 'Your email is verified. You can sign in now.', 'Email verified');
+            setTimeout(() => {
+              void this.router.navigateByUrl('/login');
+            }, 900);
+            return;
+          }
 
-        this.apiError = result.message ?? 'Unable to verify OTP.';
+          this.toast.showFailedApi(result, 'Verification failed');
+        },
+        error: () => {
+          this.toast.error('We could not reach the server. Check your connection and try again.', 'Network error');
+        },
       });
   }
 

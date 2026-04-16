@@ -9,4 +9,6 @@ public sealed class PropertyFacilitySummaryDto
     public string? PrimaryImageUrl { get; set; }
 
     public int ImageCount { get; set; }
+
+    public bool IsArchived { get; set; }
 }

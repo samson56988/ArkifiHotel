@@ -20,12 +20,20 @@ public sealed class BusinessPropertyFacilityService : IBusinessPropertyFacilityS
 
     public async Task<IReadOnlyList<PropertyFacilitySummaryDto>> ListAsync(
         Guid businessId,
+        bool includeArchived = false,
         CancellationToken cancellationToken = default)
     {
-        var rows = await _db.PropertyFacilities
+        var query = _db.PropertyFacilities
             .AsNoTracking()
             .Include(f => f.Images)
-            .Where(f => f.BusinessRegistrationId == businessId)
+            .Where(f => f.BusinessRegistrationId == businessId);
+
+        if (!includeArchived)
+        {
+            query = query.Where(f => !f.IsArchived);
+        }
+
+        var rows = await query
             .OrderBy(f => f.Name)
             .ToListAsync(cancellationToken)
             .ConfigureAwait(false);
@@ -40,6 +48,7 @@ public sealed class BusinessPropertyFacilityService : IBusinessPropertyFacilityS
                     .Select(i => "/" + i.RelativePath.Replace("\\", "/", StringComparison.Ordinal))
                     .FirstOrDefault(),
                 ImageCount = f.Images.Count,
+                IsArchived = f.IsArchived,
             })
             .ToList();
     }
@@ -142,6 +151,27 @@ public sealed class BusinessPropertyFacilityService : IBusinessPropertyFacilityS
         return true;
     }
 
+    public async Task<bool> SetArchivedAsync(
+        Guid businessId,
+        Guid facilityId,
+        bool archived,
+        CancellationToken cancellationToken = default)
+    {
+        var entity = await _db.PropertyFacilities
+            .FirstOrDefaultAsync(f => f.Id == facilityId && f.BusinessRegistrationId == businessId, cancellationToken)
+            .ConfigureAwait(false);
+
+        if (entity is null)
+        {
+            return false;
+        }
+
+        entity.IsArchived = archived;
+        entity.UpdatedAt = DateTimeOffset.UtcNow;
+        await _db.SaveChangesAsync(cancellationToken).ConfigureAwait(false);
+        return true;
+    }
+
     public async Task<FacilityImageDto?> AddImageAsync(
         Guid businessId,
         Guid facilityId,
@@ -231,6 +261,7 @@ public sealed class BusinessPropertyFacilityService : IBusinessPropertyFacilityS
             Name = f.Name,
             Description = f.Description,
             Images = images,
+            IsArchived = f.IsArchived,
         };
     }
 

@@ -175,6 +175,36 @@ label {
   border-color: var(--color-border);
 }
 
+.btn--danger {
+  background: var(--color-surface-elevated);
+  border: 1px solid color-mix(in srgb, #8b3a3f 45%, var(--color-border));
+  color: #8b3a3f;
+}
+
+.btn--danger:hover:not(:disabled) {
+  background: color-mix(in srgb, #8b3a3f 10%, var(--color-surface-elevated));
+}
+
+.archived-banner {
+  margin: 0 0 0.85rem;
+  padding: 0.55rem 0.7rem;
+  border-radius: 0.55rem;
+  background: color-mix(in srgb, #b8860b 12%, var(--color-surface));
+  border: 1px solid var(--color-border);
+  font-size: 0.86rem;
+  color: var(--color-text);
+}
+
+.form-actions-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+  align-items: center;
+  margin-top: 0.85rem;
+  padding-top: 0.85rem;
+  border-top: 1px solid var(--color-border);
+}
+
 .file-label {
   display: inline-flex;
   align-items: center;
@@ -187,6 +217,35 @@ label {
 
 .file-label input {
   display: none;
+}
+
+.pending-files {
+  margin: 0 0 0.75rem;
+  padding: 0;
+  list-style: none;
+  display: flex;
+  flex-direction: column;
+  gap: 0.4rem;
+  font-size: 0.86rem;
+  color: var(--color-text);
+}
+
+.pending-files li {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.75rem;
+  padding: 0.45rem 0.55rem;
+  border: 1px solid var(--color-border);
+  border-radius: 0.5rem;
+  background: var(--color-surface);
+}
+
+.pending-files li span {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  min-width: 0;
 }
 
 .gallery {

@@ -38,7 +38,7 @@ public sealed class BusinessPropertyFacilitiesController : ControllerBase
 
     [HttpGet]
     [ProducesResponseType(typeof(ApiResult<IReadOnlyList<PropertyFacilitySummaryDto>>), StatusCodes.Status200OK)]
-    public async Task<IActionResult> List(CancellationToken cancellationToken)
+    public async Task<IActionResult> List([FromQuery] bool includeArchived = false, CancellationToken cancellationToken = default)
     {
         var businessId = User.GetBusinessId();
         if (businessId is null)
@@ -47,7 +47,7 @@ public sealed class BusinessPropertyFacilitiesController : ControllerBase
                 ApiResult<IReadOnlyList<PropertyFacilitySummaryDto>>.Fail("Unauthorized", "Missing business identity."));
         }
 
-        var list = await _facilities.ListAsync(businessId.Value, cancellationToken).ConfigureAwait(false);
+        var list = await _facilities.ListAsync(businessId.Value, includeArchived, cancellationToken).ConfigureAwait(false);
         var mapped = list
             .Select(f => new PropertyFacilitySummaryDto
             {
@@ -55,6 +55,7 @@ public sealed class BusinessPropertyFacilitiesController : ControllerBase
                 Name = f.Name,
                 PrimaryImageUrl = string.IsNullOrWhiteSpace(f.PrimaryImageUrl) ? null : ToAbsoluteUrl(f.PrimaryImageUrl),
                 ImageCount = f.ImageCount,
+                IsArchived = f.IsArchived,
             })
             .ToList();
         return Ok(ApiResult<IReadOnlyList<PropertyFacilitySummaryDto>>.Ok(mapped));
@@ -78,6 +79,48 @@ public sealed class BusinessPropertyFacilitiesController : ControllerBase
         }
 
         return Ok(ApiResult<PropertyFacilityDetailDto>.Ok(MapFacility(dto)));
+    }
+
+    [HttpPost("{facilityId:guid}/archive")]
+    [ProducesResponseType(typeof(ApiResult<PropertyFacilityDetailDto>), StatusCodes.Status200OK)]
+    [ProducesResponseType(typeof(ApiResult<PropertyFacilityDetailDto>), StatusCodes.Status404NotFound)]
+    public async Task<IActionResult> Archive(Guid facilityId, CancellationToken cancellationToken)
+    {
+        var businessId = User.GetBusinessId();
+        if (businessId is null)
+        {
+            return Unauthorized(ApiResult<PropertyFacilityDetailDto>.Fail("Unauthorized", "Missing business identity."));
+        }
+
+        var ok = await _facilities.SetArchivedAsync(businessId.Value, facilityId, true, cancellationToken).ConfigureAwait(false);
+        if (!ok)
+        {
+            return NotFound(ApiResult<PropertyFacilityDetailDto>.Fail("NotFound", "Facility not found."));
+        }
+
+        var dto = await _facilities.GetAsync(businessId.Value, facilityId, cancellationToken).ConfigureAwait(false);
+        return Ok(ApiResult<PropertyFacilityDetailDto>.Ok(MapFacility(dto!)));
+    }
+
+    [HttpPost("{facilityId:guid}/restore")]
+    [ProducesResponseType(typeof(ApiResult<PropertyFacilityDetailDto>), StatusCodes.Status200OK)]
+    [ProducesResponseType(typeof(ApiResult<PropertyFacilityDetailDto>), StatusCodes.Status404NotFound)]
+    public async Task<IActionResult> Restore(Guid facilityId, CancellationToken cancellationToken)
+    {
+        var businessId = User.GetBusinessId();
+        if (businessId is null)
+        {
+            return Unauthorized(ApiResult<PropertyFacilityDetailDto>.Fail("Unauthorized", "Missing business identity."));
+        }
+
+        var ok = await _facilities.SetArchivedAsync(businessId.Value, facilityId, false, cancellationToken).ConfigureAwait(false);
+        if (!ok)
+        {
+            return NotFound(ApiResult<PropertyFacilityDetailDto>.Fail("NotFound", "Facility not found."));
+        }
+
+        var dto = await _facilities.GetAsync(businessId.Value, facilityId, cancellationToken).ConfigureAwait(false);
+        return Ok(ApiResult<PropertyFacilityDetailDto>.Ok(MapFacility(dto!)));
     }
 
     [HttpPost]
@@ -287,6 +330,7 @@ public sealed class BusinessPropertyFacilitiesController : ControllerBase
             Name = dto.Name,
             Description = dto.Description,
             Images = dto.Images.Select(MapImage).ToList(),
+            IsArchived = dto.IsArchived,
         };
 
     private FacilityImageDto MapImage(FacilityImageDto img) =>

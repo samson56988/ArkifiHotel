@@ -13,4 +13,6 @@ public sealed class BusinessRoomSummaryDto
     public string? PrimaryImageUrl { get; set; }
 
     public int AmenityCount { get; set; }
+
+    public bool IsArchived { get; set; }
 }

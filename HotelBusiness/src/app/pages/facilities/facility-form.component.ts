@@ -5,6 +5,7 @@ import { forkJoin, Observable, of } from 'rxjs';
 import { finalize } from 'rxjs/operators';
 import type { FacilityDetailApiResponse, FacilityImageDto, PropertyFacilityDetailDto } from '../../core/models/facilities.models';
 import { BusinessFacilitiesApiService } from '../../core/services/business-facilities-api.service';
+import { ToastService } from '../../core/services/toast.service';
 import { BusinessWorkspaceComponent } from '../../layouts/business-workspace/business-workspace.component';
 
 @Component({
@@ -19,6 +20,7 @@ export class FacilityFormComponent implements OnInit {
   private readonly api = inject(BusinessFacilitiesApiService);
   private readonly route = inject(ActivatedRoute);
   private readonly router = inject(Router);
+  private readonly toast = inject(ToastService);
 
   readonly form = this.fb.nonNullable.group({
     name: ['', [Validators.required, Validators.minLength(2), Validators.maxLength(200)]],
@@ -29,8 +31,11 @@ export class FacilityFormComponent implements OnInit {
   images: FacilityImageDto[] = [];
   loading = false;
   saving = false;
-  error: string | null = null;
-  uploadMessage: string | null = null;
+
+  /** Queued on “Add facility”; uploaded right after the facility is created. */
+  pendingPhotoFiles: File[] = [];
+
+  isArchived = false;
 
   get isCreateMode(): boolean {
     return this.facilityId === null;
@@ -59,7 +64,7 @@ export class FacilityFormComponent implements OnInit {
         }
 
         if (!detail.success || !detail.data) {
-          this.error = detail.message ?? 'Facility not found.';
+          this.toast.error(detail.message ?? 'Facility not found.', 'Facility');
           return;
         }
 
@@ -68,7 +73,6 @@ export class FacilityFormComponent implements OnInit {
   }
 
   onSubmit(): void {
-    this.error = null;
     if (this.form.invalid) {
       this.form.markAllAsTouched();
       return;
@@ -85,19 +89,101 @@ export class FacilityFormComponent implements OnInit {
       ? this.api.createFacility(body)
       : this.api.updateFacility(this.facilityId!, body);
 
-    req$.pipe(finalize(() => (this.saving = false))).subscribe((res) => {
-      if (!res.success || !res.data) {
-        this.error = res.message ?? 'Could not save facility.';
-        return;
-      }
+    req$.subscribe({
+      next: (res) => {
+        if (!res.success || !res.data) {
+          this.saving = false;
+          this.toast.showFailedApi(res, 'Facility');
+          return;
+        }
 
-      if (this.isCreateMode) {
-        void this.router.navigate(['/facilities', res.data.id], { replaceUrl: true });
-        return;
-      }
+        if (!this.isCreateMode) {
+          this.saving = false;
+          this.patchFromFacility(res.data);
+          this.toast.success('Facility details saved.', 'Saved');
+          return;
+        }
 
-      this.patchFromFacility(res.data);
+        const newId = res.data.id;
+        const files = [...this.pendingPhotoFiles];
+        if (files.length === 0) {
+          this.pendingPhotoFiles = [];
+          this.saving = false;
+          this.toast.success('Facility created.', 'Done');
+          void this.router.navigate(['/facilities', newId], { replaceUrl: true });
+          return;
+        }
+
+        this.api
+          .uploadFacilityImages(newId, files)
+          .pipe(
+            finalize(() => {
+              this.saving = false;
+              this.pendingPhotoFiles = [];
+            }),
+          )
+          .subscribe({
+            next: (up) => {
+              if (!up.success || !up.data?.length) {
+                this.toast.warning(
+                  up.message ??
+                    'Facility was created, but photos did not upload. You can add them on the next screen.',
+                  'Photos',
+                );
+              } else {
+                this.toast.success('Facility created and photos uploaded.', 'Done');
+              }
+
+              void this.router.navigate(['/facilities', newId], { replaceUrl: true });
+            },
+            error: () => {
+              this.toast.warning(
+                'Facility was created, but photos did not upload. You can add them on the next screen.',
+                'Photos',
+              );
+              void this.router.navigate(['/facilities', newId], { replaceUrl: true });
+            },
+          });
+      },
+      error: () => {
+        this.saving = false;
+        this.toast.error('Could not reach the API to save the facility.', 'Network');
+      },
     });
+  }
+
+  onPendingPhotosSelected(event: Event): void {
+    const input = event.target as HTMLInputElement;
+    const picked = input.files ? Array.from(input.files) : [];
+    input.value = '';
+    if (picked.length === 0) {
+      return;
+    }
+
+    const maxEach = 8 * 1024 * 1024;
+    const allowed = /^image\/(jpeg|png|webp|gif)$/i;
+    const skipped: string[] = [];
+    for (const f of picked) {
+      if (f.size > maxEach) {
+        skipped.push(`${f.name} (over 8MB)`);
+        continue;
+      }
+
+      if (!allowed.test(f.type)) {
+        skipped.push(`${f.name} (not JPEG/PNG/WebP/GIF)`);
+        continue;
+      }
+
+      this.pendingPhotoFiles = [...this.pendingPhotoFiles, f];
+    }
+
+    if (skipped.length) {
+      this.toast.warning(`Skipped: ${skipped.join('; ')}.`, 'Photos');
+    }
+  }
+
+  removePendingPhoto(index: number): void {
+    this.pendingPhotoFiles = this.pendingPhotoFiles.filter((_, i) => i !== index);
   }
 
   onFilesSelected(event: Event): void {
@@ -112,19 +198,18 @@ export class FacilityFormComponent implements OnInit {
       return;
     }
 
-    this.uploadMessage = null;
     this.saving = true;
     this.api
       .uploadFacilityImages(this.facilityId, files)
       .pipe(finalize(() => (this.saving = false)))
       .subscribe((res) => {
         if (!res.success || !res.data?.length) {
-          this.uploadMessage = res.message ?? 'Upload failed.';
+          this.toast.showFailedApi(res, 'Upload failed');
           return;
         }
 
         this.images = [...this.images, ...res.data];
-        this.uploadMessage = 'Photos uploaded.';
+        this.toast.success('Photos uploaded.', 'Facility photos');
       });
   }
 
@@ -134,17 +219,17 @@ export class FacilityFormComponent implements OnInit {
     }
 
     this.saving = true;
-    this.uploadMessage = null;
     this.api
       .deleteFacilityImage(this.facilityId, img.id)
       .pipe(finalize(() => (this.saving = false)))
       .subscribe((res) => {
         if (!res.success) {
-          this.uploadMessage = res.message ?? 'Could not remove image.';
+          this.toast.showFailedApi(res, 'Photo');
           return;
         }
 
         this.images = this.images.filter((i) => i.id !== img.id);
+        this.toast.info('Photo removed.', 'Facility photos');
       });
   }
 
@@ -152,8 +237,96 @@ export class FacilityFormComponent implements OnInit {
     return this.api.resolveImageUrl(img.url);
   }
 
+  archiveFacility(): void {
+    if (!this.facilityId || this.isCreateMode) {
+      return;
+    }
+
+    if (!globalThis.confirm('Archive this facility? It will disappear from your default list until you restore it.')) {
+      return;
+    }
+
+    this.saving = true;
+    this.api
+      .archiveFacility(this.facilityId)
+      .pipe(finalize(() => (this.saving = false)))
+      .subscribe({
+        next: (res) => {
+          if (!res.success || !res.data) {
+            this.toast.showFailedApi(res, 'Archive');
+            return;
+          }
+
+          this.patchFromFacility(res.data);
+          this.toast.success('Facility archived.', 'Property');
+        },
+        error: () => {
+          this.toast.error('Could not reach the API.', 'Network');
+        },
+      });
+  }
+
+  restoreFacility(): void {
+    if (!this.facilityId || this.isCreateMode) {
+      return;
+    }
+
+    this.saving = true;
+    this.api
+      .restoreFacility(this.facilityId)
+      .pipe(finalize(() => (this.saving = false)))
+      .subscribe({
+        next: (res) => {
+          if (!res.success || !res.data) {
+            this.toast.showFailedApi(res, 'Restore');
+            return;
+          }
+
+          this.patchFromFacility(res.data);
+          this.toast.success('Facility restored to your list.', 'Property');
+        },
+        error: () => {
+          this.toast.error('Could not reach the API.', 'Network');
+        },
+      });
+  }
+
+  deleteFacility(): void {
+    if (!this.facilityId || this.isCreateMode) {
+      return;
+    }
+
+    if (
+      !globalThis.confirm(
+        'Permanently delete this facility and all of its photos? This cannot be undone.',
+      )
+    ) {
+      return;
+    }
+
+    this.saving = true;
+    this.api
+      .deleteFacility(this.facilityId)
+      .pipe(finalize(() => (this.saving = false)))
+      .subscribe({
+        next: (res) => {
+          if (!res.success) {
+            this.toast.showFailedApi(res, 'Delete facility');
+            return;
+          }
+
+          this.toast.success('Facility deleted.', 'Property');
+          void this.router.navigate(['/facilities']);
+        },
+        error: () => {
+          this.toast.error('Could not reach the API.', 'Network');
+        },
+      });
+  }
+
   private patchFromFacility(f: PropertyFacilityDetailDto): void {
     this.facilityId = f.id;
+    this.isArchived = f.isArchived ?? false;
     this.form.patchValue({
       name: f.name,
       description: f.description ?? '',

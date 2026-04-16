@@ -19,5 +19,8 @@ public class PropertyFacility
 
     public DateTimeOffset? UpdatedAt { get; set; }
 
+    /// <summary>When true, the facility is hidden from the default list until restored or permanently deleted.</summary>
+    public bool IsArchived { get; set; }
+
     public ICollection<PropertyFacilityImage> Images { get; set; } = new List<PropertyFacilityImage>();
 }

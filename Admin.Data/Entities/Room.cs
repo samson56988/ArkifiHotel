@@ -20,6 +20,9 @@ public class Room
 
     public DateTimeOffset? UpdatedAt { get; set; }
 
+    /// <summary>When true, the room is hidden from the default inventory list until restored or permanently deleted.</summary>
+    public bool IsArchived { get; set; }
+
     public ICollection<RoomImage> Images { get; set; } = new List<RoomImage>();
 
     public ICollection<RoomAmenity> RoomAmenities { get; set; } = new List<RoomAmenity>();

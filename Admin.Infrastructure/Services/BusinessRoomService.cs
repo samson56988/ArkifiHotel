@@ -20,13 +20,21 @@ public sealed class BusinessRoomService : IBusinessRoomService
 
     public async Task<IReadOnlyList<BusinessRoomSummaryDto>> ListAsync(
         Guid businessId,
+        bool includeArchived = false,
         CancellationToken cancellationToken = default)
     {
-        var rooms = await _db.Rooms
+        var query = _db.Rooms
             .AsNoTracking()
             .Include(r => r.Images)
             .Include(r => r.RoomAmenities)
-            .Where(r => r.BusinessRegistrationId == businessId)
+            .Where(r => r.BusinessRegistrationId == businessId);
+
+        if (!includeArchived)
+        {
+            query = query.Where(r => !r.IsArchived);
+        }
+
+        var rooms = await query
             .OrderBy(r => r.Name)
             .ToListAsync(cancellationToken)
             .ConfigureAwait(false);
@@ -43,6 +51,7 @@ public sealed class BusinessRoomService : IBusinessRoomService
                     .Select(i => "/" + i.RelativePath.Replace("\\", "/", StringComparison.Ordinal))
                     .FirstOrDefault(),
                 AmenityCount = r.RoomAmenities.Count,
+                IsArchived = r.IsArchived,
             })
             .ToList();
     }
@@ -163,6 +172,27 @@ public sealed class BusinessRoomService : IBusinessRoomService
         }
 
         _db.Rooms.Remove(room);
+        await _db.SaveChangesAsync(cancellationToken).ConfigureAwait(false);
+        return true;
+    }
+
+    public async Task<bool> SetArchivedAsync(
+        Guid businessId,
+        Guid roomId,
+        bool archived,
+        CancellationToken cancellationToken = default)
+    {
+        var room = await _db.Rooms
+            .FirstOrDefaultAsync(r => r.Id == roomId && r.BusinessRegistrationId == businessId, cancellationToken)
+            .ConfigureAwait(false);
+
+        if (room is null)
+        {
+            return false;
+        }
+
+        room.IsArchived = archived;
+        room.UpdatedAt = DateTimeOffset.UtcNow;
         await _db.SaveChangesAsync(cancellationToken).ConfigureAwait(false);
         return true;
     }
@@ -335,6 +365,7 @@ public sealed class BusinessRoomService : IBusinessRoomService
             BasePricePerNight = r.BasePricePerNight,
             Images = images,
             Amenities = amenities,
+            IsArchived = r.IsArchived,
         };
     }
 

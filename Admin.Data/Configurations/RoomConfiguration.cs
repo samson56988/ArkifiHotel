@@ -29,6 +29,10 @@ public class RoomConfiguration : IEntityTypeConfiguration<Room>
         builder.Property(e => e.CreatedAt)
             .IsRequired();
 
+        builder.Property(e => e.IsArchived)
+            .IsRequired()
+            .HasDefaultValue(false);
+
         builder.HasIndex(e => e.BusinessRegistrationId);
         builder.HasIndex(e => new { e.BusinessRegistrationId, e.Name });
 

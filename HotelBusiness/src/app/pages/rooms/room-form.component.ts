@@ -11,6 +11,7 @@ import type {
   RoomImageDto,
 } from '../../core/models/rooms.models';
 import { BusinessRoomsApiService } from '../../core/services/business-rooms-api.service';
+import { ToastService } from '../../core/services/toast.service';
 import { BusinessWorkspaceComponent } from '../../layouts/business-workspace/business-workspace.component';
 
 @Component({
@@ -25,6 +26,7 @@ export class RoomFormComponent implements OnInit {
   private readonly api = inject(BusinessRoomsApiService);
   private readonly route = inject(ActivatedRoute);
   private readonly router = inject(Router);
+  private readonly toast = inject(ToastService);
 
   readonly form = this.fb.nonNullable.group({
     name: ['', [Validators.required, Validators.minLength(2), Validators.maxLength(200)]],
@@ -45,8 +47,12 @@ export class RoomFormComponent implements OnInit {
   /** Amenity catalog fetch (create: does not block the rest of the form). */
   amenitiesLoading = false;
   saving = false;
-  error: string | null = null;
-  uploadMessage: string | null = null;
+
+  /** Queued on “Add room”; uploaded right after the room is created. */
+  pendingPhotoFiles: File[] = [];
+
+  /** Edit mode: soft-archived rooms are omitted from the default list until restored. */
+  isArchived = false;
 
   get isCreateMode(): boolean {
     return this.roomId === null;
@@ -94,13 +100,15 @@ export class RoomFormComponent implements OnInit {
         if (amenities.success && amenities.data) {
           this.amenities = amenities.data;
         } else {
-          this.error =
+          this.toast.warning(
             amenities.message ??
-            'Could not load the amenity list. You can still edit the room and try again later.';
+              'Could not load the amenity list. You can still edit the room and try again later.',
+            'Amenities',
+          );
         }
 
         if (!room.success || !room.data) {
-          this.error = room.message ?? this.error ?? 'Room not found.';
+          this.toast.error(room.message ?? 'Room not found.', 'Room');
           return;
         }
 
@@ -132,9 +140,11 @@ export class RoomFormComponent implements OnInit {
           return;
         }
 
-        this.error =
+        this.toast.warning(
           res.message ??
-          'Amenities could not be loaded. You can still create the room and add custom amenities after the API is available.';
+            'Amenities could not be loaded. You can still create the room and add custom amenities after the API is available.',
+          'Amenities',
+        );
       });
   }
 
@@ -181,16 +191,16 @@ export class RoomFormComponent implements OnInit {
     }
 
     this.saving = true;
-    this.error = null;
     this.api
       .createCustomAmenity({ name, category: this.customCategory.trim() || null })
       .pipe(finalize(() => (this.saving = false)))
       .subscribe((res) => {
         if (!res.success || !res.data) {
-          this.error = res.message ?? 'Could not add custom amenity.';
+          this.toast.showFailedApi(res, 'Amenity');
           return;
         }
 
+        this.toast.success(`${res.data.name} was added to your list.`, 'Custom amenity');
         this.amenities = [...this.amenities, res.data];
         this.selectedAmenityIds.add(res.data.id);
         this.customName = '';
@@ -199,7 +209,6 @@ export class RoomFormComponent implements OnInit {
   }
 
   onSubmit(): void {
-    this.error = null;
     if (this.form.invalid) {
       this.form.markAllAsTouched();
       return;
@@ -219,19 +228,101 @@ export class RoomFormComponent implements OnInit {
       ? this.api.createRoom(body)
       : this.api.updateRoom(this.roomId!, body);
 
-    req$.pipe(finalize(() => (this.saving = false))).subscribe((res) => {
-      if (!res.success || !res.data) {
-        this.error = res.message ?? 'Could not save room.';
-        return;
-      }
+    req$.subscribe({
+      next: (res) => {
+        if (!res.success || !res.data) {
+          this.saving = false;
+          this.toast.showFailedApi(res, 'Room');
+          return;
+        }
 
-      if (this.isCreateMode) {
-        void this.router.navigate(['/rooms', res.data.id], { replaceUrl: true });
-        return;
-      }
+        if (!this.isCreateMode) {
+          this.saving = false;
+          this.patchFromRoom(res.data);
+          this.toast.success('Room details saved.', 'Saved');
+          return;
+        }
 
-      this.patchFromRoom(res.data);
+        const newId = res.data.id;
+        const files = [...this.pendingPhotoFiles];
+        if (files.length === 0) {
+          this.pendingPhotoFiles = [];
+          this.saving = false;
+          this.toast.success('Room created.', 'Done');
+          void this.router.navigate(['/rooms', newId], { replaceUrl: true });
+          return;
+        }
+
+        this.api
+          .uploadRoomImages(newId, files)
+          .pipe(
+            finalize(() => {
+              this.saving = false;
+              this.pendingPhotoFiles = [];
+            }),
+          )
+          .subscribe({
+            next: (up) => {
+              if (!up.success || !up.data?.length) {
+                this.toast.warning(
+                  up.message ??
+                    'Room was created, but photos did not upload. You can add them on the next screen.',
+                  'Photos',
+                );
+              } else {
+                this.toast.success('Room created and photos uploaded.', 'Done');
+              }
+
+              void this.router.navigate(['/rooms', newId], { replaceUrl: true });
+            },
+            error: () => {
+              this.toast.warning(
+                'Room was created, but photos did not upload. You can add them on the next screen.',
+                'Photos',
+              );
+              void this.router.navigate(['/rooms', newId], { replaceUrl: true });
+            },
+          });
+      },
+      error: () => {
+        this.saving = false;
+        this.toast.error('Could not reach the API to save the room.', 'Network');
+      },
     });
+  }
+
+  onPendingPhotosSelected(event: Event): void {
+    const input = event.target as HTMLInputElement;
+    const picked = input.files ? Array.from(input.files) : [];
+    input.value = '';
+    if (picked.length === 0) {
+      return;
+    }
+
+    const maxEach = 8 * 1024 * 1024;
+    const allowed = /^image\/(jpeg|png|webp|gif)$/i;
+    const skipped: string[] = [];
+    for (const f of picked) {
+      if (f.size > maxEach) {
+        skipped.push(`${f.name} (over 8MB)`);
+        continue;
+      }
+
+      if (!allowed.test(f.type)) {
+        skipped.push(`${f.name} (not JPEG/PNG/WebP/GIF)`);
+        continue;
+      }
+
+      this.pendingPhotoFiles = [...this.pendingPhotoFiles, f];
+    }
+
+    if (skipped.length) {
+      this.toast.warning(`Skipped: ${skipped.join('; ')}.`, 'Photos');
+    }
+  }
+
+  removePendingPhoto(index: number): void {
+    this.pendingPhotoFiles = this.pendingPhotoFiles.filter((_, i) => i !== index);
   }
 
   onFilesSelected(event: Event): void {
@@ -246,19 +337,18 @@ export class RoomFormComponent implements OnInit {
       return;
     }
 
-    this.uploadMessage = null;
     this.saving = true;
     this.api
       .uploadRoomImages(this.roomId, files)
       .pipe(finalize(() => (this.saving = false)))
       .subscribe((res) => {
         if (!res.success || !res.data?.length) {
-          this.uploadMessage = res.message ?? 'Upload failed.';
+          this.toast.showFailedApi(res, 'Upload failed');
           return;
         }
 
         this.images = [...this.images, ...res.data];
-        this.uploadMessage = 'Photos uploaded.';
+        this.toast.success('Photos uploaded.', 'Room photos');
       });
   }
 
@@ -268,17 +358,17 @@ export class RoomFormComponent implements OnInit {
     }
 
     this.saving = true;
-    this.uploadMessage = null;
     this.api
       .deleteRoomImage(this.roomId, image.id)
       .pipe(finalize(() => (this.saving = false)))
       .subscribe((res) => {
         if (!res.success) {
-          this.uploadMessage = res.message ?? 'Could not remove image.';
+          this.toast.showFailedApi(res, 'Photo');
           return;
         }
 
         this.images = this.images.filter((i) => i.id !== image.id);
+        this.toast.info('Photo removed.', 'Room photos');
       });
   }
 
@@ -286,8 +376,96 @@ export class RoomFormComponent implements OnInit {
     return this.api.resolveImageUrl(img.url);
   }
 
+  archiveRoom(): void {
+    if (!this.roomId || this.isCreateMode) {
+      return;
+    }
+
+    if (!globalThis.confirm('Archive this room? It will disappear from your default rooms list until you restore it.')) {
+      return;
+    }
+
+    this.saving = true;
+    this.api
+      .archiveRoom(this.roomId)
+      .pipe(finalize(() => (this.saving = false)))
+      .subscribe({
+        next: (res) => {
+          if (!res.success || !res.data) {
+            this.toast.showFailedApi(res, 'Archive');
+            return;
+          }
+
+          this.patchFromRoom(res.data);
+          this.toast.success('Room archived.', 'Inventory');
+        },
+        error: () => {
+          this.toast.error('Could not reach the API.', 'Network');
+        },
+      });
+  }
+
+  restoreRoom(): void {
+    if (!this.roomId || this.isCreateMode) {
+      return;
+    }
+
+    this.saving = true;
+    this.api
+      .restoreRoom(this.roomId)
+      .pipe(finalize(() => (this.saving = false)))
+      .subscribe({
+        next: (res) => {
+          if (!res.success || !res.data) {
+            this.toast.showFailedApi(res, 'Restore');
+            return;
+          }
+
+          this.patchFromRoom(res.data);
+          this.toast.success('Room restored to your inventory.', 'Inventory');
+        },
+        error: () => {
+          this.toast.error('Could not reach the API.', 'Network');
+        },
+      });
+  }
+
+  deleteRoom(): void {
+    if (!this.roomId || this.isCreateMode) {
+      return;
+    }
+
+    if (
+      !globalThis.confirm(
+        'Permanently delete this room and all of its photos? This cannot be undone.',
+      )
+    ) {
+      return;
+    }
+
+    this.saving = true;
+    this.api
+      .deleteRoom(this.roomId)
+      .pipe(finalize(() => (this.saving = false)))
+      .subscribe({
+        next: (res) => {
+          if (!res.success) {
+            this.toast.showFailedApi(res, 'Delete room');
+            return;
+          }
+
+          this.toast.success('Room deleted.', 'Inventory');
+          void this.router.navigate(['/rooms']);
+        },
+        error: () => {
+          this.toast.error('Could not reach the API.', 'Network');
+        },
+      });
+  }
+
   private patchFromRoom(room: BusinessRoomDetailDto): void {
     this.roomId = room.id;
+    this.isArchived = room.isArchived ?? false;
     this.form.patchValue({
       name: room.name,
       description: room.description ?? '',

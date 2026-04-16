@@ -7,15 +7,28 @@
         Add hotel-wide spaces like a swimming pool, gym, or lounge — each with its own photo gallery for guests.
       </p>
     </div>
-    <a routerLink="/facilities/new" class="btn btn--primary">Add facility</a>
+    <div class="page-head__actions">
+      <label class="check-inline">
+        <input type="checkbox" [checked]="showArchived" (change)="onShowArchivedChange($event)" />
+        <span>Show archived</span>
+      </label>
+      <a routerLink="/facilities/new" class="btn btn--primary">Add facility</a>
+    </div>
   </header>
 
   @if (loading) {
     <p class="muted">Loading…</p>
-  } @else if (error) {
-    <p class="alert">{{ error }}</p>
+  } @else if (loadFailed) {
+    <p class="muted">We could not load your facilities.</p>
+    <button type="button" class="btn btn--ghost" (click)="load()">Try again</button>
   } @else if (facilities.length === 0) {
-    <p class="muted">No facilities yet. Add swimming pool, gym, lounge, or any shared space with photos.</p>
+    <p class="muted">
+      @if (showArchived) {
+        No facilities found.
+      } @else {
+        No active facilities yet. Add a shared space, or turn on “Show archived” to see facilities you have archived.
+      }
+    </p>
   } @else {
     <div class="table-wrap">
       <table>
@@ -36,7 +49,12 @@
                   } @else {
                     <span class="thumb thumb--placeholder" aria-hidden="true"></span>
                   }
-                  <span>{{ f.name }}</span>
+                  <div class="cell__text">
+                    <span class="facility-name">{{ f.name }}</span>
+                    @if (f.isArchived) {
+                      <span class="badge-archived">Archived</span>
+                    }
+                  </div>
                 </div>
               </td>
               <td>{{ f.imageCount }}</td>

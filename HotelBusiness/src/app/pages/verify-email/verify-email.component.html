@@ -54,13 +54,6 @@
         <button type="submit" class="auth-submit" [disabled]="loading">
           {{ loading ? 'Verifying...' : 'Verify email' }}
         </button>
-
-        @if (apiError) {
-          <p class="auth-alert auth-alert--error">{{ apiError }}</p>
-        }
-        @if (apiSuccess) {
-          <p class="auth-alert auth-alert--success">{{ apiSuccess }}</p>
-        }
       </form>
 
       <p class="auth-footer-text">

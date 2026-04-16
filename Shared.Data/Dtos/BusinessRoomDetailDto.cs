@@ -15,4 +15,6 @@ public sealed class BusinessRoomDetailDto
     public IReadOnlyList<RoomImageDto> Images { get; set; } = Array.Empty<RoomImageDto>();
 
     public IReadOnlyList<AmenityDto> Amenities { get; set; } = Array.Empty<AmenityDto>();
+
+    public bool IsArchived { get; set; }
 }

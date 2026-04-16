@@ -4,7 +4,7 @@
       <p class="eyebrow">Property</p>
       <h1>{{ isCreateMode ? 'Add shared facility' : 'Edit facility' }}</h1>
       <p class="lead">
-        Examples: swimming pool, gym, lounge, spa, rooftop. Save first, then upload multiple photos.
+        Examples: swimming pool, gym, lounge, spa, rooftop. You can attach photos here; on create they upload right after the facility is saved.
       </p>
     </div>
     <a routerLink="/facilities" class="btn btn--ghost">Back to list</a>
@@ -16,6 +16,11 @@
     <form class="layout" [formGroup]="form" (ngSubmit)="onSubmit()" novalidate>
       <section class="panel">
         <h2>Details</h2>
+        @if (!isCreateMode && isArchived) {
+          <p class="archived-banner">
+            This facility is archived and hidden from your default list. Restore it to show it again, or delete it permanently.
+          </p>
+        }
         <div class="field">
           <label for="fname">Name</label>
           <input id="fname" class="input" type="text" formControlName="name" placeholder="e.g. Rooftop infinity pool" />
@@ -30,20 +35,41 @@
         <button type="submit" class="btn btn--primary" [disabled]="saving">
           {{ saving ? 'Saving…' : isCreateMode ? 'Create facility' : 'Save changes' }}
         </button>
+        @if (!isCreateMode) {
+          <div class="form-actions-row">
+            @if (isArchived) {
+              <button type="button" class="btn btn--ghost" (click)="restoreFacility()" [disabled]="saving">Restore to list</button>
+            } @else {
+              <button type="button" class="btn btn--ghost" (click)="archiveFacility()" [disabled]="saving">Archive facility</button>
+            }
+            <button type="button" class="btn btn--danger" (click)="deleteFacility()" [disabled]="saving">Delete permanently</button>
+          </div>
+        }
       </section>
 
       <section class="panel">
         <h2>Photos</h2>
+        <p class="hint">JPEG, PNG, WebP, or GIF, up to 8MB each.</p>
         @if (isCreateMode) {
-          <p class="hint">Create the facility, then return here (or stay on this page) to upload images.</p>
+          <label class="file-label">
+            <input type="file" accept="image/jpeg,image/png,image/webp,image/gif" multiple (change)="onPendingPhotosSelected($event)" [disabled]="saving" />
+            <span>Choose images to upload after create</span>
+          </label>
+          @if (pendingPhotoFiles.length > 0) {
+            <ul class="pending-files">
+              @for (f of pendingPhotoFiles; track $index) {
+                <li>
+                  <span>{{ f.name }}</span>
+                  <button type="button" class="link danger" (click)="removePendingPhoto($index)" [disabled]="saving">Remove</button>
+                </li>
+              }
+            </ul>
+          }
         } @else {
           <label class="file-label">
             <input type="file" accept="image/*" multiple (change)="onFilesSelected($event)" [disabled]="saving" />
             <span>Upload images</span>
           </label>
-          @if (uploadMessage) {
-            <p class="upload-msg">{{ uploadMessage }}</p>
-          }
           <div class="gallery">
             @for (img of images; track img.id) {
               <figure class="photo">
@@ -57,9 +83,5 @@
         }
       </section>
     </form>
-  }
-
-  @if (error) {
-    <p class="alert">{{ error }}</p>
   }
 </app-business-workspace>

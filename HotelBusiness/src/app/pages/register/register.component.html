@@ -147,13 +147,6 @@
         <button type="submit" class="auth-submit" [disabled]="loading">
           {{ loading ? 'Creating account...' : 'Create account' }}
         </button>
-
-        @if (apiError) {
-          <p class="auth-alert auth-alert--error">{{ apiError }}</p>
-        }
-        @if (apiSuccess) {
-          <p class="auth-alert auth-alert--success">{{ apiSuccess }}</p>
-        }
       </form>
 
       <p class="auth-footer-text">

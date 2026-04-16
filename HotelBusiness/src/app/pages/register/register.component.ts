@@ -9,6 +9,7 @@ import {
 import { Router, RouterLink } from '@angular/router';
 import { finalize } from 'rxjs/operators';
 import { AuthApiService } from '../../core/services/auth-api.service';
+import { ToastService } from '../../core/services/toast.service';
 
 function passwordsMatch(control: AbstractControl): ValidationErrors | null {
   const password = control.get('password')?.value;
@@ -30,6 +31,7 @@ export class RegisterComponent {
   private readonly fb = inject(FormBuilder);
   private readonly authApi = inject(AuthApiService);
   private readonly router = inject(Router);
+  private readonly toast = inject(ToastService);
 
   readonly form = this.fb.nonNullable.group(
     {
@@ -47,13 +49,9 @@ export class RegisterComponent {
 
   submitted = false;
   loading = false;
-  apiError: string | null = null;
-  apiSuccess: string | null = null;
 
   onSubmit(): void {
     this.submitted = true;
-    this.apiError = null;
-    this.apiSuccess = null;
 
     if (this.form.invalid) {
       this.form.markAllAsTouched();
@@ -73,28 +71,33 @@ export class RegisterComponent {
         acceptTerms: raw.acceptTerms,
       })
       .pipe(finalize(() => (this.loading = false)))
-      .subscribe((result) => {
-        if (result.success) {
-          this.apiSuccess = 'Registration successful. We sent an OTP to verify your email.';
-          this.form.reset({
-            propertyName: '',
-            firstName: '',
-            lastName: '',
-            email: '',
-            phoneNumber: '',
-            password: '',
-            confirmPassword: '',
-            acceptTerms: false,
-          });
-          this.submitted = false;
-          setTimeout(() => {
-            const email = encodeURIComponent(raw.email.trim());
-            void this.router.navigateByUrl(`/verify-email?email=${email}`);
-          }, 700);
-          return;
-        }
+      .subscribe({
+        next: (result) => {
+          if (result.success) {
+            this.toast.success('We sent a verification code to your email.', 'Account created');
+            this.form.reset({
+              propertyName: '',
+              firstName: '',
+              lastName: '',
+              email: '',
+              phoneNumber: '',
+              password: '',
+              confirmPassword: '',
+              acceptTerms: false,
+            });
+            this.submitted = false;
+            setTimeout(() => {
+              const email = encodeURIComponent(raw.email.trim());
+              void this.router.navigateByUrl(`/verify-email?email=${email}`);
+            }, 700);
+            return;
+          }
 
-        this.apiError = result.message ?? 'Unable to complete registration right now.';
+          this.toast.showFailedApi(result, 'Registration failed');
+        },
+        error: () => {
+          this.toast.error('We could not reach the server. Check your connection and try again.', 'Network error');
+        },
       });
   }
 

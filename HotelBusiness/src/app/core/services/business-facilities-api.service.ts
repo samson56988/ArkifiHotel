@@ -20,8 +20,9 @@ export class BusinessFacilitiesApiService {
   private readonly http = inject(HttpClient);
   private readonly baseUrl = inject(API_BASE_URL);
 
-  listFacilities(): Observable<FacilitiesListApiResponse> {
-    return this.http.get<FacilitiesListApiResponse>(`${this.baseUrl}/api/business/facilities`).pipe(
+  listFacilities(includeArchived = false): Observable<FacilitiesListApiResponse> {
+    const q = includeArchived ? '?includeArchived=true' : '';
+    return this.http.get<FacilitiesListApiResponse>(`${this.baseUrl}/api/business/facilities${q}`).pipe(
       catchError((err: HttpErrorResponse) =>
         throwError(() => this.normalizeHttpError<PropertyFacilitySummaryDto[]>(err)),
       ),
@@ -56,6 +57,26 @@ export class BusinessFacilitiesApiService {
     return this.http.delete<ApiResult<unknown>>(`${this.baseUrl}/api/business/facilities/${id}`).pipe(
       catchError((err: HttpErrorResponse) => throwError(() => this.normalizeHttpError<unknown>(err))),
     );
+  }
+
+  archiveFacility(facilityId: string): Observable<FacilityDetailApiResponse> {
+    return this.http
+      .post<FacilityDetailApiResponse>(`${this.baseUrl}/api/business/facilities/${facilityId}/archive`, {})
+      .pipe(
+        catchError((err: HttpErrorResponse) =>
+          throwError(() => this.normalizeHttpError<PropertyFacilityDetailDto>(err)),
+        ),
+      );
+  }
+
+  restoreFacility(facilityId: string): Observable<FacilityDetailApiResponse> {
+    return this.http
+      .post<FacilityDetailApiResponse>(`${this.baseUrl}/api/business/facilities/${facilityId}/restore`, {})
+      .pipe(
+        catchError((err: HttpErrorResponse) =>
+          throwError(() => this.normalizeHttpError<PropertyFacilityDetailDto>(err)),
+        ),
+      );
   }
 
   uploadFacilityImages(facilityId: string, files: File[]): Observable<FacilityImagesUploadResponse> {

@@ -3,7 +3,9 @@
     <div>
       <p class="eyebrow">Rooms</p>
       <h1>{{ isCreateMode ? 'Add room' : 'Edit room' }}</h1>
-      <p class="lead">Pick from the default amenity list, add your own, then upload photos once the room is saved.</p>
+      <p class="lead">
+        Pick from the default amenity list, add your own, and attach photos here. On create, photos upload right after the room is saved.
+      </p>
     </div>
     <a routerLink="/rooms" class="btn btn--ghost">Back to rooms</a>
   </header>
@@ -14,6 +16,11 @@
     <form class="grid" [formGroup]="form" (ngSubmit)="onSubmit()" novalidate>
       <section class="panel">
         <h2>Details</h2>
+        @if (!isCreateMode && isArchived) {
+          <p class="archived-banner">
+            This room is archived and hidden from your default list. Restore it to show it again, or delete it permanently.
+          </p>
+        }
         <div class="field">
           <label for="name">Room name</label>
           <input id="name" class="input" type="text" formControlName="name" placeholder="e.g. Deluxe King" />
@@ -38,6 +45,16 @@
         <button type="submit" class="btn btn--primary" [disabled]="saving">
           {{ saving ? 'Saving…' : isCreateMode ? 'Create room' : 'Save changes' }}
         </button>
+        @if (!isCreateMode) {
+          <div class="form-actions-row">
+            @if (isArchived) {
+              <button type="button" class="btn btn--ghost" (click)="restoreRoom()" [disabled]="saving">Restore to inventory</button>
+            } @else {
+              <button type="button" class="btn btn--ghost" (click)="archiveRoom()" [disabled]="saving">Archive room</button>
+            }
+            <button type="button" class="btn btn--danger" (click)="deleteRoom()" [disabled]="saving">Delete permanently</button>
+          </div>
+        }
       </section>
 
       <section class="panel">
@@ -112,16 +129,27 @@
 
       <section class="panel panel--wide">
         <h2>Photos</h2>
+        <p class="hint">JPEG, PNG, WebP, or GIF, up to 8MB each.</p>
         @if (isCreateMode) {
-          <p class="hint">Save the room first, then you can upload JPEG, PNG, WebP, or GIF images (up to 8MB each).</p>
+          <label class="file-label">
+            <input type="file" accept="image/jpeg,image/png,image/webp,image/gif" multiple (change)="onPendingPhotosSelected($event)" [disabled]="saving" />
+            <span>Choose images to upload after create</span>
+          </label>
+          @if (pendingPhotoFiles.length > 0) {
+            <ul class="pending-files">
+              @for (f of pendingPhotoFiles; track $index) {
+                <li>
+                  <span>{{ f.name }}</span>
+                  <button type="button" class="link danger" (click)="removePendingPhoto($index)" [disabled]="saving">Remove</button>
+                </li>
+              }
+            </ul>
+          }
         } @else {
           <label class="file-label">
             <input type="file" accept="image/*" multiple (change)="onFilesSelected($event)" [disabled]="saving" />
             <span>Upload images</span>
           </label>
-          @if (uploadMessage) {
-            <p class="upload-msg">{{ uploadMessage }}</p>
-          }
           <div class="gallery">
             @for (img of images; track img.id) {
               <figure class="photo">
@@ -135,9 +163,5 @@
         }
       </section>
     </form>
-  }
-
-  @if (error) {
-    <p class="alert">{{ error }}</p>
   }
 </app-business-workspace>

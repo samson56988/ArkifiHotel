@@ -26,6 +26,7 @@ export interface BusinessRoomSummaryDto {
   basePricePerNight: number;
   primaryImageUrl: string | null;
   amenityCount: number;
+  isArchived: boolean;
 }
 
 export interface BusinessRoomDetailDto {
@@ -36,6 +37,7 @@ export interface BusinessRoomDetailDto {
   basePricePerNight: number;
   images: RoomImageDto[];
   amenities: AmenityDto[];
+  isArchived: boolean;
 }
 
 export interface CreateBusinessRoomRequest {

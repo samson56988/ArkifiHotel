@@ -35,8 +35,9 @@ export class BusinessRoomsApiService {
     );
   }
 
-  listRooms(): Observable<RoomsListApiResponse> {
-    return this.http.get<RoomsListApiResponse>(`${this.baseUrl}/api/business/rooms`).pipe(
+  listRooms(includeArchived = false): Observable<RoomsListApiResponse> {
+    const q = includeArchived ? '?includeArchived=true' : '';
+    return this.http.get<RoomsListApiResponse>(`${this.baseUrl}/api/business/rooms${q}`).pipe(
       catchError((err: HttpErrorResponse) =>
         throwError(() => this.normalizeHttpError<BusinessRoomSummaryDto[]>(err)),
       ),
@@ -71,6 +72,26 @@ export class BusinessRoomsApiService {
     return this.http.delete<ApiResult<unknown>>(`${this.baseUrl}/api/business/rooms/${roomId}`).pipe(
       catchError((err: HttpErrorResponse) => throwError(() => this.normalizeHttpError<unknown>(err))),
     );
+  }
+
+  archiveRoom(roomId: string): Observable<RoomDetailApiResponse> {
+    return this.http
+      .post<RoomDetailApiResponse>(`${this.baseUrl}/api/business/rooms/${roomId}/archive`, {})
+      .pipe(
+        catchError((err: HttpErrorResponse) =>
+          throwError(() => this.normalizeHttpError<BusinessRoomDetailDto>(err)),
+        ),
+      );
+  }
+
+  restoreRoom(roomId: string): Observable<RoomDetailApiResponse> {
+    return this.http
+      .post<RoomDetailApiResponse>(`${this.baseUrl}/api/business/rooms/${roomId}/restore`, {})
+      .pipe(
+        catchError((err: HttpErrorResponse) =>
+          throwError(() => this.normalizeHttpError<BusinessRoomDetailDto>(err)),
+        ),
+      );
   }
 
   uploadRoomImages(roomId: string, files: File[]): Observable<RoomImagesUploadResponse> {

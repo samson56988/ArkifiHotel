@@ -4,7 +4,10 @@ namespace Admin.Services.Abstractions;
 
 public interface IBusinessRoomService
 {
-    Task<IReadOnlyList<BusinessRoomSummaryDto>> ListAsync(Guid businessId, CancellationToken cancellationToken = default);
+    Task<IReadOnlyList<BusinessRoomSummaryDto>> ListAsync(
+        Guid businessId,
+        bool includeArchived = false,
+        CancellationToken cancellationToken = default);
 
     Task<BusinessRoomDetailDto?> GetAsync(Guid businessId, Guid roomId, CancellationToken cancellationToken = default);
 
@@ -20,6 +23,12 @@ public interface IBusinessRoomService
         CancellationToken cancellationToken = default);
 
     Task<bool> DeleteAsync(Guid businessId, Guid roomId, CancellationToken cancellationToken = default);
+
+    Task<bool> SetArchivedAsync(
+        Guid businessId,
+        Guid roomId,
+        bool archived,
+        CancellationToken cancellationToken = default);
 
     Task<RoomImageDto?> AddImageAsync(
         Guid businessId,

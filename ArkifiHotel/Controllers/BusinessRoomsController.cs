@@ -38,7 +38,7 @@ public sealed class BusinessRoomsController : ControllerBase
 
     [HttpGet]
     [ProducesResponseType(typeof(ApiResult<IReadOnlyList<BusinessRoomSummaryDto>>), StatusCodes.Status200OK)]
-    public async Task<IActionResult> List(CancellationToken cancellationToken)
+    public async Task<IActionResult> List([FromQuery] bool includeArchived = false, CancellationToken cancellationToken = default)
     {
         var businessId = User.GetBusinessId();
         if (businessId is null)
@@ -46,7 +46,7 @@ public sealed class BusinessRoomsController : ControllerBase
             return Unauthorized(ApiResult<IReadOnlyList<BusinessRoomSummaryDto>>.Fail("Unauthorized", "Missing business identity."));
         }
 
-        var list = await _rooms.ListAsync(businessId.Value, cancellationToken).ConfigureAwait(false);
+        var list = await _rooms.ListAsync(businessId.Value, includeArchived, cancellationToken).ConfigureAwait(false);
         var mapped = list
             .Select(r => new BusinessRoomSummaryDto
             {
@@ -56,6 +56,7 @@ public sealed class BusinessRoomsController : ControllerBase
                 BasePricePerNight = r.BasePricePerNight,
                 PrimaryImageUrl = string.IsNullOrWhiteSpace(r.PrimaryImageUrl) ? null : ToAbsoluteUrl(r.PrimaryImageUrl),
                 AmenityCount = r.AmenityCount,
+                IsArchived = r.IsArchived,
             })
             .ToList();
         return Ok(ApiResult<IReadOnlyList<BusinessRoomSummaryDto>>.Ok(mapped));
@@ -79,6 +80,48 @@ public sealed class BusinessRoomsController : ControllerBase
         }
 
         return Ok(ApiResult<BusinessRoomDetailDto>.Ok(MapRoom(room)));
+    }
+
+    [HttpPost("{roomId:guid}/archive")]
+    [ProducesResponseType(typeof(ApiResult<BusinessRoomDetailDto>), StatusCodes.Status200OK)]
+    [ProducesResponseType(typeof(ApiResult<BusinessRoomDetailDto>), StatusCodes.Status404NotFound)]
+    public async Task<IActionResult> Archive(Guid roomId, CancellationToken cancellationToken)
+    {
+        var businessId = User.GetBusinessId();
+        if (businessId is null)
+        {
+            return Unauthorized(ApiResult<BusinessRoomDetailDto>.Fail("Unauthorized", "Missing business identity."));
+        }
+
+        var ok = await _rooms.SetArchivedAsync(businessId.Value, roomId, true, cancellationToken).ConfigureAwait(false);
+        if (!ok)
+        {
+            return NotFound(ApiResult<BusinessRoomDetailDto>.Fail("NotFound", "Room not found."));
+        }
+
+        var room = await _rooms.GetAsync(businessId.Value, roomId, cancellationToken).ConfigureAwait(false);
+        return Ok(ApiResult<BusinessRoomDetailDto>.Ok(MapRoom(room!)));
+    }
+
+    [HttpPost("{roomId:guid}/restore")]
+    [ProducesResponseType(typeof(ApiResult<BusinessRoomDetailDto>), StatusCodes.Status200OK)]
+    [ProducesResponseType(typeof(ApiResult<BusinessRoomDetailDto>), StatusCodes.Status404NotFound)]
+    public async Task<IActionResult> Restore(Guid roomId, CancellationToken cancellationToken)
+    {
+        var businessId = User.GetBusinessId();
+        if (businessId is null)
+        {
+            return Unauthorized(ApiResult<BusinessRoomDetailDto>.Fail("Unauthorized", "Missing business identity."));
+        }
+
+        var ok = await _rooms.SetArchivedAsync(businessId.Value, roomId, false, cancellationToken).ConfigureAwait(false);
+        if (!ok)
+        {
+            return NotFound(ApiResult<BusinessRoomDetailDto>.Fail("NotFound", "Room not found."));
+        }
+
+        var room = await _rooms.GetAsync(businessId.Value, roomId, cancellationToken).ConfigureAwait(false);
+        return Ok(ApiResult<BusinessRoomDetailDto>.Ok(MapRoom(room!)));
     }
 
     [HttpPost]
@@ -280,6 +323,7 @@ public sealed class BusinessRoomsController : ControllerBase
             BasePricePerNight = room.BasePricePerNight,
             Images = room.Images.Select(MapImage).ToList(),
             Amenities = room.Amenities,
+            IsArchived = room.IsArchived,
         };
 
     private RoomImageDto MapImage(RoomImageDto img) =>

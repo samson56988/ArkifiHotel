@@ -3,6 +3,7 @@ import { FormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
 import { ActivatedRoute, Router, RouterLink } from '@angular/router';
 import { finalize } from 'rxjs/operators';
 import { AuthApiService } from '../../core/services/auth-api.service';
+import { ToastService } from '../../core/services/toast.service';
 
 @Component({
   selector: 'app-verify-login-otp',
@@ -16,6 +17,7 @@ export class VerifyLoginOtpComponent {
   private readonly route = inject(ActivatedRoute);
   private readonly router = inject(Router);
   private readonly authApi = inject(AuthApiService);
+  private readonly toast = inject(ToastService);
 
   readonly form = this.fb.nonNullable.group({
     email: ['', [Validators.required, Validators.email]],
@@ -26,7 +28,6 @@ export class VerifyLoginOtpComponent {
 
   submitted = false;
   loading = false;
-  apiError: string | null = null;
 
   constructor() {
     const email = this.route.snapshot.queryParamMap.get('email') ?? '';
@@ -37,7 +38,6 @@ export class VerifyLoginOtpComponent {
 
   onSubmit(): void {
     this.submitted = true;
-    this.apiError = null;
     if (this.form.invalid) {
       this.form.markAllAsTouched();
       return;
@@ -47,12 +47,19 @@ export class VerifyLoginOtpComponent {
     this.authApi
       .verifyLoginOtp(this.form.getRawValue())
       .pipe(finalize(() => (this.loading = false)))
-      .subscribe((result) => {
-        if (result.success) {
-          void this.router.navigateByUrl('/dashboard');
-          return;
-        }
-        this.apiError = result.message ?? 'Invalid or expired code.';
+      .subscribe({
+        next: (result) => {
+          if (result.success) {
+            this.toast.success('Signed in. Welcome back.');
+            void this.router.navigateByUrl('/dashboard');
+            return;
+          }
+
+          this.toast.showFailedApi(result, 'Login verification failed');
+        },
+        error: () => {
+          this.toast.error('We could not reach the server. Check your connection and try again.', 'Network error');
+        },
       });
   }
 
