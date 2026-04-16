@@ -21,6 +21,9 @@ public class AdminDbContext : DbContext
     public DbSet<RoomAmenity> RoomAmenities => Set<RoomAmenity>();
     public DbSet<PropertyFacility> PropertyFacilities => Set<PropertyFacility>();
     public DbSet<PropertyFacilityImage> PropertyFacilityImages => Set<PropertyFacilityImage>();
+    public DbSet<Booking> Bookings => Set<Booking>();
+    public DbSet<Customer> Customers => Set<Customer>();
+    public DbSet<BookingPayment> BookingPayments => Set<BookingPayment>();
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
@@ -34,6 +37,9 @@ public class AdminDbContext : DbContext
         modelBuilder.ApplyConfiguration(new RoomAmenityConfiguration());
         modelBuilder.ApplyConfiguration(new PropertyFacilityConfiguration());
         modelBuilder.ApplyConfiguration(new PropertyFacilityImageConfiguration());
+        modelBuilder.ApplyConfiguration(new BookingConfiguration());
+        modelBuilder.ApplyConfiguration(new CustomerConfiguration());
+        modelBuilder.ApplyConfiguration(new BookingPaymentConfiguration());
         DefaultAmenitySeed.Apply(modelBuilder);
     }
 }

@@ -63,5 +63,51 @@ export const routes: Routes = [
     loadComponent: () =>
       import('./pages/facilities/facility-form.component').then((m) => m.FacilityFormComponent),
   },
+  {
+    path: 'bookings/new',
+    loadComponent: () =>
+      import('./pages/bookings/booking-form.component').then((m) => m.BookingFormComponent),
+  },
+  {
+    path: 'bookings',
+    loadComponent: () =>
+      import('./pages/bookings/bookings-list.component').then((m) => m.BookingsListComponent),
+  },
+  {
+    path: 'payment-configuration',
+    loadComponent: () =>
+      import('./pages/payment-configuration/payment-configuration.component').then(
+        (m) => m.PaymentConfigurationComponent,
+      ),
+  },
+  {
+    path: 'customers/new',
+    loadComponent: () =>
+      import('./pages/customers/customer-form.component').then((m) => m.CustomerFormComponent),
+  },
+  {
+    path: 'customers/:customerId',
+    loadComponent: () =>
+      import('./pages/customers/customer-form.component').then((m) => m.CustomerFormComponent),
+  },
+  {
+    path: 'customers',
+    loadComponent: () =>
+      import('./pages/customers/customers-list.component').then((m) => m.CustomersListComponent),
+  },
+  {
+    path: 'booking-payments/new',
+    loadComponent: () =>
+      import('./pages/booking-payments/booking-payment-form.component').then(
+        (m) => m.BookingPaymentFormComponent,
+      ),
+  },
+  {
+    path: 'booking-payments',
+    loadComponent: () =>
+      import('./pages/booking-payments/booking-payments-list.component').then(
+        (m) => m.BookingPaymentsListComponent,
+      ),
+  },
   { path: '**', redirectTo: '' },
 ];

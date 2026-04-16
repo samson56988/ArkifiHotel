@@ -2,6 +2,7 @@ using Admin.Data;
 using Admin.Infrastructure.Options;
 using Admin.Infrastructure.Services;
 using Admin.Services.Abstractions;
+using Microsoft.AspNetCore.DataProtection;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
@@ -17,6 +18,9 @@ public static class DependencyInjection
         IConfiguration configuration,
         string connectionStringName = "AdminDb")
     {
+        services.AddDataProtection()
+            .SetApplicationName("ArkifiHotel");
+
         var cs = configuration.GetConnectionString(connectionStringName)
                  ?? configuration.GetConnectionString("DefaultConnection");
 
@@ -37,6 +41,12 @@ public static class DependencyInjection
         services.AddScoped<IBusinessAmenityService, BusinessAmenityService>();
         services.AddScoped<IBusinessRoomService, BusinessRoomService>();
         services.AddScoped<IBusinessPropertyFacilityService, BusinessPropertyFacilityService>();
+        services.AddScoped<IBusinessBookingService, BusinessBookingService>();
+        services.AddScoped<IPublicBookingLookupService, PublicBookingLookupService>();
+        services.AddSingleton<IPaymentSecretProtector, PaymentSecretProtector>();
+        services.AddScoped<IBusinessPaymentConfigurationService, BusinessPaymentConfigurationService>();
+        services.AddScoped<IBusinessCustomerService, BusinessCustomerService>();
+        services.AddScoped<IBusinessBookingPaymentService, BusinessBookingPaymentService>();
 
         return services;
     }

@@ -52,6 +52,14 @@ public class BusinessRegistrationConfiguration : IEntityTypeConfiguration<Busine
         builder.Property(e => e.Slug)
             .HasMaxLength(128);
 
+        builder.Property(e => e.PaymentProvider)
+            .HasConversion<int>()
+            .IsRequired()
+            .HasDefaultValue(PaymentGatewayProvider.None);
+
+        builder.Property(e => e.PaymentSecretProtected)
+            .HasMaxLength(4096);
+
         builder.HasIndex(e => e.ContactEmail);
         builder.HasIndex(e => e.CreatedAt);
         builder.HasIndex(e => e.Status);

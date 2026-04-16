@@ -1,0 +1,77 @@
+<app-business-workspace>
+  <header class="page-head">
+    <div>
+      <p class="eyebrow">Reservations</p>
+      <h1>New booking</h1>
+      <p class="lead">
+        Total is calculated from the room’s nightly rate and length of stay. Guests can look up their reservation with the confirmation code.
+      </p>
+    </div>
+    <a routerLink="/bookings" class="btn btn--ghost">Back to bookings</a>
+  </header>
+
+  @if (loadingRooms) {
+    <p class="muted">Loading rooms…</p>
+  } @else if (roomsFailed) {
+    <p class="muted">We could not load your rooms.</p>
+    <button type="button" class="btn btn--ghost" (click)="loadRooms()">Try again</button>
+  } @else if (rooms.length === 0) {
+    <p class="muted">Add at least one active room before creating a booking.</p>
+    <a routerLink="/rooms/new" class="btn btn--primary">Add room</a>
+  } @else {
+    <form class="grid" [formGroup]="form" (ngSubmit)="onSubmit()" novalidate>
+      <section class="panel panel--wide">
+        <h2>Stay</h2>
+        <div class="field">
+          <label for="roomId">Room</label>
+          <select id="roomId" class="input" formControlName="roomId">
+            @for (r of rooms; track r.id) {
+              <option [value]="r.id">{{ r.name }} — {{ r.basePricePerNight | number: '1.2-2' }} / night</option>
+            }
+          </select>
+        </div>
+        <div class="field-row">
+          <div class="field">
+            <label for="checkIn">Check-in</label>
+            <input id="checkIn" class="input" type="date" formControlName="checkInDate" />
+          </div>
+          <div class="field">
+            <label for="checkOut">Check-out</label>
+            <input id="checkOut" class="input" type="date" formControlName="checkOutDate" />
+          </div>
+        </div>
+      </section>
+
+      <section class="panel panel--wide">
+        <h2>Guest</h2>
+        <div class="field">
+          <label for="guestName">Full name</label>
+          <input id="guestName" class="input" type="text" formControlName="guestName" autocomplete="name" />
+          @if (form.controls.guestName.touched && form.controls.guestName.invalid) {
+            <p class="field-error">Enter the guest’s name (2–200 characters).</p>
+          }
+        </div>
+        <div class="field-row">
+          <div class="field">
+            <label for="guestEmail">Email</label>
+            <input id="guestEmail" class="input" type="email" formControlName="guestEmail" autocomplete="email" />
+            @if (form.controls.guestEmail.touched && form.controls.guestEmail.invalid) {
+              <p class="field-error">Enter a valid email.</p>
+            }
+          </div>
+          <div class="field">
+            <label for="guestPhone">Phone (optional)</label>
+            <input id="guestPhone" class="input" type="tel" formControlName="guestPhone" autocomplete="tel" />
+          </div>
+        </div>
+        <div class="field">
+          <label for="notes">Internal notes (optional)</label>
+          <textarea id="notes" class="input input--area" rows="2" formControlName="internalNotes" placeholder="Only visible in your dashboard"></textarea>
+        </div>
+        <button type="submit" class="btn btn--primary" [disabled]="saving">
+          {{ saving ? 'Creating…' : 'Create booking' }}
+        </button>
+      </section>
+    </form>
+  }
+</app-business-workspace>

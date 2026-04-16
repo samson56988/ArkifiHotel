@@ -16,12 +16,10 @@
     </div>
   </header>
 
-  @if (loading) {
-    <p class="muted">Loading…</p>
-  } @else if (loadFailed) {
+  @if (loadFailed) {
     <p class="muted">We could not load your facilities.</p>
     <button type="button" class="btn btn--ghost" (click)="load()">Try again</button>
-  } @else if (facilities.length === 0) {
+  } @else if (initialLoadDone && facilities.length === 0) {
     <p class="muted">
       @if (showArchived) {
         No facilities found.
@@ -29,7 +27,7 @@
         No active facilities yet. Add a shared space, or turn on “Show archived” to see facilities you have archived.
       }
     </p>
-  } @else {
+  } @else if (initialLoadDone) {
     <div class="table-wrap">
       <table>
         <thead>

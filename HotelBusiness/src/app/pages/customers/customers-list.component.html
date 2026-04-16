@@ -1,0 +1,44 @@
+<app-business-workspace>
+  <header class="page-head">
+    <div>
+      <p class="eyebrow">CRM</p>
+      <h1>Customers</h1>
+      <p class="lead">Contacts and guests you track for your property.</p>
+    </div>
+    <div class="page-head__actions">
+      <a routerLink="/customers/new" class="btn btn--primary">Add customer</a>
+    </div>
+  </header>
+
+  @if (loadFailed) {
+    <p class="muted">We could not load customers.</p>
+    <button type="button" class="btn btn--ghost" (click)="load()">Try again</button>
+  } @else if (initialLoadDone && customers.length === 0) {
+    <p class="muted">No customer records yet.</p>
+    <a routerLink="/customers/new" class="btn btn--primary">Add customer</a>
+  } @else if (initialLoadDone) {
+    <div class="table-wrap">
+      <table>
+        <thead>
+          <tr>
+            <th>Name</th>
+            <th>Email</th>
+            <th>Phone</th>
+            <th></th>
+          </tr>
+        </thead>
+        <tbody>
+          @for (c of customers; track c.id) {
+            <tr>
+              <td>{{ c.fullName }}</td>
+              <td>{{ c.email }}</td>
+              <td>{{ c.phone || '—' }}</td>
+              <td><a class="link" [routerLink]="['/customers', c.id]">Edit</a></td>
+            </tr>
+          }
+        </tbody>
+      </table>
+    </div>
+  }
+</app-business-workspace>
+

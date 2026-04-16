@@ -1,0 +1,49 @@
+<app-business-workspace>
+  <header class="page-head">
+    <div>
+      <p class="eyebrow">CRM</p>
+      <h1>{{ isCreateMode ? 'Add customer' : 'Edit customer' }}</h1>
+      <p class="lead">Store guest contact details for your records.</p>
+    </div>
+    <a routerLink="/customers" class="btn btn--ghost">Back to customers</a>
+  </header>
+
+  @if (loading) {
+    <p class="muted">Loading…</p>
+  } @else {
+    <form class="panel" [formGroup]="form" (ngSubmit)="onSubmit()" novalidate>
+      <div class="field">
+        <label for="fullName">Full name</label>
+        <input id="fullName" class="input" type="text" formControlName="fullName" autocomplete="name" />
+        @if (form.controls.fullName.touched && form.controls.fullName.invalid) {
+          <p class="field-error">Enter a name (2–200 characters).</p>
+        }
+      </div>
+      <div class="field">
+        <label for="email">Email</label>
+        <input id="email" class="input" type="email" formControlName="email" autocomplete="email" />
+        @if (form.controls.email.touched && form.controls.email.invalid) {
+          <p class="field-error">Enter a valid email.</p>
+        }
+      </div>
+      <div class="field">
+        <label for="phone">Phone (optional)</label>
+        <input id="phone" class="input" type="tel" formControlName="phone" autocomplete="tel" />
+      </div>
+      <div class="field">
+        <label for="notes">Notes (optional)</label>
+        <textarea id="notes" class="input input--area" rows="3" formControlName="notes"></textarea>
+      </div>
+      <div class="actions">
+        <button type="submit" class="btn btn--primary" [disabled]="saving">
+          {{ saving ? 'Saving…' : isCreateMode ? 'Create customer' : 'Save changes' }}
+        </button>
+        @if (!isCreateMode) {
+          <button type="button" class="btn btn--danger" [disabled]="saving" (click)="deleteCustomer()">
+            Delete
+          </button>
+        }
+      </div>
+    </form>
+  }
+</app-business-workspace>

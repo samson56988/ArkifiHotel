@@ -23,17 +23,19 @@ export class VerifyLoginOtpComponent {
     email: ['', [Validators.required, Validators.email]],
     challengeId: ['', [Validators.required]],
     otp: ['', [Validators.required, Validators.pattern(/^\d{6}$/)]],
-    rememberMe: [false],
   });
 
   submitted = false;
   loading = false;
 
+  /** From login query `rememberMe=1|0` — not bound to a hidden input (avoids string/boolean quirks). */
+  private rememberMeFromLogin = false;
+
   constructor() {
     const email = this.route.snapshot.queryParamMap.get('email') ?? '';
     const challengeId = this.route.snapshot.queryParamMap.get('challengeId') ?? '';
-    const rememberMe = this.route.snapshot.queryParamMap.get('rememberMe') === '1';
-    this.form.patchValue({ email, challengeId, rememberMe });
+    this.rememberMeFromLogin = this.route.snapshot.queryParamMap.get('rememberMe') === '1';
+    this.form.patchValue({ email, challengeId });
   }
 
   onSubmit(): void {
@@ -44,14 +46,26 @@ export class VerifyLoginOtpComponent {
     }
 
     this.loading = true;
+    const raw = this.form.getRawValue();
     this.authApi
-      .verifyLoginOtp(this.form.getRawValue())
+      .verifyLoginOtp({
+        email: raw.email,
+        challengeId: raw.challengeId,
+        otp: raw.otp,
+        rememberMe: this.rememberMeFromLogin,
+      })
       .pipe(finalize(() => (this.loading = false)))
       .subscribe({
         next: (result) => {
-          if (result.success) {
+          if (result.success && result.data?.accessToken) {
+            this.authApi.saveSessionFromLogin(this.rememberMeFromLogin, result.data);
             this.toast.success('Signed in. Welcome back.');
             void this.router.navigateByUrl('/dashboard');
+            return;
+          }
+
+          if (result.success) {
+            this.toast.error('Sign-in did not return a token. Try again or contact support.', 'Login verification failed');
             return;
           }
 

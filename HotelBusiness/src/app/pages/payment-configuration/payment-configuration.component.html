@@ -1,0 +1,65 @@
+<app-business-workspace>
+  <header class="page-head">
+    <div>
+      <p class="eyebrow">Payments</p>
+      <h1>Payment configuration</h1>
+      <p class="lead">
+        Connect <strong>Paystack</strong> or <strong>Flutterwave</strong>. Your secret key is encrypted before it is stored.
+      </p>
+    </div>
+    <a routerLink="/dashboard" class="btn btn--ghost">Back to overview</a>
+  </header>
+
+  @if (hydrating) {
+    <p class="muted banner-hydrate">Loading current settings…</p>
+  }
+
+  @if (loadFailed) {
+    <p class="muted">We could not load your settings.</p>
+    <button type="button" class="btn btn--ghost" (click)="load()">Try again</button>
+  }
+
+  <form class="panel" [formGroup]="form" (ngSubmit)="onSubmit()" novalidate>
+      <h2>Gateway</h2>
+      <p class="hint">Choose one provider. Keys are never shown again after saving.</p>
+
+      <div class="choices">
+        <label class="choice">
+          <input type="radio" formControlName="provider" value="None" />
+          <span>None</span>
+          <small>Do not process payments through ArkifiHub yet</small>
+        </label>
+        <label class="choice">
+          <input type="radio" formControlName="provider" value="Paystack" />
+          <span>Paystack</span>
+          <small>sk_live_… or sk_test_… secret key</small>
+        </label>
+        <label class="choice">
+          <input type="radio" formControlName="provider" value="Flutterwave" />
+          <span>Flutterwave</span>
+          <small>FLWSECK_… secret key</small>
+        </label>
+      </div>
+
+      @if (form.controls.provider.value !== 'None') {
+        <div class="field">
+          <label for="secret">Secret key</label>
+          @if (hadSecretOnLoad) {
+            <p class="hint">A secret key is already saved. Enter a new key only if you want to replace it.</p>
+          }
+          <input
+            id="secret"
+            class="input"
+            type="password"
+            formControlName="secretKey"
+            autocomplete="off"
+            [attr.placeholder]="hadSecretOnLoad ? 'Leave blank to keep existing key' : 'Paste secret key'"
+          />
+        </div>
+      }
+
+      <button type="submit" class="btn btn--primary" [disabled]="saving">
+        {{ saving ? 'Saving…' : 'Save configuration' }}
+      </button>
+    </form>
+</app-business-workspace>

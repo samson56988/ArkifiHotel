@@ -1,0 +1,64 @@
+<div class="page">
+  <header class="hero">
+    <p class="eyebrow">ArkifiHub</p>
+    <h1>Track your booking</h1>
+    <p class="lead">Enter the confirmation code you received when your reservation was created.</p>
+  </header>
+
+  <form class="card" [formGroup]="form" (ngSubmit)="onSubmit()" novalidate>
+    <label class="label" for="code">Confirmation code</label>
+    <div class="row">
+      <input
+        id="code"
+        class="input"
+        type="text"
+        formControlName="code"
+        placeholder="e.g. A3K9M2PQ7X"
+        autocomplete="off"
+        autocapitalize="characters"
+      />
+      <button class="btn" type="submit" [disabled]="loading">
+        {{ loading ? 'Searching…' : 'Look up' }}
+      </button>
+    </div>
+    @if (form.controls.code.touched && form.controls.code.invalid) {
+      <p class="hint hint--error">Enter your confirmation code (at least 4 characters).</p>
+    }
+  </form>
+
+  @if (errorMessage) {
+    <p class="banner banner--error" role="alert">{{ errorMessage }}</p>
+  }
+
+  @if (result) {
+    <section class="card card--result" aria-live="polite">
+      <h2>{{ result.propertyName }}</h2>
+      <p class="room">{{ result.roomName }}</p>
+      <dl class="facts">
+        <div>
+          <dt>Guest</dt>
+          <dd>{{ result.guestName }}</dd>
+        </div>
+        <div>
+          <dt>Stay</dt>
+          <dd>
+            {{ formatDate(result.checkInDate) }} – {{ formatDate(result.checkOutDate) }}
+            <span class="nights">({{ result.nights }} night{{ result.nights === 1 ? '' : 's' }})</span>
+          </dd>
+        </div>
+        <div>
+          <dt>Status</dt>
+          <dd><span class="status">{{ result.status }}</span></dd>
+        </div>
+        <div>
+          <dt>Total</dt>
+          <dd>{{ result.totalAmount | number: '1.2-2' }} {{ result.currency }}</dd>
+        </div>
+        <div>
+          <dt>Code</dt>
+          <dd><code>{{ result.confirmationCode }}</code></dd>
+        </div>
+      </dl>
+    </section>
+  }
+</div>

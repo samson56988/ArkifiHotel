@@ -1,0 +1,52 @@
+<app-business-workspace>
+  <header class="page-head">
+    <div>
+      <p class="eyebrow">Payments</p>
+      <h1>Booking payments</h1>
+      <p class="lead">Log and review payments linked to reservations.</p>
+    </div>
+    <div class="page-head__actions">
+      <a routerLink="/booking-payments/new" class="btn btn--primary">Record payment</a>
+    </div>
+  </header>
+
+  @if (loadFailed) {
+    <p class="muted">We could not load payments.</p>
+    <button type="button" class="btn btn--ghost" (click)="load()">Try again</button>
+  } @else if (initialLoadDone && payments.length === 0) {
+    <p class="muted">No booking payment records yet.</p>
+    <a routerLink="/booking-payments/new" class="btn btn--primary">Record payment</a>
+  } @else if (initialLoadDone) {
+    <div class="table-wrap">
+      <table>
+        <thead>
+          <tr>
+            <th>When</th>
+            <th>Guest / booking</th>
+            <th>Room</th>
+            <th>Amount</th>
+            <th>Status</th>
+            <th>Gateway</th>
+            <th>Reference</th>
+          </tr>
+        </thead>
+        <tbody>
+          @for (p of payments; track p.id) {
+            <tr>
+              <td class="nowrap">{{ formatDate(p.createdAt) }}</td>
+              <td>
+                <span class="strong">{{ p.bookingGuestName }}</span>
+                <span class="sub">{{ p.bookingConfirmationCode }}</span>
+              </td>
+              <td>{{ p.roomName }}</td>
+              <td>{{ p.amount | number: '1.2-2' }} {{ p.currency }}</td>
+              <td>{{ p.status }}</td>
+              <td>{{ p.gateway }}</td>
+              <td class="ref">{{ p.externalReference || '—' }}</td>
+            </tr>
+          }
+        </tbody>
+      </table>
+    </div>
+  }
+</app-business-workspace>

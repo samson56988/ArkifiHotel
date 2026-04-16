@@ -1,0 +1,72 @@
+<app-business-workspace>
+  <header class="page-head">
+    <div>
+      <p class="eyebrow">Payments</p>
+      <h1>Record booking payment</h1>
+      <p class="lead">Attach an amount to an existing booking (e.g. card charge or manual settlement).</p>
+    </div>
+    <a routerLink="/booking-payments" class="btn btn--ghost">Back to list</a>
+  </header>
+
+  @if (loadingBookings) {
+    <p class="muted">Loading bookings…</p>
+  } @else if (bookingsFailed) {
+    <p class="muted">Could not load bookings.</p>
+    <button type="button" class="btn btn--ghost" (click)="loadBookings()">Try again</button>
+  } @else if (bookings.length === 0) {
+    <p class="muted">You need at least one booking before recording a payment.</p>
+    <a routerLink="/bookings/new" class="btn btn--primary">Create booking</a>
+  } @else {
+    <form class="panel" [formGroup]="form" (ngSubmit)="onSubmit()" novalidate>
+      <div class="field">
+        <label for="bookingId">Booking</label>
+        <select id="bookingId" class="input" formControlName="bookingId">
+          @for (b of bookings; track b.id) {
+            <option [value]="b.id">
+              {{ b.guestName }} — {{ b.roomName }} ({{ b.confirmationCode }})
+            </option>
+          }
+        </select>
+      </div>
+      <div class="field-row">
+        <div class="field">
+          <label for="amount">Amount</label>
+          <input id="amount" class="input" type="number" formControlName="amount" min="0.01" step="0.01" />
+        </div>
+        <div class="field">
+          <label for="currency">Currency</label>
+          <input id="currency" class="input" type="text" formControlName="currency" maxlength="3" />
+        </div>
+      </div>
+      <div class="field-row">
+        <div class="field">
+          <label for="status">Status</label>
+          <select id="status" class="input" formControlName="status">
+            @for (s of statusOptions; track s) {
+              <option [value]="s">{{ s }}</option>
+            }
+          </select>
+        </div>
+        <div class="field">
+          <label for="gateway">Gateway</label>
+          <select id="gateway" class="input" formControlName="gateway">
+            @for (g of gatewayOptions; track g) {
+              <option [value]="g">{{ g }}</option>
+            }
+          </select>
+        </div>
+      </div>
+      <div class="field">
+        <label for="ref">External reference (optional)</label>
+        <input id="ref" class="input" type="text" formControlName="externalReference" placeholder="Transaction id from Paystack / Flutterwave" />
+      </div>
+      <div class="field">
+        <label for="notes">Notes (optional)</label>
+        <textarea id="notes" class="input input--area" rows="2" formControlName="notes"></textarea>
+      </div>
+      <button type="submit" class="btn btn--primary" [disabled]="saving">
+        {{ saving ? 'Saving…' : 'Record payment' }}
+      </button>
+    </form>
+  }
+</app-business-workspace>

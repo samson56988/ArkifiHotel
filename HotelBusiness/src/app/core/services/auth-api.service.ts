@@ -40,7 +40,7 @@ export class AuthApiService {
     return this.http.post<LoginApiResponse>(url, request).pipe(
       map((body) => {
         if (body.success && body.data?.accessToken) {
-          this.persistSession(request.rememberMe, body.data);
+          this.persistSession(request.rememberMe === true, body.data);
         }
         return body;
       }),
@@ -62,16 +62,18 @@ export class AuthApiService {
   verifyLoginOtp(request: VerifyLoginOtpRequest): Observable<VerifyLoginOtpResponse> {
     const url = `${this.baseUrl}/api/Auth/verify-login-otp`;
     return this.http.post<VerifyLoginOtpResponse>(url, request).pipe(
-      map((body) => {
-        if (body.success && body.data?.accessToken) {
-          this.persistSession(request.rememberMe, body.data);
-        }
-        return body;
-      }),
       catchError((err: HttpErrorResponse) =>
         throwError(() => this.normalizeHttpError<LoginBusinessData>(err)),
       ),
     );
+  }
+
+  /**
+   * Call after a successful login or verify-login-otp response so the JWT is stored
+   * before any authenticated API calls or router navigation.
+   */
+  saveSessionFromLogin(rememberMe: boolean, data: LoginBusinessData): void {
+    this.persistSession(rememberMe, data);
   }
 
   clearSession(): void {
@@ -92,8 +94,9 @@ export class AuthApiService {
       return;
     }
 
+    const useLocalStorage = rememberMe === true;
     this.clearSession();
-    const store = rememberMe ? localStorage : sessionStorage;
+    const store = useLocalStorage ? localStorage : sessionStorage;
     store.setItem(TOKEN_KEY, data.accessToken);
     store.setItem(TOKEN_EXPIRES_KEY, data.expiresAtUtc);
     store.setItem(ACCOUNT_KEY, JSON.stringify(data.account));

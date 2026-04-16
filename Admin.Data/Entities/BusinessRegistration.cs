@@ -41,4 +41,11 @@ public class BusinessRegistration
 
     /// <summary>Optional storefront slug (e.g. arkifihub.com/your-slug).</summary>
     public string? Slug { get; set; }
+
+    /// <summary>Paystack, Flutterwave, or none.</summary>
+    public PaymentGatewayProvider PaymentProvider { get; set; }
+
+    /// <summary>Data-protection encrypted secret (Paystack or Flutterwave secret key). Never log or expose.</summary>
+    public string? PaymentSecretProtected { get; set; }
 }
+
