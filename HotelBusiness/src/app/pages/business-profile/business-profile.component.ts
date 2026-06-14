@@ -53,6 +53,13 @@ export class BusinessProfileComponent implements OnInit {
 
   readonly storefrontPreview = computed(() => buildStorefrontUrl(this.form.controls.slug.value));
 
+  readonly liveStorefrontUrl = computed(() => {
+    const slug = this.profile()?.slug ?? this.form.controls.slug.value;
+    return slug && isValidBusinessSlug(normalizeBusinessSlug(slug))
+      ? buildStorefrontUrl(slug)
+      : null;
+  });
+
   ngOnInit(): void {
     this.load();
 

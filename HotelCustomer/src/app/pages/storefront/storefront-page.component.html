@@ -6,5 +6,5 @@
     <p>We could not find a storefront for this link.</p>
   </div>
 } @else if (storefront(); as data) {
-  <app-storefront-renderer [storefront]="data" />
+  <app-storefront-renderer [storefront]="data" [interactive]="true" />
 }

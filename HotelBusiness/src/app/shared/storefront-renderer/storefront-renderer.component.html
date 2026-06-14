@@ -14,16 +14,16 @@
     </div>
     <nav class="sf__nav" aria-label="Storefront sections">
       @if (theme.about.enabled) {
-        <span>About</span>
+        <button type="button" class="sf__nav-link" (click)="scrollTo('sf-about')">About</button>
       }
       @if (theme.rooms.enabled) {
-        <span>Rooms</span>
+        <button type="button" class="sf__nav-link" (click)="scrollTo('sf-rooms')">Rooms</button>
       }
       @if (theme.facilities.enabled) {
-        <span>Facilities</span>
+        <button type="button" class="sf__nav-link" (click)="scrollTo('sf-facilities')">Facilities</button>
       }
     </nav>
-    <button type="button" class="sf__cta">Book now</button>
+    <button type="button" class="sf__cta" (click)="scrollTo('sf-rooms')">Book now</button>
   </header>
 
   <section
@@ -54,7 +54,7 @@
   </section>
 
   @if (theme.about.enabled) {
-    <section class="sf-section sf-about sf-about--{{ theme.about.layout }}">
+    <section id="sf-about" class="sf-section sf-about sf-about--{{ theme.about.layout }}">
       @if (theme.about.layout !== 'quote') {
         <div class="sf-section__head">
           <h3 class="sf-section__title" [style.font-family]="aboutTitleFont()">{{ theme.about.title }}</h3>
@@ -70,7 +70,7 @@
   }
 
   @if (theme.rooms.enabled) {
-    <section class="sf-section">
+    <section id="sf-rooms" class="sf-section">
       <div class="sf-section__head">
         <h3 class="sf-section__title" [style.font-family]="roomsTitleFont()">{{ theme.rooms.title }}</h3>
         <p class="sf-section__subtitle">{{ theme.rooms.subtitle }}</p>
@@ -101,7 +101,7 @@
   }
 
   @if (theme.facilities.enabled) {
-    <section class="sf-section">
+    <section id="sf-facilities" class="sf-section">
       <div class="sf-section__head">
         <h3 class="sf-section__title" [style.font-family]="facilitiesTitleFont()">{{ theme.facilities.title }}</h3>
         <p class="sf-section__subtitle">{{ theme.facilities.subtitle }}</p>
@@ -165,7 +165,9 @@
       </div>
       @if (theme.footer.showContact) {
         <div class="sf-footer__links">
-          <span>Book with confidence</span>
+          @if (interactive()) {
+            <a routerLink="/lookup" class="sf-footer__link">Find your booking</a>
+          }
           <span>Secure payments</span>
           <span>24/7 support</span>
         </div>

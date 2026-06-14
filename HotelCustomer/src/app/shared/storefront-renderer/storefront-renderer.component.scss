@@ -73,8 +73,19 @@
   opacity: 0.85;
 }
 
-.sf__nav span {
-  cursor: default;
+.sf__nav-link {
+  border: none;
+  background: none;
+  padding: 0;
+  font: inherit;
+  color: inherit;
+  cursor: pointer;
+}
+
+.sf__nav-link:hover {
+  opacity: 1;
+  text-decoration: underline;
+  text-underline-offset: 3px;
 }
 
 .sf__cta {
@@ -440,6 +451,16 @@
   gap: 0.35rem;
   font-size: 0.82rem;
   opacity: 0.9;
+}
+
+.sf-footer__link {
+  color: inherit;
+  font-weight: 600;
+  text-decoration: none;
+}
+
+.sf-footer__link:hover {
+  text-decoration: underline;
 }
 
 @media (max-width: 720px) {

@@ -14,6 +14,7 @@ public static partial class BusinessSlugHelper
         "bookings",
         "dashboard",
         "login",
+        "lookup",
         "register",
         "www",
     };

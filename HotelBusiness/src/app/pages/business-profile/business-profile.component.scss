@@ -1,5 +1,11 @@
 @import '../payment-configuration/payment-configuration.component.scss';
 
+.page-head__actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+}
+
 .layout {
   display: grid;
   grid-template-columns: minmax(220px, 280px) minmax(0, 1fr);
