@@ -4,6 +4,7 @@ import { ActivatedRoute, Router, RouterLink } from '@angular/router';
 import { finalize } from 'rxjs/operators';
 import { AuthApiService } from '../../core/services/auth-api.service';
 import { ToastService } from '../../core/services/toast.service';
+import { showAuthRequestError, showAuthSuccessMessage } from '../../core/utils/auth-request-error';
 
 @Component({
   selector: 'app-verify-email',
@@ -48,7 +49,12 @@ export class VerifyEmailComponent {
       .subscribe({
         next: (result) => {
           if (result.success) {
-            this.toast.success(result.message ?? 'Your email is verified. You can sign in now.', 'Email verified');
+            showAuthSuccessMessage(
+              this.toast,
+              result,
+              'Your email is verified. You can sign in now.',
+              'Email verified',
+            );
             setTimeout(() => {
               void this.router.navigateByUrl('/login');
             }, 900);
@@ -57,9 +63,7 @@ export class VerifyEmailComponent {
 
           this.toast.showFailedApi(result, 'Verification failed');
         },
-        error: () => {
-          this.toast.error('We could not reach the server. Check your connection and try again.', 'Network error');
-        },
+        error: (err: unknown) => showAuthRequestError(this.toast, err, 'Verification failed'),
       });
   }
 

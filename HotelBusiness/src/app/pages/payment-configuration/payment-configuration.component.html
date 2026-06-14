@@ -4,48 +4,99 @@
       <p class="eyebrow">Payments</p>
       <h1>Payment configuration</h1>
       <p class="lead">
-        Connect <strong>Paystack</strong> or <strong>Flutterwave</strong>. Your secret key is encrypted before it is stored.
+        Connect <strong>Paystack</strong>, <strong>Flutterwave</strong>, or <strong>Monify</strong>.
+        Credentials are stored as encrypted JSON and never shown again after saving.
       </p>
     </div>
     <a routerLink="/dashboard" class="btn btn--ghost">Back to overview</a>
   </header>
 
-  @if (hydrating) {
+  @if (hydrating()) {
     <p class="muted banner-hydrate">Loading current settings…</p>
   }
 
-  @if (loadFailed) {
+  @if (loadFailed()) {
     <p class="muted">We could not load your settings.</p>
     <button type="button" class="btn btn--ghost" (click)="load()">Try again</button>
   }
 
-  <form class="panel" [formGroup]="form" (ngSubmit)="onSubmit()" novalidate>
-      <h2>Gateway</h2>
-      <p class="hint">Choose one provider. Keys are never shown again after saving.</p>
+  @if (!hydrating() && !loadFailed() && hasActiveConfig() && !editing()) {
+    @if (currentConfig(); as config) {
+      <section class="panel panel--summary">
+        <div class="summary-head">
+          <div>
+            <p class="summary-eyebrow">Active gateway</p>
+            <h2>{{ config.provider }}</h2>
+            <p class="hint summary-hint">{{ gatewayHint(config.provider) }}</p>
+          </div>
+          <span class="badge badge--active">Active</span>
+        </div>
+
+        <ul class="credential-list">
+          @for (item of credentialItems(config); track item.label) {
+            <li class="credential-list__item" [class.credential-list__item--saved]="item.saved">
+              <span class="credential-list__label">{{ item.label }}</span>
+              @if (item.saved) {
+                <span class="credential-list__status">Saved securely</span>
+              } @else {
+                <span class="credential-list__status credential-list__status--missing">Not configured</span>
+              }
+            </li>
+          }
+        </ul>
+
+        <p class="hint">Keys are encrypted at rest. We never display them after save.</p>
+
+        <div class="form-actions">
+          <button type="button" class="btn btn--primary" (click)="startEdit()">Edit configuration</button>
+        </div>
+      </section>
+    }
+  }
+
+  @if (!hydrating() && !loadFailed() && (!hasActiveConfig() || editing())) {
+    <form class="panel" [formGroup]="form" (ngSubmit)="onSubmit()" novalidate>
+      <div class="form-intro">
+        <h2>{{ hasActiveConfig() ? 'Edit gateway' : 'Set up gateway' }}</h2>
+        <p class="hint">
+          @if (hasActiveConfig()) {
+            Update credentials for your current provider or switch to another gateway.
+          } @else {
+            Choose one provider. Keys are encrypted before storage.
+          }
+        </p>
+      </div>
 
       <div class="choices">
-        <label class="choice">
-          <input type="radio" formControlName="provider" value="None" />
-          <span>None</span>
-          <small>Do not process payments through ArkifiHub yet</small>
-        </label>
+        @if (hasActiveConfig()) {
+          <label class="choice">
+            <input type="radio" formControlName="provider" value="None" />
+            <span>None</span>
+            <small>Remove online payment gateway</small>
+          </label>
+        }
         <label class="choice">
           <input type="radio" formControlName="provider" value="Paystack" />
           <span>Paystack</span>
-          <small>sk_live_… or sk_test_… secret key</small>
+          <small>Secret key only — sk_live_… or sk_test_…</small>
         </label>
         <label class="choice">
           <input type="radio" formControlName="provider" value="Flutterwave" />
           <span>Flutterwave</span>
-          <small>FLWSECK_… secret key</small>
+          <small>Secret key only — FLWSECK_…</small>
+        </label>
+        <label class="choice">
+          <input type="radio" formControlName="provider" value="Monify" />
+          <span>Monify</span>
+          <small>API key, secret key, and contract code</small>
         </label>
       </div>
 
-      @if (form.controls.provider.value !== 'None') {
+      @if (form.controls.provider.value === 'Paystack' || form.controls.provider.value === 'Flutterwave') {
         <div class="field">
           <label for="secret">Secret key</label>
-          @if (hadSecretOnLoad) {
-            <p class="hint">A secret key is already saved. Enter a new key only if you want to replace it.</p>
+          @if (hadSecretOnLoad()) {
+            <p class="hint">A secret key is already saved. Enter a new key only to replace it.</p>
           }
           <input
             id="secret"
@@ -53,13 +104,64 @@
             type="password"
             formControlName="secretKey"
             autocomplete="off"
-            [attr.placeholder]="hadSecretOnLoad ? 'Leave blank to keep existing key' : 'Paste secret key'"
+            [attr.placeholder]="hadSecretOnLoad() ? 'Leave blank to keep existing key' : 'Paste secret key'"
           />
         </div>
       }
 
-      <button type="submit" class="btn btn--primary" [disabled]="saving">
-        {{ saving ? 'Saving…' : 'Save configuration' }}
-      </button>
+      @if (form.controls.provider.value === 'Monify') {
+        <div class="field">
+          <label for="apiKey">API key</label>
+          @if (hadApiKeyOnLoad()) {
+            <p class="hint">An API key is already saved. Enter a new value only to replace it.</p>
+          }
+          <input
+            id="apiKey"
+            class="input"
+            type="password"
+            formControlName="apiKey"
+            autocomplete="off"
+            [attr.placeholder]="hadApiKeyOnLoad() ? 'Leave blank to keep existing key' : 'Paste Monify API key'"
+          />
+        </div>
+        <div class="field">
+          <label for="monifySecret">Secret key</label>
+          @if (hadSecretOnLoad()) {
+            <p class="hint">A secret key is already saved. Enter a new value only to replace it.</p>
+          }
+          <input
+            id="monifySecret"
+            class="input"
+            type="password"
+            formControlName="secretKey"
+            autocomplete="off"
+            [attr.placeholder]="hadSecretOnLoad() ? 'Leave blank to keep existing key' : 'Paste Monify secret key'"
+          />
+        </div>
+        <div class="field">
+          <label for="contractCode">Contract code</label>
+          @if (hadContractCodeOnLoad()) {
+            <p class="hint">A contract code is already saved. Enter a new value only to replace it.</p>
+          }
+          <input
+            id="contractCode"
+            class="input"
+            type="password"
+            formControlName="contractCode"
+            autocomplete="off"
+            [attr.placeholder]="hadContractCodeOnLoad() ? 'Leave blank to keep existing code' : 'Paste Monify contract code'"
+          />
+        </div>
+      }
+
+      <div class="form-actions">
+        @if (hasActiveConfig()) {
+          <button type="button" class="btn btn--ghost" (click)="cancelEdit()" [disabled]="saving()">Cancel</button>
+        }
+        <button type="submit" class="btn btn--primary" [disabled]="saving()">
+          {{ saving() ? 'Saving…' : hasActiveConfig() ? 'Save changes' : 'Save configuration' }}
+        </button>
+      </div>
     </form>
+  }
 </app-business-workspace>

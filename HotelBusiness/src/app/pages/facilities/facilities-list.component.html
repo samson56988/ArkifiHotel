@@ -16,10 +16,12 @@
     </div>
   </header>
 
-  @if (loadFailed) {
+  @if (loading()) {
+    <p class="muted">Loading facilities…</p>
+  } @else if (loadFailed()) {
     <p class="muted">We could not load your facilities.</p>
     <button type="button" class="btn btn--ghost" (click)="load()">Try again</button>
-  } @else if (initialLoadDone && facilities.length === 0) {
+  } @else if (initialLoadDone() && facilities().length === 0) {
     <p class="muted">
       @if (showArchived) {
         No facilities found.
@@ -27,18 +29,19 @@
         No active facilities yet. Add a shared space, or turn on “Show archived” to see facilities you have archived.
       }
     </p>
-  } @else if (initialLoadDone) {
+  } @else if (initialLoadDone()) {
     <div class="table-wrap">
       <table>
         <thead>
           <tr>
             <th>Facility</th>
+            <th>Location</th>
             <th>Photos</th>
             <th></th>
           </tr>
         </thead>
         <tbody>
-          @for (f of facilities; track f.id) {
+          @for (f of facilities(); track f.id) {
             <tr>
               <td>
                 <div class="cell">
@@ -55,6 +58,7 @@
                   </div>
                 </div>
               </td>
+              <td>{{ f.locationName || '—' }}</td>
               <td>{{ f.imageCount }}</td>
               <td><a class="link" [routerLink]="['/facilities', f.id]">Edit</a></td>
             </tr>

@@ -6,4 +6,5 @@ public enum PaymentGatewayProvider
     None = 0,
     Paystack = 1,
     Flutterwave = 2,
+    Monify = 3,
 }

@@ -11,6 +11,10 @@ public class PropertyFacility
 
     public BusinessRegistration BusinessRegistration { get; set; } = null!;
 
+    public Guid? LocationId { get; set; }
+
+    public BusinessLocation? Location { get; set; }
+
     public string Name { get; set; } = null!;
 
     public string? Description { get; set; }

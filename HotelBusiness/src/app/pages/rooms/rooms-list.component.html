@@ -3,7 +3,7 @@
     <div>
       <p class="eyebrow">Inventory</p>
       <h1>Rooms</h1>
-      <p class="lead">Create rooms, upload photos, and tag amenities guests care about.</p>
+      <p class="lead">Create rooms, upload photos, and assign amenities from your property list.</p>
     </div>
     <div class="page-head__actions">
       <label class="check-inline">
@@ -14,10 +14,12 @@
     </div>
   </header>
 
-  @if (loadFailed) {
+  @if (loading()) {
+    <p class="muted">Loading rooms…</p>
+  } @else if (loadFailed()) {
     <p class="muted">We could not load your rooms.</p>
     <button type="button" class="btn btn--ghost" (click)="load()">Try again</button>
-  } @else if (initialLoadDone && rooms.length === 0) {
+  } @else if (initialLoadDone() && rooms().length === 0) {
     <p class="muted">
       @if (showArchived) {
         No rooms found.
@@ -25,12 +27,14 @@
         No active rooms yet. Add your first room, or turn on “Show archived” to see rooms you have archived.
       }
     </p>
-  } @else if (initialLoadDone) {
+  } @else if (initialLoadDone()) {
     <div class="table-wrap">
       <table>
         <thead>
           <tr>
             <th>Room</th>
+            <th>Location</th>
+            <th>Qty</th>
             <th>Guests</th>
             <th>Price / night</th>
             <th>Amenities</th>
@@ -38,7 +42,7 @@
           </tr>
         </thead>
         <tbody>
-          @for (r of rooms; track r.id) {
+          @for (r of rooms(); track r.id) {
             <tr>
               <td>
                 <div class="room-cell">
@@ -55,6 +59,8 @@
                   </div>
                 </div>
               </td>
+              <td>{{ r.locationName || '—' }}</td>
+              <td>{{ r.quantity ?? 1 }}</td>
               <td>{{ r.maxOccupancy }}</td>
               <td>{{ r.basePricePerNight | number: '1.2-2' }}</td>
               <td>{{ r.amenityCount }}</td>

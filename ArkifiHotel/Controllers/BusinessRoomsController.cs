@@ -18,8 +18,6 @@ public sealed class BusinessRoomsController : ControllerBase
     {
         "image/jpeg",
         "image/png",
-        "image/webp",
-        "image/gif",
     };
 
     private readonly IBusinessRoomService _rooms;
@@ -54,6 +52,9 @@ public sealed class BusinessRoomsController : ControllerBase
                 Name = r.Name,
                 MaxOccupancy = r.MaxOccupancy,
                 BasePricePerNight = r.BasePricePerNight,
+                Quantity = r.Quantity,
+                LocationId = r.LocationId,
+                LocationName = r.LocationName,
                 PrimaryImageUrl = string.IsNullOrWhiteSpace(r.PrimaryImageUrl) ? null : ToAbsoluteUrl(r.PrimaryImageUrl),
                 AmenityCount = r.AmenityCount,
                 IsArchived = r.IsArchived,
@@ -143,7 +144,7 @@ public sealed class BusinessRoomsController : ControllerBase
             return BadRequest(
                 ApiResult<BusinessRoomDetailDto>.Fail(
                     "Validation",
-                    "Could not create room. Check fields and amenity selections."));
+                    "Could not create room. Check fields, select a location, and amenity selections."));
         }
 
         return Created($"/api/business/rooms/{room.Id}", ApiResult<BusinessRoomDetailDto>.Ok(MapRoom(room)));
@@ -176,7 +177,7 @@ public sealed class BusinessRoomsController : ControllerBase
             return BadRequest(
                 ApiResult<BusinessRoomDetailDto>.Fail(
                     "Validation",
-                    "Could not update room. Check fields and amenity selections."));
+                    "Could not update room. Check fields, select a location, and amenity selections."));
         }
 
         return Ok(ApiResult<BusinessRoomDetailDto>.Ok(MapRoom(room)));
@@ -241,7 +242,7 @@ public sealed class BusinessRoomsController : ControllerBase
                 return BadRequest(
                     ApiResult<IReadOnlyList<RoomImageDto>>.Fail(
                         "Validation",
-                        "Only JPEG, PNG, WebP, or GIF images are allowed."));
+                        "Only JPEG or PNG images are allowed."));
             }
 
             var ext = Path.GetExtension(file.FileName);
@@ -251,8 +252,6 @@ public sealed class BusinessRoomsController : ControllerBase
                 {
                     "image/jpeg" => ".jpg",
                     "image/png" => ".png",
-                    "image/webp" => ".webp",
-                    "image/gif" => ".gif",
                     _ => ".bin",
                 };
             }
@@ -321,6 +320,9 @@ public sealed class BusinessRoomsController : ControllerBase
             Description = room.Description,
             MaxOccupancy = room.MaxOccupancy,
             BasePricePerNight = room.BasePricePerNight,
+            Quantity = room.Quantity,
+            LocationId = room.LocationId,
+            LocationName = room.LocationName,
             Images = room.Images.Select(MapImage).ToList(),
             Amenities = room.Amenities,
             IsArchived = room.IsArchived,

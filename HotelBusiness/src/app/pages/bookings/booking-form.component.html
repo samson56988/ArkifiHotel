@@ -4,18 +4,18 @@
       <p class="eyebrow">Reservations</p>
       <h1>New booking</h1>
       <p class="lead">
-        Total is calculated from the room’s nightly rate and length of stay. Guests can look up their reservation with the confirmation code.
+        For walk-in and reception bookings only. Confirm cash or bank transfer payment first, then create the reservation manually.
       </p>
     </div>
     <a routerLink="/bookings" class="btn btn--ghost">Back to bookings</a>
   </header>
 
-  @if (loadingRooms) {
+  @if (loadingRooms()) {
     <p class="muted">Loading rooms…</p>
-  } @else if (roomsFailed) {
+  } @else if (roomsFailed()) {
     <p class="muted">We could not load your rooms.</p>
     <button type="button" class="btn btn--ghost" (click)="loadRooms()">Try again</button>
-  } @else if (rooms.length === 0) {
+  } @else if (allRooms().length === 0) {
     <p class="muted">Add at least one active room before creating a booking.</p>
     <a routerLink="/rooms/new" class="btn btn--primary">Add room</a>
   } @else {
@@ -23,12 +23,21 @@
       <section class="panel panel--wide">
         <h2>Stay</h2>
         <div class="field">
-          <label for="roomId">Room</label>
-          <select id="roomId" class="input" formControlName="roomId">
-            @for (r of rooms; track r.id) {
-              <option [value]="r.id">{{ r.name }} — {{ r.basePricePerNight | number: '1.2-2' }} / night</option>
+          <label for="locationFilter">Location</label>
+          <select id="locationFilter" class="input" formControlName="locationFilterId" (change)="onLocationFilterChange()">
+            <option value="" disabled>Select a location</option>
+            @for (loc of locations(); track loc.id) {
+              <option [value]="loc.id">{{ loc.name }}</option>
             }
           </select>
+          @if (form.controls.locationFilterId.touched && form.controls.locationFilterId.invalid) {
+            <p class="field-error">Select a location for this booking.</p>
+          }
+          @if (loadingLocations()) {
+            <p class="hint">Loading locations…</p>
+          } @else if (locations().length === 0) {
+            <p class="field-error">Add a location under <a routerLink="/locations">Locations</a> before creating a booking.</p>
+          }
         </div>
         <div class="field-row">
           <div class="field">
@@ -40,6 +49,52 @@
             <input id="checkOut" class="input" type="date" formControlName="checkOutDate" />
           </div>
         </div>
+
+        <div class="field">
+          <label for="roomId">Room</label>
+          <select id="roomId" class="input" formControlName="roomId">
+            @for (r of filteredRooms(); track r.id) {
+              <option [value]="r.id" [disabled]="!isRoomSelectable(r.id)">{{ roomOptionLabel(r) }}</option>
+            }
+          </select>
+          @if (filteredRooms().length === 0 && form.controls.locationFilterId.value) {
+            <p class="field-error">No rooms at this location. Add rooms there or choose another location.</p>
+          } @else if (filteredRooms().length === 0) {
+            <p class="hint">Select a location to see available rooms.</p>
+          }
+        </div>
+
+        @if (selectedRoom(); as room) {
+          <p class="hint">
+            Room location:
+            @if (room.locationName) {
+              <strong>{{ room.locationName }}</strong>
+            } @else {
+              not assigned
+            }
+          </p>
+        }
+
+        @if (checkingAvailability()) {
+          <p class="hint">Checking availability…</p>
+        } @else if (selectedRoomAvailability(); as avail) {
+          @if (avail.isAvailable) {
+            <p class="availability availability--ok">
+              @if (avail.totalQuantity > 1) {
+                <strong>{{ avail.availableUnits }} of {{ avail.totalQuantity }}</strong> rooms available for these dates.
+              } @else {
+                This room is available for these dates.
+              }
+              @if (estimatedTotal(); as total) {
+                <span class="availability__total">Total: {{ total | number: '1.2-2' }} NGN</span>
+              }
+            </p>
+          } @else {
+            <p class="availability availability--bad">
+              Not available — all {{ avail.totalQuantity }} room@if (avail.totalQuantity !== 1) {s} of this type are booked for part of this stay. Choose another room or different dates.
+            </p>
+          }
+        }
       </section>
 
       <section class="panel panel--wide">
@@ -59,17 +114,79 @@
               <p class="field-error">Enter a valid email.</p>
             }
           </div>
-          <div class="field">
-            <label for="guestPhone">Phone (optional)</label>
-            <input id="guestPhone" class="input" type="tel" formControlName="guestPhone" autocomplete="tel" />
+          <div class="field field--phone">
+            <label for="guestPhoneLocal">Phone</label>
+            <div class="phone-row">
+              <select
+                id="guestPhoneCountryCode"
+                class="input phone-row__code"
+                formControlName="guestPhoneCountryCode"
+                aria-label="Country code"
+              >
+                @for (c of countryDialCodes; track c.iso2) {
+                  <option [value]="c.dialCode">{{ dialCodeLabel(c) }}</option>
+                }
+              </select>
+              <input
+                id="guestPhoneLocal"
+                class="input phone-row__number"
+                type="tel"
+                formControlName="guestPhoneLocal"
+                autocomplete="tel-national"
+                inputmode="numeric"
+                placeholder="801 234 5678"
+              />
+            </div>
+            <p class="hint">Country code and local number are saved together (e.g. +234 801 234 5678).</p>
+            @if (form.controls.guestPhoneLocal.touched && form.controls.guestPhoneLocal.hasError('required')) {
+              <p class="field-error">Enter the guest’s phone number.</p>
+            } @else if (form.controls.guestPhoneLocal.touched && form.controls.guestPhoneLocal.hasError('phoneInvalid')) {
+              <p class="field-error">Enter 7–15 digits for the phone number.</p>
+            }
           </div>
         </div>
         <div class="field">
           <label for="notes">Internal notes (optional)</label>
           <textarea id="notes" class="input input--area" rows="2" formControlName="internalNotes" placeholder="Only visible in your dashboard"></textarea>
         </div>
-        <button type="submit" class="btn btn--primary" [disabled]="saving">
-          {{ saving ? 'Creating…' : 'Create booking' }}
+      </section>
+
+      <section class="panel panel--wide">
+        <h2>Payment (reception)</h2>
+        @if (estimatedTotal(); as total) {
+          <p class="payment-total">
+            Amount to record: <strong>{{ total | number: '1.2-2' }} NGN</strong>
+            <span class="payment-total__hint">Saved on the booking and as a completed payment when you create it.</span>
+          </p>
+        } @else {
+          <p class="hint">Select valid check-in and check-out dates to see the total.</p>
+        }
+        <div class="field">
+          <label for="paymentMethod">How the guest paid</label>
+          <select id="paymentMethod" class="input" formControlName="paymentMethod">
+            @for (opt of paymentMethodOptions; track opt.value) {
+              <option [value]="opt.value">{{ opt.label }}</option>
+            }
+          </select>
+          @for (opt of paymentMethodOptions; track opt.value) {
+            @if (form.controls.paymentMethod.value === opt.value) {
+              <p class="hint">{{ opt.hint }}</p>
+            }
+          }
+        </div>
+        <label class="check-inline payment-confirm">
+          <input type="checkbox" formControlName="paymentConfirmed" />
+          <span>I confirm payment has been received at reception</span>
+        </label>
+        @if (form.controls.paymentConfirmed.touched && form.controls.paymentConfirmed.invalid) {
+          <p class="field-error">Confirm payment before creating the booking.</p>
+        }
+        <button
+          type="submit"
+          class="btn btn--primary"
+          [disabled]="saving() || checkingAvailability() || !form.controls.locationFilterId.value || filteredRooms().length === 0 || !(selectedRoomAvailability()?.isAvailable ?? false) || !form.controls.paymentConfirmed.value"
+        >
+          {{ saving() ? 'Creating…' : 'Create booking' }}
         </button>
       </section>
     </form>

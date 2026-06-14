@@ -1,74 +1,128 @@
-import { Component, inject, OnInit } from '@angular/core';
-import { FormBuilder, FormsModule, ReactiveFormsModule, Validators } from '@angular/forms';
+import { Component, DestroyRef, inject, OnInit, signal } from '@angular/core';
+import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
+import { FormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
 import { ActivatedRoute, Router, RouterLink } from '@angular/router';
 import { forkJoin, of } from 'rxjs';
 import { catchError, finalize, timeout } from 'rxjs/operators';
+import type { AmenitiesApiResponse } from '../../core/models/amenities.models';
+import type { AmenityDto } from '../../core/models/amenities.models';
+import type { BusinessLocationDto } from '../../core/models/locations.models';
 import type {
-  AmenitiesApiResponse,
-  AmenityDto,
   BusinessRoomDetailDto,
   RoomDetailApiResponse,
   RoomImageDto,
 } from '../../core/models/rooms.models';
+import { BusinessAmenitiesApiService } from '../../core/services/business-amenities-api.service';
+import { BusinessLocationsApiService } from '../../core/services/business-locations-api.service';
 import { BusinessRoomsApiService } from '../../core/services/business-rooms-api.service';
 import { ToastService } from '../../core/services/toast.service';
+import { ALLOWED_IMAGE_ACCEPT, filterAllowedImageFiles } from '../../core/utils/image-upload';
 import { BusinessWorkspaceComponent } from '../../layouts/business-workspace/business-workspace.component';
 
 @Component({
   selector: 'app-room-form',
   standalone: true,
-  imports: [ReactiveFormsModule, FormsModule, RouterLink, BusinessWorkspaceComponent],
+  imports: [ReactiveFormsModule, RouterLink, BusinessWorkspaceComponent],
   templateUrl: './room-form.component.html',
   styleUrl: './room-form.component.scss',
 })
 export class RoomFormComponent implements OnInit {
   private readonly fb = inject(FormBuilder);
   private readonly api = inject(BusinessRoomsApiService);
+  private readonly amenitiesApi = inject(BusinessAmenitiesApiService);
+  private readonly locationsApi = inject(BusinessLocationsApiService);
   private readonly route = inject(ActivatedRoute);
   private readonly router = inject(Router);
   private readonly toast = inject(ToastService);
+  private readonly destroyRef = inject(DestroyRef);
 
   readonly form = this.fb.nonNullable.group({
     name: ['', [Validators.required, Validators.minLength(2), Validators.maxLength(200)]],
     description: [''],
     maxOccupancy: [2, [Validators.required, Validators.min(1), Validators.max(50)]],
+    quantity: [1, [Validators.required, Validators.min(1), Validators.max(500)]],
     basePricePerNight: [0, [Validators.required, Validators.min(0)]],
+    locationId: ['', Validators.required],
   });
 
-  amenities: AmenityDto[] = [];
-  readonly selectedAmenityIds = new Set<string>();
-  customName = '';
-  customCategory = '';
+  readonly amenities = signal<AmenityDto[]>([]);
+  readonly locations = signal<BusinessLocationDto[]>([]);
+  readonly selectedAmenityIds = signal<string[]>([]);
 
-  roomId: string | null = null;
-  images: RoomImageDto[] = [];
-  /** Full-page spinner only while loading an existing room for edit. */
-  initialLoading = false;
-  /** Amenity catalog fetch (create: does not block the rest of the form). */
-  amenitiesLoading = false;
-  saving = false;
+  readonly roomId = signal<string | null>(null);
+  readonly images = signal<RoomImageDto[]>([]);
+  readonly initialLoading = signal(false);
+  readonly amenitiesLoading = signal(false);
+  readonly locationsLoading = signal(false);
+  readonly saving = signal(false);
+  readonly isArchived = signal(false);
 
   /** Queued on “Add room”; uploaded right after the room is created. */
-  pendingPhotoFiles: File[] = [];
+  readonly pendingPhotoFiles = signal<File[]>([]);
 
-  /** Edit mode: soft-archived rooms are omitted from the default list until restored. */
-  isArchived = false;
+  readonly imageAccept = ALLOWED_IMAGE_ACCEPT;
 
   get isCreateMode(): boolean {
-    return this.roomId === null;
+    return this.roomId() === null;
   }
 
   ngOnInit(): void {
-    const paramId = this.route.snapshot.paramMap.get('roomId');
-    this.roomId = paramId ?? null;
+    this.route.paramMap.pipe(takeUntilDestroyed(this.destroyRef)).subscribe((params) => {
+      this.initFromRoute(params.get('roomId'));
+    });
+  }
 
-    if (!this.roomId) {
+  private initFromRoute(paramId: string | null): void {
+    this.resetFormState();
+    this.roomId.set(paramId);
+
+    if (!paramId) {
       this.loadAmenitiesForCreate();
+      this.loadLocations();
       return;
     }
 
-    this.initialLoading = true;
-    const room$ = this.api.getRoom(this.roomId).pipe(
+    this.loadRoomForEdit(paramId);
+  }
+
+  private resetFormState(): void {
+    this.form.reset({
+      name: '',
+      description: '',
+      maxOccupancy: 2,
+      quantity: 1,
+      basePricePerNight: 0,
+      locationId: '',
+    });
+    this.amenities.set([]);
+    this.selectedAmenityIds.set([]);
+    this.images.set([]);
+    this.pendingPhotoFiles.set([]);
+    this.isArchived.set(false);
+    this.initialLoading.set(false);
+    this.amenitiesLoading.set(false);
+    this.locationsLoading.set(false);
+    this.saving.set(false);
+  }
+
+  private loadLocations(): void {
+    this.locationsLoading.set(true);
+    this.locationsApi
+      .listLocations()
+      .pipe(
+        timeout(25_000),
+        finalize(() => this.locationsLoading.set(false)),
+      )
+      .subscribe((res) => {
+        if (res.success && res.data) {
+          this.locations.set(res.data);
+        }
+      });
+  }
+
+  private loadRoomForEdit(paramId: string): void {
+    this.initialLoading.set(true);
+    const room$ = this.api.getRoom(paramId).pipe(
       timeout(25_000),
       catchError(() =>
         of<RoomDetailApiResponse>({
@@ -81,7 +135,7 @@ export class RoomFormComponent implements OnInit {
       ),
     );
 
-    const amenities$ = this.api.listAmenities().pipe(
+    const amenities$ = this.amenitiesApi.listAmenities().pipe(
       timeout(25_000),
       catchError(() =>
         of<AmenitiesApiResponse>({
@@ -94,17 +148,34 @@ export class RoomFormComponent implements OnInit {
       ),
     );
 
-    forkJoin({ amenities: amenities$, room: room$ })
-      .pipe(finalize(() => (this.initialLoading = false)))
-      .subscribe(({ amenities, room }) => {
+    const locations$ = this.locationsApi.listLocations().pipe(
+      timeout(25_000),
+      catchError(() =>
+        of({
+          success: false,
+          data: null,
+          message: 'Could not load locations.',
+          code: 'NetworkOrTimeout',
+          validationErrors: null,
+        }),
+      ),
+    );
+
+    forkJoin({ amenities: amenities$, room: room$, locations: locations$ })
+      .pipe(finalize(() => this.initialLoading.set(false)))
+      .subscribe(({ amenities, room, locations }) => {
         if (amenities.success && amenities.data) {
-          this.amenities = amenities.data;
+          this.amenities.set(amenities.data);
         } else {
           this.toast.warning(
             amenities.message ??
               'Could not load the amenity list. You can still edit the room and try again later.',
             'Amenities',
           );
+        }
+
+        if (locations.success && locations.data) {
+          this.locations.set(locations.data);
         }
 
         if (!room.success || !room.data) {
@@ -117,8 +188,8 @@ export class RoomFormComponent implements OnInit {
   }
 
   private loadAmenitiesForCreate(): void {
-    this.amenitiesLoading = true;
-    this.api
+    this.amenitiesLoading.set(true);
+    this.amenitiesApi
       .listAmenities()
       .pipe(
         timeout(25_000),
@@ -127,31 +198,30 @@ export class RoomFormComponent implements OnInit {
             success: false,
             data: null,
             message:
-              'Could not reach the API to load amenities. Start the ArkifiHub API (e.g. https://localhost:7058), ensure CORS is enabled, and sign in again.',
+              'Could not reach the API to load amenities. Add amenities under Room amenities in the sidebar, then try again.',
             code: 'NetworkOrTimeout',
             validationErrors: null,
           }),
         ),
-        finalize(() => (this.amenitiesLoading = false)),
+        finalize(() => this.amenitiesLoading.set(false)),
       )
       .subscribe((res) => {
         if (res.success && res.data) {
-          this.amenities = res.data;
+          this.amenities.set(res.data);
           return;
         }
 
         this.toast.warning(
           res.message ??
-            'Amenities could not be loaded. You can still create the room and add custom amenities after the API is available.',
+            'Amenities could not be loaded. You can still save the room and assign amenities after they are set up.',
           'Amenities',
         );
       });
   }
 
-  groupedCatalog(): { category: string; items: AmenityDto[] }[] {
-    const catalog = this.amenities.filter((a) => !a.isCustom);
+  groupedAmenities(): { category: string; items: AmenityDto[] }[] {
     const map = new Map<string, AmenityDto[]>();
-    for (const a of catalog) {
+    for (const a of this.amenities()) {
       const key = a.category?.trim() || 'General';
       if (!map.has(key)) {
         map.set(key, []);
@@ -168,44 +238,17 @@ export class RoomFormComponent implements OnInit {
       }));
   }
 
-  customAmenities(): AmenityDto[] {
-    return this.amenities.filter((a) => a.isCustom).sort((a, b) => a.name.localeCompare(b.name));
-  }
-
   toggleAmenity(id: string): void {
-    if (this.selectedAmenityIds.has(id)) {
-      this.selectedAmenityIds.delete(id);
+    const current = this.selectedAmenityIds();
+    if (current.includes(id)) {
+      this.selectedAmenityIds.set(current.filter((x) => x !== id));
     } else {
-      this.selectedAmenityIds.add(id);
+      this.selectedAmenityIds.set([...current, id]);
     }
   }
 
   isSelected(id: string): boolean {
-    return this.selectedAmenityIds.has(id);
-  }
-
-  addCustomAmenity(): void {
-    const name = this.customName.trim();
-    if (name.length < 2) {
-      return;
-    }
-
-    this.saving = true;
-    this.api
-      .createCustomAmenity({ name, category: this.customCategory.trim() || null })
-      .pipe(finalize(() => (this.saving = false)))
-      .subscribe((res) => {
-        if (!res.success || !res.data) {
-          this.toast.showFailedApi(res, 'Amenity');
-          return;
-        }
-
-        this.toast.success(`${res.data.name} was added to your list.`, 'Custom amenity');
-        this.amenities = [...this.amenities, res.data];
-        this.selectedAmenityIds.add(res.data.id);
-        this.customName = '';
-        this.customCategory = '';
-      });
+    return this.selectedAmenityIds().includes(id);
   }
 
   onSubmit(): void {
@@ -219,35 +262,37 @@ export class RoomFormComponent implements OnInit {
       name: raw.name.trim(),
       description: raw.description.trim() || null,
       maxOccupancy: raw.maxOccupancy,
+      quantity: raw.quantity,
       basePricePerNight: raw.basePricePerNight,
-      amenityIds: [...this.selectedAmenityIds],
+      locationId: raw.locationId.trim(),
+      amenityIds: [...this.selectedAmenityIds()],
     };
 
-    this.saving = true;
+    this.saving.set(true);
     const req$ = this.isCreateMode
       ? this.api.createRoom(body)
-      : this.api.updateRoom(this.roomId!, body);
+      : this.api.updateRoom(this.roomId()!, body);
 
     req$.subscribe({
       next: (res) => {
         if (!res.success || !res.data) {
-          this.saving = false;
+          this.saving.set(false);
           this.toast.showFailedApi(res, 'Room');
           return;
         }
 
         if (!this.isCreateMode) {
-          this.saving = false;
+          this.saving.set(false);
           this.patchFromRoom(res.data);
           this.toast.success('Room details saved.', 'Saved');
           return;
         }
 
         const newId = res.data.id;
-        const files = [...this.pendingPhotoFiles];
+        const files = [...this.pendingPhotoFiles()];
         if (files.length === 0) {
-          this.pendingPhotoFiles = [];
-          this.saving = false;
+          this.pendingPhotoFiles.set([]);
+          this.saving.set(false);
           this.toast.success('Room created.', 'Done');
           void this.router.navigate(['/rooms', newId], { replaceUrl: true });
           return;
@@ -257,8 +302,8 @@ export class RoomFormComponent implements OnInit {
           .uploadRoomImages(newId, files)
           .pipe(
             finalize(() => {
-              this.saving = false;
-              this.pendingPhotoFiles = [];
+              this.saving.set(false);
+              this.pendingPhotoFiles.set([]);
             }),
           )
           .subscribe({
@@ -285,7 +330,7 @@ export class RoomFormComponent implements OnInit {
           });
       },
       error: () => {
-        this.saving = false;
+        this.saving.set(false);
         this.toast.error('Could not reach the API to save the room.', 'Network');
       },
     });
@@ -299,21 +344,10 @@ export class RoomFormComponent implements OnInit {
       return;
     }
 
-    const maxEach = 8 * 1024 * 1024;
-    const allowed = /^image\/(jpeg|png|webp|gif)$/i;
-    const skipped: string[] = [];
-    for (const f of picked) {
-      if (f.size > maxEach) {
-        skipped.push(`${f.name} (over 8MB)`);
-        continue;
-      }
+    const { accepted, skipped } = filterAllowedImageFiles(picked);
 
-      if (!allowed.test(f.type)) {
-        skipped.push(`${f.name} (not JPEG/PNG/WebP/GIF)`);
-        continue;
-      }
-
-      this.pendingPhotoFiles = [...this.pendingPhotoFiles, f];
+    if (accepted.length) {
+      this.pendingPhotoFiles.update((current) => [...current, ...accepted]);
     }
 
     if (skipped.length) {
@@ -322,52 +356,63 @@ export class RoomFormComponent implements OnInit {
   }
 
   removePendingPhoto(index: number): void {
-    this.pendingPhotoFiles = this.pendingPhotoFiles.filter((_, i) => i !== index);
+    this.pendingPhotoFiles.update((files) => files.filter((_, i) => i !== index));
   }
 
   onFilesSelected(event: Event): void {
-    if (!this.roomId) {
+    const id = this.roomId();
+    if (!id) {
       return;
     }
 
     const input = event.target as HTMLInputElement;
-    const files = input.files ? Array.from(input.files) : [];
+    const picked = input.files ? Array.from(input.files) : [];
     input.value = '';
-    if (files.length === 0) {
+    if (picked.length === 0) {
       return;
     }
 
-    this.saving = true;
+    const { accepted, skipped } = filterAllowedImageFiles(picked);
+    if (skipped.length) {
+      this.toast.warning(`Skipped: ${skipped.join('; ')}.`, 'Photos');
+    }
+
+    if (accepted.length === 0) {
+      return;
+    }
+
+    this.saving.set(true);
     this.api
-      .uploadRoomImages(this.roomId, files)
-      .pipe(finalize(() => (this.saving = false)))
+      .uploadRoomImages(id, accepted)
+      .pipe(finalize(() => this.saving.set(false)))
       .subscribe((res) => {
         if (!res.success || !res.data?.length) {
           this.toast.showFailedApi(res, 'Upload failed');
           return;
         }
 
-        this.images = [...this.images, ...res.data];
+        this.images.update((current) => [...current, ...res.data!]);
         this.toast.success('Photos uploaded.', 'Room photos');
       });
   }
 
   removeImage(image: RoomImageDto): void {
-    if (!this.roomId) {
+    const id = this.roomId();
+    if (!id) {
       return;
     }
 
-    this.saving = true;
+    this.saving.set(true);
     this.api
-      .deleteRoomImage(this.roomId, image.id)
-      .pipe(finalize(() => (this.saving = false)))
+      .deleteRoomImage(id, image.id)
+      .pipe(finalize(() => this.saving.set(false)))
       .subscribe((res) => {
         if (!res.success) {
           this.toast.showFailedApi(res, 'Photo');
           return;
         }
 
-        this.images = this.images.filter((i) => i.id !== image.id);
+        this.images.update((current) => current.filter((i) => i.id !== image.id));
         this.toast.info('Photo removed.', 'Room photos');
       });
   }
@@ -377,7 +422,8 @@ export class RoomFormComponent implements OnInit {
   }
 
   archiveRoom(): void {
-    if (!this.roomId || this.isCreateMode) {
+    const id = this.roomId();
+    if (!id || this.isCreateMode) {
       return;
     }
 
@@ -385,10 +431,10 @@ export class RoomFormComponent implements OnInit {
       return;
     }
 
-    this.saving = true;
+    this.saving.set(true);
     this.api
-      .archiveRoom(this.roomId)
-      .pipe(finalize(() => (this.saving = false)))
+      .archiveRoom(id)
+      .pipe(finalize(() => this.saving.set(false)))
       .subscribe({
         next: (res) => {
           if (!res.success || !res.data) {
@@ -406,14 +452,15 @@ export class RoomFormComponent implements OnInit {
   }
 
   restoreRoom(): void {
-    if (!this.roomId || this.isCreateMode) {
+    const id = this.roomId();
+    if (!id || this.isCreateMode) {
       return;
     }
 
-    this.saving = true;
+    this.saving.set(true);
     this.api
-      .restoreRoom(this.roomId)
-      .pipe(finalize(() => (this.saving = false)))
+      .restoreRoom(id)
+      .pipe(finalize(() => this.saving.set(false)))
       .subscribe({
         next: (res) => {
           if (!res.success || !res.data) {
@@ -431,7 +478,8 @@ export class RoomFormComponent implements OnInit {
   }
 
   deleteRoom(): void {
-    if (!this.roomId || this.isCreateMode) {
+    const id = this.roomId();
+    if (!id || this.isCreateMode) {
       return;
     }
 
@@ -443,10 +491,10 @@ export class RoomFormComponent implements OnInit {
       return;
     }
 
-    this.saving = true;
+    this.saving.set(true);
     this.api
-      .deleteRoom(this.roomId)
-      .pipe(finalize(() => (this.saving = false)))
+      .deleteRoom(id)
+      .pipe(finalize(() => this.saving.set(false)))
       .subscribe({
         next: (res) => {
           if (!res.success) {
@@ -464,18 +512,36 @@ export class RoomFormComponent implements OnInit {
   }
 
   private patchFromRoom(room: BusinessRoomDetailDto): void {
-    this.roomId = room.id;
-    this.isArchived = room.isArchived ?? false;
+    this.roomId.set(room.id);
+    this.isArchived.set(room.isArchived ?? false);
     this.form.patchValue({
       name: room.name,
       description: room.description ?? '',
       maxOccupancy: room.maxOccupancy,
+      quantity: room.quantity ?? 1,
       basePricePerNight: room.basePricePerNight,
+      locationId: room.locationId ?? '',
     });
-    this.images = [...room.images].sort((a, b) => a.sortOrder - b.sortOrder);
-    this.selectedAmenityIds.clear();
+    this.images.set([...room.images].sort((a, b) => a.sortOrder - b.sortOrder));
+
+    const allowed = new Set(this.amenities().map((a) => a.id));
+    const selected: string[] = [];
+    const orphaned: string[] = [];
     for (const a of room.amenities) {
-      this.selectedAmenityIds.add(a.id);
+      if (allowed.has(a.id)) {
+        selected.push(a.id);
+      } else {
+        orphaned.push(a.name);
+      }
+    }
+
+    this.selectedAmenityIds.set(selected);
+
+    if (orphaned.length > 0) {
+      this.toast.warning(
+        `Some amenities on this room are not on your list anymore (${orphaned.join(', ')}). Re-select from your amenities and save.`,
+        'Amenities',
+      );
     }
   }
 }

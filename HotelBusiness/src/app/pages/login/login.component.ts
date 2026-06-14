@@ -4,6 +4,8 @@ import { Router, RouterLink } from '@angular/router';
 import { finalize } from 'rxjs/operators';
 import { AuthApiService } from '../../core/services/auth-api.service';
 import { ToastService } from '../../core/services/toast.service';
+import { showAuthRequestError } from '../../core/utils/auth-request-error';
+import { getApiResultMessage } from '../../core/utils/http-api-result';
 
 @Component({
   selector: 'app-login',
@@ -67,9 +69,22 @@ export class LoginComponent {
 
           this.toast.showFailedApi(result, 'Sign in failed');
         },
-        error: () => {
-          this.toast.error('We could not reach the server. Check your connection and try again.', 'Network error');
-        },
+        error: (err: unknown) =>
+          showAuthRequestError(
+            this.toast,
+            err,
+            'Sign in failed',
+            {
+              EmailNotVerified: (res, email) => {
+                this.toast.warning(
+                  getApiResultMessage(res, 'Verify your email before signing in.'),
+                  'Email not verified',
+                );
+                void this.router.navigateByUrl(`/verify-email?email=${encodeURIComponent(email)}`);
+              },
+            },
+            { email: this.form.controls.email.value.trim() },
+          ),
       });
   }
 

@@ -1,0 +1,76 @@
+<app-business-workspace>
+  <header class="page-head">
+    <div>
+      <p class="eyebrow">Property</p>
+      <h1>Locations</h1>
+      <p class="lead">
+        Add sites or branches for your business. When you create rooms and facilities, you can assign them to one of these locations.
+      </p>
+    </div>
+    <a routerLink="/rooms/new" class="btn btn--ghost">Add room</a>
+  </header>
+
+  <div class="layout">
+    <section class="panel">
+      <h2>{{ isEditing ? 'Edit location' : 'Add location' }}</h2>
+      <form [formGroup]="form" (ngSubmit)="onSubmit()" novalidate>
+        <div class="field">
+          <label for="name">Name</label>
+          <input id="name" class="input" type="text" formControlName="name" placeholder="e.g. Lagos Main" />
+          @if (form.controls.name.touched && form.controls.name.invalid) {
+            <p class="field-error">Enter a name (2–200 characters).</p>
+          }
+        </div>
+        <div class="field">
+          <label for="address">Address (optional)</label>
+          <textarea id="address" class="input input--area" rows="2" formControlName="address" placeholder="Street, city, state"></textarea>
+        </div>
+        <div class="form-actions">
+          <button type="submit" class="btn btn--primary" [disabled]="saving()">
+            {{ saving() ? 'Saving…' : isEditing ? 'Save changes' : 'Add location' }}
+          </button>
+          @if (isEditing) {
+            <button type="button" class="btn btn--ghost" (click)="cancelEdit()" [disabled]="saving()">Cancel</button>
+          }
+        </div>
+      </form>
+    </section>
+
+    <section class="panel panel--table">
+      <h2>Your locations</h2>
+
+      @if (loading()) {
+        <p class="muted">Loading locations…</p>
+      } @else if (loadFailed()) {
+        <p class="muted">We could not load your locations.</p>
+        <button type="button" class="btn btn--ghost" (click)="load()">Try again</button>
+      } @else if (initialLoadDone() && locations().length === 0) {
+        <p class="muted">No locations yet. Add your first site, then assign it when you create or edit rooms and facilities.</p>
+      } @else if (initialLoadDone()) {
+        <div class="table-wrap">
+          <table>
+            <thead>
+              <tr>
+                <th>Name</th>
+                <th>Address</th>
+                <th></th>
+              </tr>
+            </thead>
+            <tbody>
+              @for (l of locations(); track l.id) {
+                <tr [class.row--editing]="editingId() === l.id">
+                  <td>{{ l.name }}</td>
+                  <td>{{ l.address || '—' }}</td>
+                  <td class="actions">
+                    <button type="button" class="link" (click)="startEdit(l)" [disabled]="saving()">Edit</button>
+                    <button type="button" class="link danger" (click)="deleteLocation(l)" [disabled]="saving()">Delete</button>
+                  </td>
+                </tr>
+              }
+            </tbody>
+          </table>
+        </div>
+      }
+    </section>
+  </div>
+</app-business-workspace>

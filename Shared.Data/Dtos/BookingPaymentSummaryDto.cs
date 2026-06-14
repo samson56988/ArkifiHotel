@@ -18,6 +18,8 @@ public sealed class BookingPaymentSummaryDto
 
     public string Status { get; set; } = string.Empty;
 
+    public string Method { get; set; } = string.Empty;
+
     public string Gateway { get; set; } = string.Empty;
 
     public string? ExternalReference { get; set; }

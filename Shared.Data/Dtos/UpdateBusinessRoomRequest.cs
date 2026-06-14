@@ -10,5 +10,9 @@ public sealed class UpdateBusinessRoomRequest
 
     public decimal BasePricePerNight { get; set; }
 
+    public int Quantity { get; set; }
+
+    public Guid? LocationId { get; set; }
+
     public IReadOnlyList<Guid>? AmenityIds { get; set; }
 }

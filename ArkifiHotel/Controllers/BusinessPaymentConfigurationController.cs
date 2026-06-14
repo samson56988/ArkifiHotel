@@ -63,7 +63,7 @@ public sealed class BusinessPaymentConfigurationController : ControllerBase
             return BadRequest(
                 ApiResult<PaymentConfigurationDto>.Fail(
                     "Validation",
-                    "Invalid provider or secret. Use None, Paystack, or Flutterwave. When enabling or switching provider, provide a secret key (8–512 characters). Leave secret empty only to keep the existing key when the provider is unchanged."));
+                    "Invalid provider or credentials. Use None, Paystack, Flutterwave, or Monify. Paystack and Flutterwave need a secret key. Monify needs API key, secret key, and contract code. Leave fields empty only to keep existing values when the provider is unchanged."));
         }
 
         return Ok(ApiResult<PaymentConfigurationDto>.Ok(data!));

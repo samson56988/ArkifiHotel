@@ -10,5 +10,9 @@ public sealed class PropertyFacilitySummaryDto
 
     public int ImageCount { get; set; }
 
+    public Guid? LocationId { get; set; }
+
+    public string? LocationName { get; set; }
+
     public bool IsArchived { get; set; }
 }

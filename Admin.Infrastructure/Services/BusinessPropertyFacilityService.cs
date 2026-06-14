@@ -26,6 +26,7 @@ public sealed class BusinessPropertyFacilityService : IBusinessPropertyFacilityS
         var query = _db.PropertyFacilities
             .AsNoTracking()
             .Include(f => f.Images)
+            .Include(f => f.Location)
             .Where(f => f.BusinessRegistrationId == businessId);
 
         if (!includeArchived)
@@ -48,6 +49,8 @@ public sealed class BusinessPropertyFacilityService : IBusinessPropertyFacilityS
                     .Select(i => "/" + i.RelativePath.Replace("\\", "/", StringComparison.Ordinal))
                     .FirstOrDefault(),
                 ImageCount = f.Images.Count,
+                LocationId = f.LocationId,
+                LocationName = f.Location?.Name,
                 IsArchived = f.IsArchived,
             })
             .ToList();
@@ -61,6 +64,7 @@ public sealed class BusinessPropertyFacilityService : IBusinessPropertyFacilityS
         var f = await _db.PropertyFacilities
             .AsNoTracking()
             .Include(x => x.Images)
+            .Include(x => x.Location)
             .FirstOrDefaultAsync(
                 x => x.Id == facilityId && x.BusinessRegistrationId == businessId,
                 cancellationToken)
@@ -84,11 +88,17 @@ public sealed class BusinessPropertyFacilityService : IBusinessPropertyFacilityS
             return null;
         }
 
+        if (!await LocationAllowedForBusinessAsync(businessId, request.LocationId, cancellationToken).ConfigureAwait(false))
+        {
+            return null;
+        }
+
         var now = DateTimeOffset.UtcNow;
         var entity = new PropertyFacility
         {
             Id = Guid.NewGuid(),
             BusinessRegistrationId = businessId,
+            LocationId = request.LocationId,
             Name = name,
             Description = string.IsNullOrWhiteSpace(request.Description) ? null : request.Description.Trim(),
             CreatedAt = now,
@@ -120,8 +130,14 @@ public sealed class BusinessPropertyFacilityService : IBusinessPropertyFacilityS
             return null;
         }
 
+        if (!await LocationAllowedForBusinessAsync(businessId, request.LocationId, cancellationToken).ConfigureAwait(false))
+        {
+            return null;
+        }
+
         entity.Name = name;
         entity.Description = string.IsNullOrWhiteSpace(request.Description) ? null : request.Description.Trim();
+        entity.LocationId = request.LocationId;
         entity.UpdatedAt = DateTimeOffset.UtcNow;
 
         await _db.SaveChangesAsync(cancellationToken).ConfigureAwait(false);
@@ -248,6 +264,22 @@ public sealed class BusinessPropertyFacilityService : IBusinessPropertyFacilityS
             .AnyAsync(b => b.Id == businessId, cancellationToken)
             .ConfigureAwait(false);
 
+    private async Task<bool> LocationAllowedForBusinessAsync(
+        Guid businessId,
+        Guid? locationId,
+        CancellationToken cancellationToken)
+    {
+        if (!locationId.HasValue || locationId.Value == Guid.Empty)
+        {
+            return false;
+        }
+
+        return await _db.BusinessLocations
+            .AsNoTracking()
+            .AnyAsync(l => l.Id == locationId.Value && l.BusinessRegistrationId == businessId, cancellationToken)
+            .ConfigureAwait(false);
+    }
+
     private static PropertyFacilityDetailDto MapDetail(PropertyFacility f)
     {
         var images = f.Images
@@ -260,6 +292,8 @@ public sealed class BusinessPropertyFacilityService : IBusinessPropertyFacilityS
             Id = f.Id,
             Name = f.Name,
             Description = f.Description,
+            LocationId = f.LocationId,
+            LocationName = f.Location?.Name,
             Images = images,
             IsArchived = f.IsArchived,
         };

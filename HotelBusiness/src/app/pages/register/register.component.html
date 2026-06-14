@@ -35,6 +35,33 @@
           }
         </div>
 
+        <div class="auth-field">
+          <label class="auth-label" for="reg-slug">Hotel slug</label>
+          <input
+            id="reg-slug"
+            class="auth-input"
+            type="text"
+            formControlName="slug"
+            autocomplete="off"
+            spellcheck="false"
+            placeholder="e.g. marina-suites"
+          />
+          <p class="auth-hint">
+            Guest booking link:
+            <strong>{{ storefrontPreview() }}</strong>
+          </p>
+          @if (slugChecking) {
+            <p class="auth-hint">Checking slug…</p>
+          } @else if (slugAvailable === true && form.controls.slug.value.length >= 3) {
+            <p class="auth-hint auth-hint--ok">This slug is available.</p>
+          } @else if (slugAvailable === false) {
+            <p class="auth-error">This slug is already taken.</p>
+          }
+          @if (showError('slug')) {
+            <p class="auth-error">Enter a hotel slug (at least 3 characters).</p>
+          }
+        </div>
+
         <div class="auth-field-grid">
           <div class="auth-field">
             <label class="auth-label" for="reg-first-name">First name</label>
@@ -144,7 +171,7 @@
           <p class="auth-error auth-error--terms">Please accept the terms to continue.</p>
         }
 
-        <button type="submit" class="auth-submit" [disabled]="loading">
+        <button type="submit" class="auth-submit" [disabled]="loading || slugAvailable === false">
           {{ loading ? 'Creating account...' : 'Create account' }}
         </button>
       </form>

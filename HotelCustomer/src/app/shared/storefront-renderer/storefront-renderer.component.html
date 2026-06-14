@@ -1,0 +1,175 @@
+@let data = storefront();
+@let theme = data.theme;
+@let banner = theme.banner;
+
+<div class="sf" [class.sf--compact]="compact()" [style]="cssVars()">
+  <header class="sf__header">
+    <div class="sf__brand">
+      @if (data.logoUrl) {
+        <img class="sf__logo" [src]="data.logoUrl" [alt]="data.businessName + ' logo'" />
+      } @else {
+        <span class="sf__logo-fallback">{{ data.businessName.charAt(0) }}</span>
+      }
+      <h1 class="sf__name">{{ data.businessName }}</h1>
+    </div>
+    <nav class="sf__nav" aria-label="Storefront sections">
+      @if (theme.about.enabled) {
+        <span>About</span>
+      }
+      @if (theme.rooms.enabled) {
+        <span>Rooms</span>
+      }
+      @if (theme.facilities.enabled) {
+        <span>Facilities</span>
+      }
+    </nav>
+    <button type="button" class="sf__cta">Book now</button>
+  </header>
+
+  <section
+    class="sf-banner sf-banner--{{ banner.style }}"
+    [class.sf-banner--grand-hero]="banner.style === 'grand-hero'"
+  >
+    @if (banner.style === 'split-showcase') {
+      <div
+        class="sf-banner__copy sf-banner__copy--{{ banner.textAlign }}"
+        [style.font-family]="bannerSubFont()"
+      >
+        <h2 class="sf-banner__headline" [style.font-family]="bannerHeadlineFont()">{{ banner.headline }}</h2>
+        <p class="sf-banner__sub">{{ banner.subheadline }}</p>
+      </div>
+      <div class="sf-banner__visual" aria-hidden="true"></div>
+    } @else {
+      @if (banner.style === 'grand-hero') {
+        <div class="sf-banner__overlay" [style.opacity]="banner.overlayOpacity / 100"></div>
+      }
+      <div
+        class="sf-banner__copy sf-banner__copy--{{ banner.textAlign }}"
+        [style.font-family]="bannerSubFont()"
+      >
+        <h2 class="sf-banner__headline" [style.font-family]="bannerHeadlineFont()">{{ banner.headline }}</h2>
+        <p class="sf-banner__sub">{{ banner.subheadline }}</p>
+      </div>
+    }
+  </section>
+
+  @if (theme.about.enabled) {
+    <section class="sf-section sf-about sf-about--{{ theme.about.layout }}">
+      @if (theme.about.layout !== 'quote') {
+        <div class="sf-section__head">
+          <h3 class="sf-section__title" [style.font-family]="aboutTitleFont()">{{ theme.about.title }}</h3>
+        </div>
+      }
+      <p class="sf-about__desc" [style.font-family]="aboutBodyFont()">
+        @if (theme.about.layout === 'quote') {
+          <strong [style.font-family]="aboutTitleFont()">{{ theme.about.title }}. </strong>
+        }
+        {{ theme.about.description }}
+      </p>
+    </section>
+  }
+
+  @if (theme.rooms.enabled) {
+    <section class="sf-section">
+      <div class="sf-section__head">
+        <h3 class="sf-section__title" [style.font-family]="roomsTitleFont()">{{ theme.rooms.title }}</h3>
+        <p class="sf-section__subtitle">{{ theme.rooms.subtitle }}</p>
+      </div>
+      <div class="sf-grid sf-grid--rooms">
+        @for (room of data.rooms; track room.id) {
+          <article class="sf-card sf-card--{{ theme.rooms.cardStyle }}">
+            <div class="sf-card__media">
+              @if (room.primaryImageUrl) {
+                <img [src]="room.primaryImageUrl" [alt]="room.name" />
+              } @else {
+                <span class="sf-card__placeholder">🛏</span>
+              }
+            </div>
+            <div class="sf-card__body">
+              <h4 class="sf-card__name">{{ room.name }}</h4>
+              <p class="sf-card__meta">Up to {{ room.maxOccupancy }} guests{{ room.locationName ? ' · ' + room.locationName : '' }}</p>
+              @if (theme.rooms.showPrice) {
+                <p class="sf-card__price">{{ room.basePricePerNight | number: '1.0-0' }} NGN / night</p>
+              }
+            </div>
+          </article>
+        } @empty {
+          <p class="sf-section__subtitle">Add rooms in your dashboard to showcase them here.</p>
+        }
+      </div>
+    </section>
+  }
+
+  @if (theme.facilities.enabled) {
+    <section class="sf-section">
+      <div class="sf-section__head">
+        <h3 class="sf-section__title" [style.font-family]="facilitiesTitleFont()">{{ theme.facilities.title }}</h3>
+        <p class="sf-section__subtitle">{{ theme.facilities.subtitle }}</p>
+      </div>
+      @if (theme.facilities.displayStyle === 'list') {
+        <div>
+          @for (f of data.facilities; track f.id) {
+            <div class="sf-facility-row">
+              <div class="sf-facility-row__thumb">
+                @if (f.primaryImageUrl) {
+                  <img [src]="f.primaryImageUrl" [alt]="f.name" />
+                }
+              </div>
+              <div>
+                <strong>{{ f.name }}</strong>
+                @if (f.locationName) {
+                  <p class="sf-card__meta">{{ f.locationName }}</p>
+                }
+              </div>
+            </div>
+          } @empty {
+            <p class="sf-section__subtitle">Add facilities in your dashboard to list them here.</p>
+          }
+        </div>
+      } @else {
+        <div class="sf-grid sf-grid--facilities-grid">
+          @for (f of data.facilities; track f.id) {
+            <article class="sf-card sf-card--elevated">
+              <div class="sf-card__media">
+                @if (f.primaryImageUrl) {
+                  <img [src]="f.primaryImageUrl" [alt]="f.name" />
+                } @else {
+                  <span class="sf-card__placeholder">✦</span>
+                }
+              </div>
+              <div class="sf-card__body">
+                <h4 class="sf-card__name">{{ f.name }}</h4>
+              </div>
+            </article>
+          } @empty {
+            <p class="sf-section__subtitle">Add facilities in your dashboard to showcase them here.</p>
+          }
+        </div>
+      }
+    </section>
+  }
+
+  <footer class="sf-footer sf-footer--{{ theme.footer.style }} sf-footer--{{ theme.footer.backgroundStyle }}">
+    @if (theme.footer.style === 'simple') {
+      <p class="sf-footer__tagline">{{ theme.footer.tagline || data.businessName }}</p>
+      <p class="sf-footer__copy">{{ theme.footer.copyrightText }}</p>
+    } @else if (theme.footer.style === 'centered') {
+      <p class="sf-footer__brand">{{ data.businessName }}</p>
+      <p class="sf-footer__tagline">{{ theme.footer.tagline }}</p>
+      <p class="sf-footer__copy">{{ theme.footer.copyrightText }}</p>
+    } @else {
+      <div>
+        <p class="sf-footer__brand">{{ data.businessName }}</p>
+        <p class="sf-footer__tagline">{{ theme.footer.tagline }}</p>
+        <p class="sf-footer__copy">{{ theme.footer.copyrightText }}</p>
+      </div>
+      @if (theme.footer.showContact) {
+        <div class="sf-footer__links">
+          <span>Book with confidence</span>
+          <span>Secure payments</span>
+          <span>24/7 support</span>
+        </div>
+      }
+    }
+  </footer>
+</div>

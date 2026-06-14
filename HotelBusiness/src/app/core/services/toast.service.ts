@@ -1,5 +1,6 @@
 import { Injectable, signal } from '@angular/core';
 import type { ApiResult } from '../models/api-result.model';
+import { getApiResultMessage } from '../utils/http-api-result';
 
 export type ToastVariant = 'success' | 'error' | 'info' | 'warning';
 
@@ -34,20 +35,6 @@ const DEFAULT_DURATION: Record<ToastVariant, number> = {
 
 const MAX_TOASTS = 5;
 
-function formatApiFailure(result: Pick<ApiResult<unknown>, 'message' | 'validationErrors'>): string {
-  const parts: string[] = [];
-  if (result.message?.trim()) {
-    parts.push(result.message.trim());
-  }
-
-  const ve = result.validationErrors?.filter((s) => s?.trim()) ?? [];
-  if (ve.length) {
-    parts.push(ve.join(' '));
-  }
-
-  return parts.length ? parts.join(' ') : 'Something went wrong.';
-}
-
 @Injectable({ providedIn: 'root' })
 export class ToastService {
   private readonly _items = signal<ToastItem[]>([]);
@@ -77,7 +64,7 @@ export class ToastService {
     result: Pick<ApiResult<unknown>, 'message' | 'validationErrors'>,
     title?: string,
   ): ToastRef {
-    return this.error(formatApiFailure(result), title ?? 'Something went wrong');
+    return this.error(getApiResultMessage(result), title ?? 'Something went wrong');
   }
 
   show(options: ToastShowOptions): ToastRef {

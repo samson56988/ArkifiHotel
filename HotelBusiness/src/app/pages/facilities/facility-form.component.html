@@ -10,13 +10,13 @@
     <a routerLink="/facilities" class="btn btn--ghost">Back to list</a>
   </header>
 
-  @if (loading) {
+  @if (loading()) {
     <p class="muted">Loading…</p>
   } @else {
     <form class="layout" [formGroup]="form" (ngSubmit)="onSubmit()" novalidate>
       <section class="panel">
         <h2>Details</h2>
-        @if (!isCreateMode && isArchived) {
+        @if (!isCreateMode && isArchived()) {
           <p class="archived-banner">
             This facility is archived and hidden from your default list. Restore it to show it again, or delete it permanently.
           </p>
@@ -32,50 +32,67 @@
           <label for="fdesc">Description</label>
           <textarea id="fdesc" class="input input--area" rows="4" formControlName="description" placeholder="Hours, rules, what guests can expect…"></textarea>
         </div>
-        <button type="submit" class="btn btn--primary" [disabled]="saving">
-          {{ saving ? 'Saving…' : isCreateMode ? 'Create facility' : 'Save changes' }}
+        <div class="field">
+          <label for="locationId">Location</label>
+          <select id="locationId" class="input" formControlName="locationId">
+            <option value="" disabled>Select a location</option>
+            @for (loc of locations(); track loc.id) {
+              <option [value]="loc.id">{{ loc.name }}</option>
+            }
+          </select>
+          @if (form.controls.locationId.touched && form.controls.locationId.invalid) {
+            <p class="field-error">Select a location for this facility.</p>
+          }
+          @if (locationsLoading()) {
+            <p class="hint">Loading locations…</p>
+          } @else if (locations().length === 0) {
+            <p class="field-error">Add a location under <a routerLink="/locations">Locations</a> before creating a facility.</p>
+          }
+        </div>
+        <button type="submit" class="btn btn--primary" [disabled]="saving() || locations().length === 0">
+          {{ saving() ? 'Saving…' : isCreateMode ? 'Create facility' : 'Save changes' }}
         </button>
         @if (!isCreateMode) {
           <div class="form-actions-row">
-            @if (isArchived) {
-              <button type="button" class="btn btn--ghost" (click)="restoreFacility()" [disabled]="saving">Restore to list</button>
+            @if (isArchived()) {
+              <button type="button" class="btn btn--ghost" (click)="restoreFacility()" [disabled]="saving()">Restore to list</button>
             } @else {
-              <button type="button" class="btn btn--ghost" (click)="archiveFacility()" [disabled]="saving">Archive facility</button>
+              <button type="button" class="btn btn--ghost" (click)="archiveFacility()" [disabled]="saving()">Archive facility</button>
             }
-            <button type="button" class="btn btn--danger" (click)="deleteFacility()" [disabled]="saving">Delete permanently</button>
+            <button type="button" class="btn btn--danger" (click)="deleteFacility()" [disabled]="saving()">Delete permanently</button>
           </div>
         }
       </section>
 
       <section class="panel">
         <h2>Photos</h2>
-        <p class="hint">JPEG, PNG, WebP, or GIF, up to 8MB each.</p>
+        <p class="hint">JPEG, PNG, or JPG only, up to 8MB each.</p>
         @if (isCreateMode) {
           <label class="file-label">
-            <input type="file" accept="image/jpeg,image/png,image/webp,image/gif" multiple (change)="onPendingPhotosSelected($event)" [disabled]="saving" />
+            <input type="file" [accept]="imageAccept" multiple (change)="onPendingPhotosSelected($event)" [disabled]="saving()" />
             <span>Choose images to upload after create</span>
           </label>
-          @if (pendingPhotoFiles.length > 0) {
+          @if (pendingPhotoFiles().length > 0) {
             <ul class="pending-files">
-              @for (f of pendingPhotoFiles; track $index) {
+              @for (f of pendingPhotoFiles(); track $index) {
                 <li>
                   <span>{{ f.name }}</span>
-                  <button type="button" class="link danger" (click)="removePendingPhoto($index)" [disabled]="saving">Remove</button>
+                  <button type="button" class="link danger" (click)="removePendingPhoto($index)" [disabled]="saving()">Remove</button>
                 </li>
               }
             </ul>
           }
         } @else {
           <label class="file-label">
-            <input type="file" accept="image/*" multiple (change)="onFilesSelected($event)" [disabled]="saving" />
+            <input type="file" [accept]="imageAccept" multiple (change)="onFilesSelected($event)" [disabled]="saving()" />
             <span>Upload images</span>
           </label>
           <div class="gallery">
-            @for (img of images; track img.id) {
+            @for (img of images(); track img.id) {
               <figure class="photo">
                 <img [src]="imageUrl(img)" [alt]="img.originalFileName ?? 'Facility photo'" />
                 <figcaption>
-                  <button type="button" class="link danger" (click)="removeImage(img)" [disabled]="saving">Remove</button>
+                  <button type="button" class="link danger" (click)="removeImage(img)" [disabled]="saving()">Remove</button>
                 </figcaption>
               </figure>
             }

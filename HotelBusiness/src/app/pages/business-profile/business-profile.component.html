@@ -1,0 +1,98 @@
+<app-business-workspace>
+  <header class="page-head">
+    <div>
+      <p class="eyebrow">Account</p>
+      <h1>Business profile</h1>
+      <p class="lead">
+        Your hotel name, public booking link, and logo shown to guests on
+        <strong>{{ storefrontBase }}</strong>.
+      </p>
+    </div>
+  </header>
+
+  @if (loading()) {
+    <p class="muted">Loading profile…</p>
+  } @else if (loadFailed()) {
+    <p class="muted">We could not load your profile.</p>
+    <button type="button" class="btn btn--ghost" (click)="load()">Try again</button>
+  } @else {
+    <div class="layout">
+      <section class="panel logo-panel">
+        <h2>Logo</h2>
+        <p class="hint">Optional. JPEG or PNG, max 8MB.</p>
+
+        <div class="logo-preview" [class.logo-preview--empty]="!logoPreviewUrl()">
+          @if (logoPreviewUrl()) {
+            <img [src]="logoPreviewUrl()!" alt="Business logo preview" />
+          } @else {
+            <span>No logo yet</span>
+          }
+        </div>
+
+        <label class="btn btn--ghost file-btn">
+          Choose logo
+          <input type="file" [accept]="allowedLogoAccept" (change)="onLogoSelected($event)" hidden />
+        </label>
+
+        <div class="logo-actions">
+          @if (pendingLogoFile()) {
+            <button type="button" class="btn btn--primary" [disabled]="uploadingLogo()" (click)="uploadLogo()">
+              {{ uploadingLogo() ? 'Uploading…' : 'Upload logo' }}
+            </button>
+          }
+          @if (profile()?.logoUrl) {
+            <button type="button" class="btn btn--danger" [disabled]="uploadingLogo()" (click)="removeLogo()">
+              Remove logo
+            </button>
+          }
+        </div>
+      </section>
+
+      <form class="panel" [formGroup]="form" (ngSubmit)="onSubmit()" novalidate>
+        <h2>Public details</h2>
+
+        <div class="field">
+          <label for="businessName">Business name</label>
+          <input id="businessName" class="input" type="text" formControlName="businessName" autocomplete="organization" />
+        </div>
+
+        <div class="field">
+          <label for="slug">Hotel slug</label>
+          <input id="slug" class="input" type="text" formControlName="slug" autocomplete="off" spellcheck="false" />
+          <p class="hint">
+            Your guest booking page:
+            <strong>{{ storefrontPreview() }}</strong>
+          </p>
+          @if (slugChecking()) {
+            <p class="hint">Checking slug…</p>
+          } @else if (slugAvailable() === true) {
+            <p class="hint hint--ok">This slug is available.</p>
+          } @else if (slugAvailable() === false) {
+            <p class="hint hint--error">This slug is already taken.</p>
+          }
+        </div>
+
+        @if (profile(); as p) {
+          <dl class="meta">
+            <div>
+              <dt>Contact email</dt>
+              <dd>{{ p.contactEmail }}</dd>
+            </div>
+            <div>
+              <dt>Phone</dt>
+              <dd>{{ p.phoneNumber }}</dd>
+            </div>
+            <div>
+              <dt>Account status</dt>
+              <dd>{{ p.status }}{{ p.isEmailVerified ? '' : ' · email not verified' }}</dd>
+            </div>
+          </dl>
+        }
+
+        <button type="submit" class="btn btn--primary" [disabled]="saving() || slugAvailable() === false">
+          {{ saving() ? 'Saving…' : 'Save profile' }}
+        </button>
+      </form>
+    </div>
+  }
+</app-business-workspace>

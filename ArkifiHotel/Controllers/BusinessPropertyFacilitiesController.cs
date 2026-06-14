@@ -18,8 +18,6 @@ public sealed class BusinessPropertyFacilitiesController : ControllerBase
     {
         "image/jpeg",
         "image/png",
-        "image/webp",
-        "image/gif",
     };
 
     private readonly IBusinessPropertyFacilityService _facilities;
@@ -55,6 +53,8 @@ public sealed class BusinessPropertyFacilitiesController : ControllerBase
                 Name = f.Name,
                 PrimaryImageUrl = string.IsNullOrWhiteSpace(f.PrimaryImageUrl) ? null : ToAbsoluteUrl(f.PrimaryImageUrl),
                 ImageCount = f.ImageCount,
+                LocationId = f.LocationId,
+                LocationName = f.LocationName,
                 IsArchived = f.IsArchived,
             })
             .ToList();
@@ -142,7 +142,7 @@ public sealed class BusinessPropertyFacilitiesController : ControllerBase
             return BadRequest(
                 ApiResult<PropertyFacilityDetailDto>.Fail(
                     "Validation",
-                    "Could not create facility. Check the name (2–200 characters) and description length."));
+                    "Could not create facility. Check the name (2–200 characters), select a location, and description length."));
         }
 
         return Created($"/api/business/facilities/{dto.Id}", ApiResult<PropertyFacilityDetailDto>.Ok(MapFacility(dto)));
@@ -175,7 +175,7 @@ public sealed class BusinessPropertyFacilitiesController : ControllerBase
             return BadRequest(
                 ApiResult<PropertyFacilityDetailDto>.Fail(
                     "Validation",
-                    "Could not update facility. Check the name and description."));
+                    "Could not update facility. Check the name, select a location, and description."));
         }
 
         return Ok(ApiResult<PropertyFacilityDetailDto>.Ok(MapFacility(dto)));
@@ -246,7 +246,7 @@ public sealed class BusinessPropertyFacilitiesController : ControllerBase
                 return BadRequest(
                     ApiResult<IReadOnlyList<FacilityImageDto>>.Fail(
                         "Validation",
-                        "Only JPEG, PNG, WebP, or GIF images are allowed."));
+                        "Only JPEG or PNG images are allowed."));
             }
 
             var ext = Path.GetExtension(file.FileName);
@@ -256,8 +256,6 @@ public sealed class BusinessPropertyFacilitiesController : ControllerBase
                 {
                     "image/jpeg" => ".jpg",
                     "image/png" => ".png",
-                    "image/webp" => ".webp",
-                    "image/gif" => ".gif",
                     _ => ".bin",
                 };
             }
@@ -329,6 +327,8 @@ public sealed class BusinessPropertyFacilitiesController : ControllerBase
             Id = dto.Id,
             Name = dto.Name,
             Description = dto.Description,
+            LocationId = dto.LocationId,
+            LocationName = dto.LocationName,
             Images = dto.Images.Select(MapImage).ToList(),
             IsArchived = dto.IsArchived,
         };

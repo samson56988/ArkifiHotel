@@ -3,20 +3,22 @@
     <div>
       <p class="eyebrow">Payments</p>
       <h1>Booking payments</h1>
-      <p class="lead">Log and review payments linked to reservations.</p>
+      <p class="lead">Payments recorded at reception or online, linked to reservations.</p>
     </div>
     <div class="page-head__actions">
       <a routerLink="/booking-payments/new" class="btn btn--primary">Record payment</a>
     </div>
   </header>
 
-  @if (loadFailed) {
+  @if (loading()) {
+    <p class="muted">Loading payments…</p>
+  } @else if (loadFailed()) {
     <p class="muted">We could not load payments.</p>
     <button type="button" class="btn btn--ghost" (click)="load()">Try again</button>
-  } @else if (initialLoadDone && payments.length === 0) {
+  } @else if (initialLoadDone() && payments().length === 0) {
     <p class="muted">No booking payment records yet.</p>
     <a routerLink="/booking-payments/new" class="btn btn--primary">Record payment</a>
-  } @else if (initialLoadDone) {
+  } @else if (initialLoadDone()) {
     <div class="table-wrap">
       <table>
         <thead>
@@ -26,12 +28,13 @@
             <th>Room</th>
             <th>Amount</th>
             <th>Status</th>
+            <th>Method</th>
             <th>Gateway</th>
             <th>Reference</th>
           </tr>
         </thead>
         <tbody>
-          @for (p of payments; track p.id) {
+          @for (p of payments(); track p.id) {
             <tr>
               <td class="nowrap">{{ formatDate(p.createdAt) }}</td>
               <td>
@@ -41,7 +44,8 @@
               <td>{{ p.roomName }}</td>
               <td>{{ p.amount | number: '1.2-2' }} {{ p.currency }}</td>
               <td>{{ p.status }}</td>
-              <td>{{ p.gateway }}</td>
+              <td>{{ p.method || '—' }}</td>
+              <td>{{ p.gateway === 'None' ? '—' : p.gateway }}</td>
               <td class="ref">{{ p.externalReference || '—' }}</td>
             </tr>
           }

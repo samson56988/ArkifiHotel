@@ -43,7 +43,7 @@
             type="password"
             formControlName="password"
             autocomplete="current-password"
-            placeholder="••••••••"
+            placeholder="ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½"
           />
           @if (showError('password')) {
             <p class="auth-error">At least 8 characters.</p>
@@ -55,7 +55,7 @@
             <input type="checkbox" formControlName="rememberMe" />
             <span>Remember me</span>
           </label>
-          <button type="button" class="auth-forgot">Forgot password?</button>
+          <a routerLink="/forgot-password" class="auth-forgot">Forgot password?</a>
         </div>
 
         <button type="submit" class="auth-submit" [disabled]="loading">

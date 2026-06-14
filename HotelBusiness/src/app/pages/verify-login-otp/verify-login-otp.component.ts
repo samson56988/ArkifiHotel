@@ -4,6 +4,7 @@ import { ActivatedRoute, Router, RouterLink } from '@angular/router';
 import { finalize } from 'rxjs/operators';
 import { AuthApiService } from '../../core/services/auth-api.service';
 import { ToastService } from '../../core/services/toast.service';
+import { showAuthRequestError } from '../../core/utils/auth-request-error';
 
 @Component({
   selector: 'app-verify-login-otp',
@@ -71,9 +72,7 @@ export class VerifyLoginOtpComponent {
 
           this.toast.showFailedApi(result, 'Login verification failed');
         },
-        error: () => {
-          this.toast.error('We could not reach the server. Check your connection and try again.', 'Network error');
-        },
+        error: (err: unknown) => showAuthRequestError(this.toast, err, 'Login verification failed'),
       });
   }
 

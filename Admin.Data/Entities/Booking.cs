@@ -15,6 +15,10 @@ public class Booking
 
     public Room Room { get; set; } = null!;
 
+    public Guid? LocationId { get; set; }
+
+    public BusinessLocation? Location { get; set; }
+
     public string GuestName { get; set; } = null!;
 
     public string GuestEmail { get; set; } = null!;
@@ -31,7 +35,7 @@ public class Booking
 
     public BookingStatus Status { get; set; }
 
-    /// <summary>Guest-facing code for lookup without login (unique per booking).</summary>
+    /// <summary>Guest-facing code for lookup without login (unique per business).</summary>
     public string ConfirmationCode { get; set; } = null!;
 
     public string? InternalNotes { get; set; }

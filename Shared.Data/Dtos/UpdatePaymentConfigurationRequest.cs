@@ -2,12 +2,15 @@ namespace Shared.Data.Dtos;
 
 public sealed class UpdatePaymentConfigurationRequest
 {
-    /// <summary>None, Paystack, or Flutterwave (case-insensitive).</summary>
+    /// <summary>None, Paystack, Flutterwave, or Monify (case-insensitive).</summary>
     public string Provider { get; set; } = "None";
 
-    /// <summary>
-    /// Paystack or Flutterwave secret key. Leave empty to keep the existing key when the provider is unchanged.
-    /// Required when switching providers or enabling payments for the first time.
-    /// </summary>
+    /// <summary>Paystack, Flutterwave, or Monify secret key.</summary>
     public string? SecretKey { get; set; }
+
+    /// <summary>Monify API key.</summary>
+    public string? ApiKey { get; set; }
+
+    /// <summary>Monify contract code.</summary>
+    public string? ContractCode { get; set; }
 }

@@ -1,5 +1,5 @@
 import { DecimalPipe } from '@angular/common';
-import { Component, inject, OnInit } from '@angular/core';
+import { Component, inject, OnInit, signal } from '@angular/core';
 import { RouterLink } from '@angular/router';
 import { BusinessRoomsApiService } from '../../core/services/business-rooms-api.service';
 import { ToastService } from '../../core/services/toast.service';
@@ -18,10 +18,10 @@ export class RoomsListComponent implements OnInit {
   private readonly api = inject(BusinessRoomsApiService);
   private readonly toast = inject(ToastService);
 
-  rooms: BusinessRoomSummaryDto[] = [];
-  /** First list response received (success or failure). */
-  initialLoadDone = false;
-  loadFailed = false;
+  readonly rooms = signal<BusinessRoomSummaryDto[]>([]);
+  readonly initialLoadDone = signal(false);
+  readonly loadFailed = signal(false);
+  readonly loading = signal(false);
   /** When true, list includes archived rooms (hidden from guests by default). */
   showArchived = false;
 
@@ -41,15 +41,16 @@ export class RoomsListComponent implements OnInit {
   }
 
   load(): void {
-    this.loadFailed = false;
+    this.loading.set(true);
+    this.loadFailed.set(false);
     this.api.listRooms(this.showArchived).subscribe({
       next: (res) => {
         if (res.success) {
-          this.rooms = Array.isArray(res.data) ? res.data! : [];
-          this.loadFailed = false;
+          this.rooms.set(Array.isArray(res.data) ? res.data! : []);
+          this.loadFailed.set(false);
         } else {
-          this.rooms = [];
-          this.loadFailed = true;
+          this.rooms.set([]);
+          this.loadFailed.set(true);
           if (res.code === 'Unauthorized' || res.message?.includes('401')) {
             this.toast.warning('Please sign in again to manage rooms.', 'Rooms');
           } else {
@@ -57,12 +58,14 @@ export class RoomsListComponent implements OnInit {
           }
         }
 
-        this.initialLoadDone = true;
+        this.initialLoadDone.set(true);
+        this.loading.set(false);
       },
       error: (err: unknown) => {
-        this.rooms = [];
-        this.loadFailed = true;
-        this.initialLoadDone = true;
+        this.rooms.set([]);
+        this.loadFailed.set(true);
+        this.initialLoadDone.set(true);
+        this.loading.set(false);
         const res = err as ApiResult<BusinessRoomSummaryDto[]>;
         if (res && typeof res === 'object' && 'message' in res) {
           this.toast.showFailedApi(res, 'Rooms');

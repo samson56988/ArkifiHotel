@@ -14,8 +14,14 @@ import type {
   VerifyEmailOtpResponse,
   VerifyLoginOtpRequest,
   VerifyLoginOtpResponse,
+  RequestPasswordResetData,
+  RequestPasswordResetRequest,
+  RequestPasswordResetResponse,
+  ResetPasswordRequest,
+  ResetPasswordResponse,
 } from '../models/auth.models';
 import { API_BASE_URL } from '../tokens/api-base-url.token';
+import { parseHttpApiResult } from '../utils/http-api-result';
 
 const TOKEN_KEY = 'arkifihub_business_token';
 const TOKEN_EXPIRES_KEY = 'arkifihub_business_token_expires';
@@ -30,7 +36,7 @@ export class AuthApiService {
     const url = `${this.baseUrl}/api/Registration`;
     return this.http.post<RegisterApiResponse>(url, request).pipe(
       catchError((err: HttpErrorResponse) =>
-        throwError(() => this.normalizeHttpError<BusinessRegistrationDto>(err)),
+        throwError(() => parseHttpApiResult<BusinessRegistrationDto>(err)),
       ),
     );
   }
@@ -45,7 +51,7 @@ export class AuthApiService {
         return body;
       }),
       catchError((err: HttpErrorResponse) =>
-        throwError(() => this.normalizeHttpError<LoginBusinessData>(err)),
+        throwError(() => parseHttpApiResult<LoginBusinessData>(err)),
       ),
     );
   }
@@ -54,7 +60,7 @@ export class AuthApiService {
     const url = `${this.baseUrl}/api/Auth/verify-email-otp`;
     return this.http.post<VerifyEmailOtpResponse>(url, request).pipe(
       catchError((err: HttpErrorResponse) =>
-        throwError(() => this.normalizeHttpError<null>(err)),
+        throwError(() => parseHttpApiResult<null>(err)),
       ),
     );
   }
@@ -63,7 +69,25 @@ export class AuthApiService {
     const url = `${this.baseUrl}/api/Auth/verify-login-otp`;
     return this.http.post<VerifyLoginOtpResponse>(url, request).pipe(
       catchError((err: HttpErrorResponse) =>
-        throwError(() => this.normalizeHttpError<LoginBusinessData>(err)),
+        throwError(() => parseHttpApiResult<LoginBusinessData>(err)),
+      ),
+    );
+  }
+
+  requestPasswordReset(request: RequestPasswordResetRequest): Observable<RequestPasswordResetResponse> {
+    const url = `${this.baseUrl}/api/Auth/forgot-password`;
+    return this.http.post<RequestPasswordResetResponse>(url, request).pipe(
+      catchError((err: HttpErrorResponse) =>
+        throwError(() => parseHttpApiResult<RequestPasswordResetData | null>(err)),
+      ),
+    );
+  }
+
+  resetPassword(request: ResetPasswordRequest): Observable<ResetPasswordResponse> {
+    const url = `${this.baseUrl}/api/Auth/reset-password`;
+    return this.http.post<ResetPasswordResponse>(url, request).pipe(
+      catchError((err: HttpErrorResponse) =>
+        throwError(() => parseHttpApiResult<null>(err)),
       ),
     );
   }
@@ -102,18 +126,4 @@ export class AuthApiService {
     store.setItem(ACCOUNT_KEY, JSON.stringify(data.account));
   }
 
-  private normalizeHttpError<T>(err: HttpErrorResponse): ApiResult<T> {
-    const body = err.error as Partial<ApiResult<T>> | null;
-    if (body && typeof body === 'object' && 'success' in body) {
-      return body as ApiResult<T>;
-    }
-
-    return {
-      success: false,
-      data: null,
-      message: err.message || 'Network error. Is the API running?',
-      code: 'HttpError',
-      validationErrors: null,
-    };
-  }
 }

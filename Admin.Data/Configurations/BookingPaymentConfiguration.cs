@@ -25,6 +25,11 @@ public class BookingPaymentConfiguration : IEntityTypeConfiguration<BookingPayme
             .HasConversion<int>()
             .IsRequired();
 
+        builder.Property(e => e.Method)
+            .HasConversion<int>()
+            .IsRequired()
+            .HasDefaultValue(BookingPaymentMethod.Cash);
+
         builder.Property(e => e.Gateway)
             .HasConversion<int>()
             .IsRequired();

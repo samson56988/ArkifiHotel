@@ -39,13 +39,13 @@ public class BusinessRegistration
     /// <summary>Optional internal notes for admin staff.</summary>
     public string? AdminNotes { get; set; }
 
-    /// <summary>Optional storefront slug (e.g. arkifihub.com/your-slug).</summary>
+    /// <summary>Optional storefront slug (e.g. arkifistay.com/your-slug).</summary>
     public string? Slug { get; set; }
 
-    /// <summary>Paystack, Flutterwave, or none.</summary>
-    public PaymentGatewayProvider PaymentProvider { get; set; }
+    /// <summary>Relative path under wwwroot, e.g. uploads/{businessId}/logo/logo.png.</summary>
+    public string? LogoPath { get; set; }
 
-    /// <summary>Data-protection encrypted secret (Paystack or Flutterwave secret key). Never log or expose.</summary>
-    public string? PaymentSecretProtected { get; set; }
+    /// <summary>JSON theme for the guest storefront (banner, sections, footer, colors).</summary>
+    public string? StorefrontThemeJson { get; set; }
 }
 

@@ -1,5 +1,5 @@
 import { DecimalPipe } from '@angular/common';
-import { Component, inject, OnInit } from '@angular/core';
+import { Component, inject, OnInit, signal } from '@angular/core';
 import { RouterLink } from '@angular/router';
 import type { ApiResult } from '../../core/models/api-result.model';
 import type { BookingPaymentSummaryDto } from '../../core/models/booking-payments.models';
@@ -18,24 +18,26 @@ export class BookingPaymentsListComponent implements OnInit {
   private readonly api = inject(BusinessBookingPaymentsApiService);
   private readonly toast = inject(ToastService);
 
-  payments: BookingPaymentSummaryDto[] = [];
-  initialLoadDone = false;
-  loadFailed = false;
+  readonly payments = signal<BookingPaymentSummaryDto[]>([]);
+  readonly initialLoadDone = signal(false);
+  readonly loadFailed = signal(false);
+  readonly loading = signal(false);
 
   ngOnInit(): void {
     this.load();
   }
 
   load(): void {
-    this.loadFailed = false;
+    this.loading.set(true);
+    this.loadFailed.set(false);
     this.api.listPayments().subscribe({
       next: (res) => {
         if (res.success) {
-          this.payments = Array.isArray(res.data) ? res.data! : [];
-          this.loadFailed = false;
+          this.payments.set(Array.isArray(res.data) ? res.data! : []);
+          this.loadFailed.set(false);
         } else {
-          this.payments = [];
-          this.loadFailed = true;
+          this.payments.set([]);
+          this.loadFailed.set(true);
           if (res.code === 'Unauthorized' || res.message?.includes('401')) {
             this.toast.warning('Please sign in again.', 'Payments');
           } else {
@@ -43,12 +45,14 @@ export class BookingPaymentsListComponent implements OnInit {
           }
         }
 
-        this.initialLoadDone = true;
+        this.initialLoadDone.set(true);
+        this.loading.set(false);
       },
       error: (err: unknown) => {
-        this.payments = [];
-        this.loadFailed = true;
-        this.initialLoadDone = true;
+        this.payments.set([]);
+        this.loadFailed.set(true);
+        this.initialLoadDone.set(true);
+        this.loading.set(false);
         const r = err as ApiResult<BookingPaymentSummaryDto[]>;
         if (r && typeof r === 'object' && 'message' in r) {
           this.toast.showFailedApi(r, 'Payments');

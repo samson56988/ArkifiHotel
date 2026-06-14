@@ -3,20 +3,22 @@
     <div>
       <p class="eyebrow">CRM</p>
       <h1>Customers</h1>
-      <p class="lead">Contacts and guests you track for your property.</p>
+      <p class="lead">Guests from bookings are saved here automatically. You can also add contacts manually.</p>
     </div>
     <div class="page-head__actions">
       <a routerLink="/customers/new" class="btn btn--primary">Add customer</a>
     </div>
   </header>
 
-  @if (loadFailed) {
+  @if (loading()) {
+    <p class="muted">Loading customers…</p>
+  } @else if (loadFailed()) {
     <p class="muted">We could not load customers.</p>
     <button type="button" class="btn btn--ghost" (click)="load()">Try again</button>
-  } @else if (initialLoadDone && customers.length === 0) {
-    <p class="muted">No customer records yet.</p>
+  } @else if (initialLoadDone() && customers().length === 0) {
+    <p class="muted">No customer records yet. Create a booking or add a customer manually.</p>
     <a routerLink="/customers/new" class="btn btn--primary">Add customer</a>
-  } @else if (initialLoadDone) {
+  } @else if (initialLoadDone()) {
     <div class="table-wrap">
       <table>
         <thead>
@@ -28,7 +30,7 @@
           </tr>
         </thead>
         <tbody>
-          @for (c of customers; track c.id) {
+          @for (c of customers(); track c.id) {
             <tr>
               <td>{{ c.fullName }}</td>
               <td>{{ c.email }}</td>
@@ -41,4 +43,3 @@
     </div>
   }
 </app-business-workspace>
-

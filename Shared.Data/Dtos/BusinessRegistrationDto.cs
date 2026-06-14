@@ -25,4 +25,6 @@ public sealed class BusinessRegistrationDto
     public string PhoneNumber { get; set; } = string.Empty;
 
     public string? Slug { get; set; }
+
+    public string? LogoUrl { get; set; }
 }

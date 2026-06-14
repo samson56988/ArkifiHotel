@@ -11,10 +11,14 @@ namespace ArkifiHotel.Controllers;
 public class AuthController : ControllerBase
 {
     private readonly IBusinessAuthService _authService;
+    private readonly IBusinessPasswordResetService _passwordResetService;
 
-    public AuthController(IBusinessAuthService authService)
+    public AuthController(
+        IBusinessAuthService authService,
+        IBusinessPasswordResetService passwordResetService)
     {
         _authService = authService;
+        _passwordResetService = passwordResetService;
     }
 
     /// <summary>Business login — returns JWT and account summary.</summary>
@@ -81,17 +85,61 @@ public class AuthController : ControllerBase
         CancellationToken cancellationToken)
     {
         var result = await _authService.VerifyEmailOtpAsync(request, cancellationToken);
-        if (result.Succeeded)
+        var verifyApi = result.ToApiResult();
+        if (verifyApi.Success)
         {
-            return Ok(ApiResult.Ok("Email verified successfully."));
+            return Ok(verifyApi);
         }
 
         var code = result.ErrorCode ?? "Error";
-        var api = ApiResult.Fail(code, result.ErrorMessage ?? "Verification failed.");
         return code switch
         {
-            "NotFound" => NotFound(api),
-            _ => BadRequest(api),
+            "NotFound" => NotFound(verifyApi),
+            _ => BadRequest(verifyApi),
+        };
+    }
+
+    /// <summary>Request a password reset OTP (always returns a generic message when email is unknown).</summary>
+    [HttpPost("forgot-password")]
+    [AllowAnonymous]
+    [ProducesResponseType(typeof(ApiResult<RequestPasswordResetData>), StatusCodes.Status200OK)]
+    [ProducesResponseType(typeof(ApiResult<RequestPasswordResetData>), StatusCodes.Status400BadRequest)]
+    public async Task<IActionResult> ForgotPassword(
+        [FromBody] RequestPasswordResetRequest request,
+        CancellationToken cancellationToken)
+    {
+        var result = await _passwordResetService.RequestResetAsync(request, cancellationToken);
+        var api = result.ToApiResult();
+
+        if (api.Success)
+        {
+            return Ok(api);
+        }
+
+        return BadRequest(api);
+    }
+
+    /// <summary>Verify reset OTP and set a new password.</summary>
+    [HttpPost("reset-password")]
+    [AllowAnonymous]
+    [ProducesResponseType(typeof(ApiResult), StatusCodes.Status200OK)]
+    [ProducesResponseType(typeof(ApiResult), StatusCodes.Status400BadRequest)]
+    [ProducesResponseType(typeof(ApiResult), StatusCodes.Status401Unauthorized)]
+    public async Task<IActionResult> ResetPassword(
+        [FromBody] ResetPasswordRequest request,
+        CancellationToken cancellationToken)
+    {
+        var result = await _passwordResetService.ResetPasswordAsync(request, cancellationToken);
+        var resetApi = result.ToApiResult();
+        if (resetApi.Success)
+        {
+            return Ok(resetApi);
+        }
+
+        return (result.ErrorCode ?? string.Empty) switch
+        {
+            "InvalidOtp" => Unauthorized(resetApi),
+            _ => BadRequest(resetApi),
         };
     }
 }

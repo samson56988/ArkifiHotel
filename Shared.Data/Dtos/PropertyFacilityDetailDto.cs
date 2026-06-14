@@ -8,6 +8,10 @@ public sealed class PropertyFacilityDetailDto
 
     public string? Description { get; set; }
 
+    public Guid? LocationId { get; set; }
+
+    public string? LocationName { get; set; }
+
     public IReadOnlyList<FacilityImageDto> Images { get; set; } = Array.Empty<FacilityImageDto>();
 
     public bool IsArchived { get; set; }

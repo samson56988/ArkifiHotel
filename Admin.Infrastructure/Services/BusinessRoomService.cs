@@ -1,5 +1,6 @@
 using Admin.Data;
 using Admin.Data.Entities;
+using Admin.Data.Enums;
 using Admin.Services.Abstractions;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.EntityFrameworkCore;
@@ -9,6 +10,9 @@ namespace Admin.Infrastructure.Services;
 
 public sealed class BusinessRoomService : IBusinessRoomService
 {
+    private const int MinQuantity = 1;
+    private const int MaxQuantity = 500;
+
     private readonly AdminDbContext _db;
     private readonly IWebHostEnvironment _env;
 
@@ -27,6 +31,7 @@ public sealed class BusinessRoomService : IBusinessRoomService
             .AsNoTracking()
             .Include(r => r.Images)
             .Include(r => r.RoomAmenities)
+            .Include(r => r.Location)
             .Where(r => r.BusinessRegistrationId == businessId);
 
         if (!includeArchived)
@@ -46,6 +51,9 @@ public sealed class BusinessRoomService : IBusinessRoomService
                 Name = r.Name,
                 MaxOccupancy = r.MaxOccupancy,
                 BasePricePerNight = r.BasePricePerNight,
+                Quantity = r.Quantity,
+                LocationId = r.LocationId,
+                LocationName = r.Location?.Name,
                 PrimaryImageUrl = r.Images
                     .OrderBy(i => i.SortOrder)
                     .Select(i => "/" + i.RelativePath.Replace("\\", "/", StringComparison.Ordinal))
@@ -66,6 +74,7 @@ public sealed class BusinessRoomService : IBusinessRoomService
             .Include(r => r.Images)
             .Include(r => r.RoomAmenities)
             .ThenInclude(ra => ra.Amenity)
+            .Include(r => r.Location)
             .FirstOrDefaultAsync(r => r.Id == roomId && r.BusinessRegistrationId == businessId, cancellationToken)
             .ConfigureAwait(false);
 
@@ -77,7 +86,12 @@ public sealed class BusinessRoomService : IBusinessRoomService
         CreateBusinessRoomRequest request,
         CancellationToken cancellationToken = default)
     {
-        var validation = ValidateRoomCore(request.Name, request.Description, request.MaxOccupancy, request.BasePricePerNight);
+        var validation = ValidateRoomCore(
+            request.Name,
+            request.Description,
+            request.MaxOccupancy,
+            request.BasePricePerNight,
+            request.Quantity);
         if (validation is not null)
         {
             return null;
@@ -94,15 +108,22 @@ public sealed class BusinessRoomService : IBusinessRoomService
             return null;
         }
 
+        if (!await LocationAllowedForBusinessAsync(businessId, request.LocationId, cancellationToken).ConfigureAwait(false))
+        {
+            return null;
+        }
+
         var now = DateTimeOffset.UtcNow;
         var room = new Room
         {
             Id = Guid.NewGuid(),
             BusinessRegistrationId = businessId,
+            LocationId = request.LocationId,
             Name = request.Name!.Trim(),
             Description = string.IsNullOrWhiteSpace(request.Description) ? null : request.Description.Trim(),
             MaxOccupancy = request.MaxOccupancy,
             BasePricePerNight = request.BasePricePerNight,
+            Quantity = request.Quantity,
             CreatedAt = now,
         };
 
@@ -120,7 +141,12 @@ public sealed class BusinessRoomService : IBusinessRoomService
         UpdateBusinessRoomRequest request,
         CancellationToken cancellationToken = default)
     {
-        var validation = ValidateRoomCore(request.Name, request.Description, request.MaxOccupancy, request.BasePricePerNight);
+        var validation = ValidateRoomCore(
+            request.Name,
+            request.Description,
+            request.MaxOccupancy,
+            request.BasePricePerNight,
+            request.Quantity);
         if (validation is not null)
         {
             return null;
@@ -141,10 +167,26 @@ public sealed class BusinessRoomService : IBusinessRoomService
             return null;
         }
 
+        if (!await LocationAllowedForBusinessAsync(businessId, request.LocationId, cancellationToken).ConfigureAwait(false))
+        {
+            return null;
+        }
+
+        if (request.Quantity < room.Quantity)
+        {
+            var maxConcurrent = await GetMaxConcurrentBookingsAsync(roomId, cancellationToken).ConfigureAwait(false);
+            if (request.Quantity < maxConcurrent)
+            {
+                return null;
+            }
+        }
+
         room.Name = request.Name!.Trim();
         room.Description = string.IsNullOrWhiteSpace(request.Description) ? null : request.Description.Trim();
         room.MaxOccupancy = request.MaxOccupancy;
         room.BasePricePerNight = request.BasePricePerNight;
+        room.Quantity = request.Quantity;
+        room.LocationId = request.LocationId;
         room.UpdatedAt = DateTimeOffset.UtcNow;
 
         await _db.SaveChangesAsync(cancellationToken).ConfigureAwait(false);
@@ -284,12 +326,28 @@ public sealed class BusinessRoomService : IBusinessRoomService
         var distinct = amenityIds.Distinct().ToList();
         var allowed = await _db.Amenities
             .AsNoTracking()
-            .Where(a => distinct.Contains(a.Id) && (a.BusinessRegistrationId == null || a.BusinessRegistrationId == businessId))
+            .Where(a => distinct.Contains(a.Id) && a.BusinessRegistrationId == businessId)
             .Select(a => a.Id)
             .ToListAsync(cancellationToken)
             .ConfigureAwait(false);
 
         return allowed.Count == distinct.Count;
+    }
+
+    private async Task<bool> LocationAllowedForBusinessAsync(
+        Guid businessId,
+        Guid? locationId,
+        CancellationToken cancellationToken)
+    {
+        if (!locationId.HasValue || locationId.Value == Guid.Empty)
+        {
+            return false;
+        }
+
+        return await _db.BusinessLocations
+            .AsNoTracking()
+            .AnyAsync(l => l.Id == locationId.Value && l.BusinessRegistrationId == businessId, cancellationToken)
+            .ConfigureAwait(false);
     }
 
     private async Task ReplaceRoomAmenitiesAsync(
@@ -317,7 +375,12 @@ public sealed class BusinessRoomService : IBusinessRoomService
         await _db.SaveChangesAsync(cancellationToken).ConfigureAwait(false);
     }
 
-    private static string? ValidateRoomCore(string? name, string? description, int maxOccupancy, decimal basePrice)
+    private static string? ValidateRoomCore(
+        string? name,
+        string? description,
+        int maxOccupancy,
+        decimal basePrice,
+        int quantity)
     {
         var n = name?.Trim() ?? string.Empty;
         if (n.Length < 2 || n.Length > 200)
@@ -340,7 +403,53 @@ public sealed class BusinessRoomService : IBusinessRoomService
             return "bad";
         }
 
+        if (quantity < MinQuantity || quantity > MaxQuantity)
+        {
+            return "bad";
+        }
+
         return null;
+    }
+
+    private async Task<int> GetMaxConcurrentBookingsAsync(Guid roomId, CancellationToken cancellationToken)
+    {
+        var bookings = await _db.Bookings
+            .AsNoTracking()
+            .Where(b => b.RoomId == roomId && b.Status != BookingStatus.Cancelled)
+            .Select(b => new { b.CheckInDate, b.CheckOutDate })
+            .ToListAsync(cancellationToken)
+            .ConfigureAwait(false);
+
+        if (bookings.Count == 0)
+        {
+            return 0;
+        }
+
+        var events = new List<(DateOnly Day, int Delta)>(bookings.Count * 2);
+        foreach (var b in bookings)
+        {
+            events.Add((b.CheckInDate, 1));
+            events.Add((b.CheckOutDate, -1));
+        }
+
+        events.Sort(static (a, b) =>
+        {
+            var day = a.Day.CompareTo(b.Day);
+            return day != 0 ? day : a.Delta.CompareTo(b.Delta);
+        });
+
+        var current = 0;
+        var max = 0;
+        foreach (var (_, delta) in events)
+        {
+            current += delta;
+            if (current > max)
+            {
+                max = current;
+            }
+        }
+
+        return max;
     }
 
     private static BusinessRoomDetailDto MapDetail(Room r)
@@ -363,6 +472,9 @@ public sealed class BusinessRoomService : IBusinessRoomService
             Description = r.Description,
             MaxOccupancy = r.MaxOccupancy,
             BasePricePerNight = r.BasePricePerNight,
+            Quantity = r.Quantity,
+            LocationId = r.LocationId,
+            LocationName = r.Location?.Name,
             Images = images,
             Amenities = amenities,
             IsArchived = r.IsArchived,

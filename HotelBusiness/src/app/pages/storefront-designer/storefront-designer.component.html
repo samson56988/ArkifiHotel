@@ -1,0 +1,311 @@
+<app-business-workspace>
+  <header class="page-head">
+    <div>
+      <p class="eyebrow">Storefront</p>
+      <h1>Theme designer</h1>
+      <p class="lead">
+        Design how guests experience your hotel — banner, sections, fonts, colors, and footer.
+        @if (liveUrl(); as url) {
+          Live at <strong>{{ url }}</strong>
+        } @else {
+          Set a hotel slug on your <a routerLink="/profile">profile</a> to publish.
+        }
+      </p>
+    </div>
+    <div class="page-head__actions">
+      @if (liveUrl(); as url) {
+        <a [href]="url" target="_blank" rel="noopener" class="btn btn--ghost">Open live site</a>
+      }
+      <button type="button" class="btn btn--ghost" (click)="resetToDefaults()">Reset defaults</button>
+      <button type="button" class="btn btn--primary" [disabled]="saving() || loading()" (click)="save()">
+        {{ saving() ? 'Saving…' : 'Save theme' }}
+      </button>
+    </div>
+  </header>
+
+  @if (loading()) {
+    <p class="muted">Loading designer…</p>
+  } @else {
+    <div class="designer">
+      <aside class="designer__panel panel">
+        <nav class="tabs" aria-label="Theme sections">
+          <button type="button" class="tabs__btn" [class.tabs__btn--active]="activeTab() === 'global'" (click)="setTab('global')">Global</button>
+          <button type="button" class="tabs__btn" [class.tabs__btn--active]="activeTab() === 'banner'" (click)="setTab('banner')">Banner</button>
+          <button type="button" class="tabs__btn" [class.tabs__btn--active]="activeTab() === 'about'" (click)="setTab('about')">Who we are</button>
+          <button type="button" class="tabs__btn" [class.tabs__btn--active]="activeTab() === 'rooms'" (click)="setTab('rooms')">Rooms</button>
+          <button type="button" class="tabs__btn" [class.tabs__btn--active]="activeTab() === 'facilities'" (click)="setTab('facilities')">Facilities</button>
+          <button type="button" class="tabs__btn" [class.tabs__btn--active]="activeTab() === 'footer'" (click)="setTab('footer')">Footer</button>
+          <button type="button" class="tabs__btn" [class.tabs__btn--active]="activeTab() === 'colors'" (click)="setTab('colors')">Colors</button>
+        </nav>
+
+        <form [formGroup]="form" class="designer-form" novalidate>
+          @if (activeTab() === 'global') {
+            <div class="field">
+              <label for="globalFont">Site-wide font personality</label>
+              <select id="globalFont" class="input" formControlName="globalFont">
+                @for (f of globalFonts; track f.id) {
+                  <option [value]="f.id">{{ f.label }}</option>
+                }
+              </select>
+              <p class="hint">Headings, body text, and accent styles across all sections inherit from this palette.</p>
+            </div>
+          }
+
+          @if (activeTab() === 'banner') {
+            <ng-container formGroupName="banner">
+              <div class="field">
+                <label for="bannerStyle">Banner theme</label>
+                <select id="bannerStyle" class="input" formControlName="style">
+                  @for (b of bannerStyles; track b.id) {
+                    <option [value]="b.id">{{ b.label }}</option>
+                  }
+                </select>
+                @for (b of bannerStyles; track b.id) {
+                  @if (form.controls.banner.controls.style.value === b.id) {
+                    <p class="hint">{{ b.hint }}</p>
+                  }
+                }
+              </div>
+              <div class="field">
+                <label for="headline">Headline</label>
+                <input id="headline" class="input" type="text" formControlName="headline" />
+              </div>
+              <div class="field">
+                <label for="subheadline">Subheadline</label>
+                <textarea id="subheadline" class="input input--area" rows="3" formControlName="subheadline"></textarea>
+              </div>
+              <div class="field-row">
+                <div class="field">
+                  <label for="headlineFont">Headline font</label>
+                  <select id="headlineFont" class="input" formControlName="headlineFont">
+                    @for (f of sectionFonts; track f.id) {
+                      <option [value]="f.id">{{ f.label }}</option>
+                    }
+                  </select>
+                </div>
+                <div class="field">
+                  <label for="subFont">Subheadline font</label>
+                  <select id="subFont" class="input" formControlName="subheadlineFont">
+                    @for (f of sectionFonts; track f.id) {
+                      <option [value]="f.id">{{ f.label }}</option>
+                    }
+                  </select>
+                </div>
+              </div>
+              <div class="field-row">
+                <div class="field">
+                  <label for="textAlign">Text alignment</label>
+                  <select id="textAlign" class="input" formControlName="textAlign">
+                    <option value="left">Left</option>
+                    <option value="center">Center</option>
+                    <option value="right">Right</option>
+                  </select>
+                </div>
+                <div class="field">
+                  <label for="overlay">Hero overlay {{ form.controls.banner.controls.overlayOpacity.value }}%</label>
+                  <input id="overlay" type="range" min="0" max="90" formControlName="overlayOpacity" />
+                </div>
+              </div>
+            </ng-container>
+          }
+
+          @if (activeTab() === 'about') {
+            <ng-container formGroupName="about">
+              <label class="check"><input type="checkbox" formControlName="enabled" /> Show “Who we are” section</label>
+              <div class="field">
+                <label for="aboutTitle">Section title</label>
+                <input id="aboutTitle" class="input" type="text" formControlName="title" />
+              </div>
+              <div class="field">
+                <label for="aboutDesc">Description</label>
+                <textarea id="aboutDesc" class="input input--area" rows="5" formControlName="description"></textarea>
+              </div>
+              <div class="field-row">
+                <div class="field">
+                  <label for="aboutTitleFont">Title font</label>
+                  <select id="aboutTitleFont" class="input" formControlName="titleFont">
+                    @for (f of sectionFonts; track f.id) {
+                      <option [value]="f.id">{{ f.label }}</option>
+                    }
+                  </select>
+                </div>
+                <div class="field">
+                  <label for="aboutBodyFont">Body font</label>
+                  <select id="aboutBodyFont" class="input" formControlName="bodyFont">
+                    @for (f of sectionFonts; track f.id) {
+                      <option [value]="f.id">{{ f.label }}</option>
+                    }
+                  </select>
+                </div>
+              </div>
+              <div class="field">
+                <label for="aboutLayout">Layout</label>
+                <select id="aboutLayout" class="input" formControlName="layout">
+                  <option value="side-by-side">Side by side</option>
+                  <option value="stacked">Stacked</option>
+                  <option value="quote">Quote highlight</option>
+                </select>
+              </div>
+            </ng-container>
+          }
+
+          @if (activeTab() === 'rooms') {
+            <ng-container formGroupName="rooms">
+              <label class="check"><input type="checkbox" formControlName="enabled" /> Show rooms section</label>
+              <div class="field">
+                <label for="roomsTitle">Section title</label>
+                <input id="roomsTitle" class="input" type="text" formControlName="title" />
+              </div>
+              <div class="field">
+                <label for="roomsSub">Subtitle</label>
+                <input id="roomsSub" class="input" type="text" formControlName="subtitle" />
+              </div>
+              <div class="field-row">
+                <div class="field">
+                  <label for="roomsTitleFont">Title font</label>
+                  <select id="roomsTitleFont" class="input" formControlName="titleFont">
+                    @for (f of sectionFonts; track f.id) {
+                      <option [value]="f.id">{{ f.label }}</option>
+                    }
+                  </select>
+                </div>
+                <div class="field">
+                  <label for="cardStyle">Card style</label>
+                  <select id="cardStyle" class="input" formControlName="cardStyle">
+                    <option value="elevated">Elevated</option>
+                    <option value="bordered">Bordered</option>
+                    <option value="minimal">Minimal</option>
+                    <option value="glass">Glass</option>
+                  </select>
+                </div>
+              </div>
+              <label class="check"><input type="checkbox" formControlName="showPrice" /> Show nightly price on cards</label>
+            </ng-container>
+          }
+
+          @if (activeTab() === 'facilities') {
+            <ng-container formGroupName="facilities">
+              <label class="check"><input type="checkbox" formControlName="enabled" /> Show facilities section</label>
+              <div class="field">
+                <label for="facTitle">Section title</label>
+                <input id="facTitle" class="input" type="text" formControlName="title" />
+              </div>
+              <div class="field">
+                <label for="facSub">Subtitle</label>
+                <input id="facSub" class="input" type="text" formControlName="subtitle" />
+              </div>
+              <div class="field-row">
+                <div class="field">
+                  <label for="facTitleFont">Title font</label>
+                  <select id="facTitleFont" class="input" formControlName="titleFont">
+                    @for (f of sectionFonts; track f.id) {
+                      <option [value]="f.id">{{ f.label }}</option>
+                    }
+                  </select>
+                </div>
+                <div class="field">
+                  <label for="facDisplay">Display style</label>
+                  <select id="facDisplay" class="input" formControlName="displayStyle">
+                    <option value="grid">Photo grid</option>
+                    <option value="carousel">Carousel-style grid</option>
+                    <option value="list">Compact list</option>
+                  </select>
+                </div>
+              </div>
+            </ng-container>
+          }
+
+          @if (activeTab() === 'footer') {
+            <ng-container formGroupName="footer">
+              <div class="field">
+                <label for="footerStyle">Footer layout</label>
+                <select id="footerStyle" class="input" formControlName="style">
+                  <option value="columns">Two columns</option>
+                  <option value="centered">Centered</option>
+                  <option value="simple">Simple bar</option>
+                  <option value="dark-band">Dark band</option>
+                </select>
+              </div>
+              <div class="field">
+                <label for="tagline">Tagline</label>
+                <input id="tagline" class="input" type="text" formControlName="tagline" />
+              </div>
+              <div class="field">
+                <label for="copyright">Copyright line</label>
+                <input id="copyright" class="input" type="text" formControlName="copyrightText" />
+              </div>
+              <div class="field">
+                <label for="footerBg">Background style</label>
+                <select id="footerBg" class="input" formControlName="backgroundStyle">
+                  <option value="dark-band">Dark brand band</option>
+                  <option value="match-primary">Match primary color</option>
+                  <option value="light">Light accent</option>
+                </select>
+              </div>
+              <label class="check"><input type="checkbox" formControlName="showContact" /> Show trust links column</label>
+            </ng-container>
+          }
+
+          @if (activeTab() === 'colors') {
+            <ng-container formGroupName="colors">
+              <div class="field">
+                <label for="preset">Color preset</label>
+                <select id="preset" class="input" formControlName="preset">
+                  @for (p of colorPresets; track p.id) {
+                    <option [value]="p.id">{{ p.id }}</option>
+                  }
+                </select>
+              </div>
+              <div class="swatches">
+                @for (p of colorPresets; track p.id) {
+                  <button
+                    type="button"
+                    class="swatch"
+                    [class.swatch--active]="form.controls.colors.controls.preset.value === p.id"
+                    [style.background]="p.palette.primary"
+                    (click)="selectColorPreset(p.id)"
+                    [attr.aria-label]="'Apply ' + p.id + ' palette'"
+                  ></button>
+                }
+              </div>
+              <div class="field-row">
+                <div class="field">
+                  <label for="primary">Primary</label>
+                  <input id="primary" class="input" type="color" formControlName="primary" />
+                </div>
+                <div class="field">
+                  <label for="accent">Accent</label>
+                  <input id="accent" class="input" type="color" formControlName="accent" />
+                </div>
+              </div>
+              <div class="field-row">
+                <div class="field">
+                  <label for="bg">Background</label>
+                  <input id="bg" class="input" type="color" formControlName="background" />
+                </div>
+                <div class="field">
+                  <label for="text">Text</label>
+                  <input id="text" class="input" type="color" formControlName="text" />
+                </div>
+              </div>
+            </ng-container>
+          }
+        </form>
+      </aside>
+
+      <section class="designer__preview">
+        <div class="preview-chrome">
+          <span class="preview-chrome__dot"></span>
+          <span class="preview-chrome__dot"></span>
+          <span class="preview-chrome__dot"></span>
+          <span class="preview-chrome__label">Live preview</span>
+        </div>
+        <div class="preview-frame">
+          @if (previewStorefront(); as preview) {
+            <app-storefront-renderer [storefront]="preview" [compact]="true" />
+          }
+        </div>
+      </section>
+    </div>
+  }
+</app-business-workspace>

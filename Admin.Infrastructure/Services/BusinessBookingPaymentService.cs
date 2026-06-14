@@ -1,6 +1,7 @@
 using Admin.Data;
 using Admin.Data.Entities;
 using Admin.Data.Enums;
+using Admin.Infrastructure.Helpers;
 using Admin.Services.Abstractions;
 using Microsoft.EntityFrameworkCore;
 using Shared.Data.Dtos;
@@ -51,7 +52,21 @@ public sealed class BusinessBookingPaymentService : IBusinessBookingPaymentServi
             return null;
         }
 
+        if (!TryParseMethod(request.Method, out var method))
+        {
+            return null;
+        }
+
         if (!TryParseGateway(request.Gateway, out var gateway))
+        {
+            return null;
+        }
+
+        if (method != BookingPaymentMethod.Gateway)
+        {
+            gateway = PaymentGatewayProvider.None;
+        }
+        else if (gateway == PaymentGatewayProvider.None)
         {
             return null;
         }
@@ -78,6 +93,24 @@ public sealed class BusinessBookingPaymentService : IBusinessBookingPaymentServi
             ext = ext[..256];
         }
 
+        if (ext is null)
+        {
+            var businessName = await _db.BusinessRegistrations
+                .AsNoTracking()
+                .Where(b => b.Id == businessId)
+                .Select(b => b.BusinessName)
+                .FirstOrDefaultAsync(cancellationToken)
+                .ConfigureAwait(false);
+
+            if (businessName is null)
+            {
+                return null;
+            }
+
+            ext = await GenerateUniquePaymentReferenceAsync(businessId, businessName, cancellationToken)
+                .ConfigureAwait(false);
+        }
+
         var now = DateTimeOffset.UtcNow;
         var entity = new BookingPayment
         {
@@ -87,6 +120,7 @@ public sealed class BusinessBookingPaymentService : IBusinessBookingPaymentServi
             Amount = decimal.Round(request.Amount, 2, MidpointRounding.AwayFromZero),
             Currency = cur,
             Status = status,
+            Method = method,
             Gateway = gateway,
             ExternalReference = ext,
             Notes = notes,
@@ -114,6 +148,21 @@ public sealed class BusinessBookingPaymentService : IBusinessBookingPaymentServi
         return p is null ? null : Map(p);
     }
 
+    private Task<string> GenerateUniquePaymentReferenceAsync(
+        Guid businessId,
+        string businessName,
+        CancellationToken cancellationToken) =>
+        BusinessReferenceCodeGenerator.GenerateUniqueAsync(
+            businessName,
+            async (code, ct) => await _db.BookingPayments
+                .AnyAsync(
+                    p => p.BusinessRegistrationId == businessId
+                        && p.ExternalReference != null
+                        && p.ExternalReference == code,
+                    ct)
+                .ConfigureAwait(false),
+            cancellationToken);
+
     private static BookingPaymentSummaryDto Map(BookingPayment p) =>
         new()
         {
@@ -125,6 +174,7 @@ public sealed class BusinessBookingPaymentService : IBusinessBookingPaymentServi
             Amount = p.Amount,
             Currency = p.Currency,
             Status = p.Status.ToString(),
+            Method = p.Method.ToString(),
             Gateway = p.Gateway.ToString(),
             ExternalReference = p.ExternalReference,
             CreatedAt = p.CreatedAt,
@@ -152,5 +202,17 @@ public sealed class BusinessBookingPaymentService : IBusinessBookingPaymentServi
 
         return Enum.TryParse(value.Trim(), ignoreCase: true, out gateway)
                && Enum.IsDefined(typeof(PaymentGatewayProvider), gateway);
+    }
+
+    private static bool TryParseMethod(string? value, out BookingPaymentMethod method)
+    {
+        method = BookingPaymentMethod.Cash;
+        if (string.IsNullOrWhiteSpace(value))
+        {
+            return false;
+        }
+
+        return Enum.TryParse(value.Trim(), ignoreCase: true, out method)
+               && Enum.IsDefined(typeof(BookingPaymentMethod), method);
     }
 }

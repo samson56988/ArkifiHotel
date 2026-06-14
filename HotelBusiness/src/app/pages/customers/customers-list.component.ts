@@ -1,4 +1,4 @@
-import { Component, inject, OnInit } from '@angular/core';
+import { Component, inject, OnInit, signal } from '@angular/core';
 import { RouterLink } from '@angular/router';
 import type { ApiResult } from '../../core/models/api-result.model';
 import type { CustomerSummaryDto } from '../../core/models/customers.models';
@@ -17,24 +17,26 @@ export class CustomersListComponent implements OnInit {
   private readonly api = inject(BusinessCustomersApiService);
   private readonly toast = inject(ToastService);
 
-  customers: CustomerSummaryDto[] = [];
-  initialLoadDone = false;
-  loadFailed = false;
+  readonly customers = signal<CustomerSummaryDto[]>([]);
+  readonly initialLoadDone = signal(false);
+  readonly loadFailed = signal(false);
+  readonly loading = signal(false);
 
   ngOnInit(): void {
     this.load();
   }
 
   load(): void {
-    this.loadFailed = false;
+    this.loading.set(true);
+    this.loadFailed.set(false);
     this.api.listCustomers().subscribe({
       next: (res) => {
         if (res.success) {
-          this.customers = Array.isArray(res.data) ? res.data! : [];
-          this.loadFailed = false;
+          this.customers.set(Array.isArray(res.data) ? res.data! : []);
+          this.loadFailed.set(false);
         } else {
-          this.customers = [];
-          this.loadFailed = true;
+          this.customers.set([]);
+          this.loadFailed.set(true);
           if (res.code === 'Unauthorized' || res.message?.includes('401')) {
             this.toast.warning('Please sign in again.', 'Customers');
           } else {
@@ -42,12 +44,14 @@ export class CustomersListComponent implements OnInit {
           }
         }
 
-        this.initialLoadDone = true;
+        this.initialLoadDone.set(true);
+        this.loading.set(false);
       },
       error: (err: unknown) => {
-        this.customers = [];
-        this.loadFailed = true;
-        this.initialLoadDone = true;
+        this.customers.set([]);
+        this.loadFailed.set(true);
+        this.initialLoadDone.set(true);
+        this.loading.set(false);
         const r = err as ApiResult<CustomerSummaryDto[]>;
         if (r && typeof r === 'object' && 'message' in r) {
           this.toast.showFailedApi(r, 'Customers');

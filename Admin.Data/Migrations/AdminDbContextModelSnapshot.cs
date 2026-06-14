@@ -270,6 +270,9 @@ namespace Admin.Data.Migrations
                         .HasMaxLength(4000)
                         .HasColumnType("character varying(4000)");
 
+                    b.Property<Guid?>("LocationId")
+                        .HasColumnType("uuid");
+
                     b.Property<Guid>("RoomId")
                         .HasColumnType("uuid");
 
@@ -287,12 +290,14 @@ namespace Admin.Data.Migrations
 
                     b.HasIndex("BusinessRegistrationId");
 
-                    b.HasIndex("ConfirmationCode")
-                        .IsUnique();
+                    b.HasIndex("LocationId");
 
                     b.HasIndex("RoomId");
 
                     b.HasIndex("BusinessRegistrationId", "CheckInDate");
+
+                    b.HasIndex("BusinessRegistrationId", "ConfirmationCode")
+                        .IsUnique();
 
                     b.ToTable("Bookings", (string)null);
                 });
@@ -328,6 +333,11 @@ namespace Admin.Data.Migrations
                     b.Property<int>("Gateway")
                         .HasColumnType("integer");
 
+                    b.Property<int>("Method")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("integer")
+                        .HasDefaultValue(0);
+
                     b.Property<string>("Notes")
                         .HasMaxLength(4000)
                         .HasColumnType("character varying(4000)");
@@ -347,6 +357,40 @@ namespace Admin.Data.Migrations
                     b.HasIndex("BusinessRegistrationId", "CreatedAt");
 
                     b.ToTable("BookingPayments", (string)null);
+                });
+
+            modelBuilder.Entity("Admin.Data.Entities.BusinessLocation", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uuid");
+
+                    b.Property<string>("Address")
+                        .HasMaxLength(500)
+                        .HasColumnType("character varying(500)");
+
+                    b.Property<Guid>("BusinessRegistrationId")
+                        .HasColumnType("uuid");
+
+                    b.Property<DateTimeOffset>("CreatedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<string>("Name")
+                        .IsRequired()
+                        .HasMaxLength(200)
+                        .HasColumnType("character varying(200)");
+
+                    b.Property<DateTimeOffset?>("UpdatedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("BusinessRegistrationId");
+
+                    b.HasIndex("BusinessRegistrationId", "Name")
+                        .IsUnique();
+
+                    b.ToTable("BusinessLocations", (string)null);
                 });
 
             modelBuilder.Entity("Admin.Data.Entities.BusinessLoginOtpChallenge", b =>
@@ -386,6 +430,45 @@ namespace Admin.Data.Migrations
                     b.HasIndex("BusinessRegistrationId", "IsUsed");
 
                     b.ToTable("BusinessLoginOtpChallenges", (string)null);
+                });
+
+            modelBuilder.Entity("Admin.Data.Entities.BusinessPasswordResetChallenge", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uuid");
+
+                    b.Property<Guid>("BusinessRegistrationId")
+                        .HasColumnType("uuid");
+
+                    b.Property<DateTimeOffset>("CreatedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<DateTimeOffset>("ExpiresAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<bool>("IsUsed")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("boolean")
+                        .HasDefaultValue(false);
+
+                    b.Property<string>("OtpCodeHash")
+                        .IsRequired()
+                        .HasMaxLength(128)
+                        .HasColumnType("character varying(128)");
+
+                    b.Property<DateTimeOffset?>("UsedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("BusinessRegistrationId");
+
+                    b.HasIndex("ExpiresAt");
+
+                    b.HasIndex("BusinessRegistrationId", "IsUsed");
+
+                    b.ToTable("BusinessPasswordResetChallenges", (string)null);
                 });
 
             modelBuilder.Entity("Admin.Data.Entities.BusinessRegistration", b =>
@@ -431,14 +514,12 @@ namespace Admin.Data.Migrations
                         .HasMaxLength(100)
                         .HasColumnType("character varying(100)");
 
-                    b.Property<int>("PaymentProvider")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("integer")
-                        .HasDefaultValue(0);
+                    b.Property<string>("LogoPath")
+                        .HasMaxLength(512)
+                        .HasColumnType("character varying(512)");
 
-                    b.Property<string>("PaymentSecretProtected")
-                        .HasMaxLength(4096)
-                        .HasColumnType("character varying(4096)");
+                    b.Property<string>("StorefrontThemeJson")
+                        .HasColumnType("jsonb");
 
                     b.Property<string>("PhoneNumber")
                         .IsRequired()
@@ -557,6 +638,37 @@ namespace Admin.Data.Migrations
                     b.ToTable("EmailVerificationOtps", (string)null);
                 });
 
+            modelBuilder.Entity("Admin.Data.Entities.PaymentConfiguration", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uuid");
+
+                    b.Property<Guid>("BusinessRegistrationId")
+                        .HasColumnType("uuid");
+
+                    b.Property<DateTimeOffset>("CreatedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<string>("EncryptedJson")
+                        .IsRequired()
+                        .HasMaxLength(8192)
+                        .HasColumnType("character varying(8192)");
+
+                    b.Property<int>("Gateway")
+                        .HasColumnType("integer");
+
+                    b.Property<DateTimeOffset?>("UpdatedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("BusinessRegistrationId")
+                        .IsUnique();
+
+                    b.ToTable("PaymentConfigurations", (string)null);
+                });
+
             modelBuilder.Entity("Admin.Data.Entities.PropertyFacility", b =>
                 {
                     b.Property<Guid>("Id")
@@ -578,6 +690,9 @@ namespace Admin.Data.Migrations
                         .HasColumnType("boolean")
                         .HasDefaultValue(false);
 
+                    b.Property<Guid?>("LocationId")
+                        .HasColumnType("uuid");
+
                     b.Property<string>("Name")
                         .IsRequired()
                         .HasMaxLength(200)
@@ -589,6 +704,8 @@ namespace Admin.Data.Migrations
                     b.HasKey("Id");
 
                     b.HasIndex("BusinessRegistrationId");
+
+                    b.HasIndex("LocationId");
 
                     b.HasIndex("BusinessRegistrationId", "Name");
 
@@ -651,6 +768,9 @@ namespace Admin.Data.Migrations
                         .HasColumnType("boolean")
                         .HasDefaultValue(false);
 
+                    b.Property<Guid?>("LocationId")
+                        .HasColumnType("uuid");
+
                     b.Property<int>("MaxOccupancy")
                         .HasColumnType("integer");
 
@@ -659,12 +779,19 @@ namespace Admin.Data.Migrations
                         .HasMaxLength(200)
                         .HasColumnType("character varying(200)");
 
+                    b.Property<int>("Quantity")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("integer")
+                        .HasDefaultValue(1);
+
                     b.Property<DateTimeOffset?>("UpdatedAt")
                         .HasColumnType("timestamp with time zone");
 
                     b.HasKey("Id");
 
                     b.HasIndex("BusinessRegistrationId");
+
+                    b.HasIndex("LocationId");
 
                     b.HasIndex("BusinessRegistrationId", "Name");
 
@@ -735,6 +862,11 @@ namespace Admin.Data.Migrations
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
 
+                    b.HasOne("Admin.Data.Entities.BusinessLocation", "Location")
+                        .WithMany()
+                        .HasForeignKey("LocationId")
+                        .OnDelete(DeleteBehavior.SetNull);
+
                     b.HasOne("Admin.Data.Entities.Room", "Room")
                         .WithMany()
                         .HasForeignKey("RoomId")
@@ -742,6 +874,8 @@ namespace Admin.Data.Migrations
                         .IsRequired();
 
                     b.Navigation("BusinessRegistration");
+
+                    b.Navigation("Location");
 
                     b.Navigation("Room");
                 });
@@ -765,7 +899,29 @@ namespace Admin.Data.Migrations
                     b.Navigation("BusinessRegistration");
                 });
 
+            modelBuilder.Entity("Admin.Data.Entities.BusinessLocation", b =>
+                {
+                    b.HasOne("Admin.Data.Entities.BusinessRegistration", "BusinessRegistration")
+                        .WithMany()
+                        .HasForeignKey("BusinessRegistrationId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("BusinessRegistration");
+                });
+
             modelBuilder.Entity("Admin.Data.Entities.BusinessLoginOtpChallenge", b =>
+                {
+                    b.HasOne("Admin.Data.Entities.BusinessRegistration", "BusinessRegistration")
+                        .WithMany()
+                        .HasForeignKey("BusinessRegistrationId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("BusinessRegistration");
+                });
+
+            modelBuilder.Entity("Admin.Data.Entities.BusinessPasswordResetChallenge", b =>
                 {
                     b.HasOne("Admin.Data.Entities.BusinessRegistration", "BusinessRegistration")
                         .WithMany()
@@ -798,7 +954,7 @@ namespace Admin.Data.Migrations
                     b.Navigation("BusinessRegistration");
                 });
 
-            modelBuilder.Entity("Admin.Data.Entities.PropertyFacility", b =>
+            modelBuilder.Entity("Admin.Data.Entities.PaymentConfiguration", b =>
                 {
                     b.HasOne("Admin.Data.Entities.BusinessRegistration", "BusinessRegistration")
                         .WithMany()
@@ -807,6 +963,24 @@ namespace Admin.Data.Migrations
                         .IsRequired();
 
                     b.Navigation("BusinessRegistration");
+                });
+
+            modelBuilder.Entity("Admin.Data.Entities.PropertyFacility", b =>
+                {
+                    b.HasOne("Admin.Data.Entities.BusinessRegistration", "BusinessRegistration")
+                        .WithMany()
+                        .HasForeignKey("BusinessRegistrationId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.HasOne("Admin.Data.Entities.BusinessLocation", "Location")
+                        .WithMany("PropertyFacilities")
+                        .HasForeignKey("LocationId")
+                        .OnDelete(DeleteBehavior.SetNull);
+
+                    b.Navigation("BusinessRegistration");
+
+                    b.Navigation("Location");
                 });
 
             modelBuilder.Entity("Admin.Data.Entities.PropertyFacilityImage", b =>
@@ -828,7 +1002,14 @@ namespace Admin.Data.Migrations
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
 
+                    b.HasOne("Admin.Data.Entities.BusinessLocation", "Location")
+                        .WithMany("Rooms")
+                        .HasForeignKey("LocationId")
+                        .OnDelete(DeleteBehavior.SetNull);
+
                     b.Navigation("BusinessRegistration");
+
+                    b.Navigation("Location");
                 });
 
             modelBuilder.Entity("Admin.Data.Entities.RoomAmenity", b =>
@@ -864,6 +1045,13 @@ namespace Admin.Data.Migrations
             modelBuilder.Entity("Admin.Data.Entities.Amenity", b =>
                 {
                     b.Navigation("RoomAmenities");
+                });
+
+            modelBuilder.Entity("Admin.Data.Entities.BusinessLocation", b =>
+                {
+                    b.Navigation("PropertyFacilities");
+
+                    b.Navigation("Rooms");
                 });
 
             modelBuilder.Entity("Admin.Data.Entities.PropertyFacility", b =>

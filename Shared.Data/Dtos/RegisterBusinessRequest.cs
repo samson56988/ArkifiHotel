@@ -17,4 +17,7 @@ public sealed class RegisterBusinessRequest
     public bool AcceptTerms { get; set; }
 
     public string PhoneNumber { get; set; } = string.Empty;
+
+    /// <summary>URL-safe storefront path segment, e.g. marina-suites.</summary>
+    public string Slug { get; set; } = string.Empty;
 }

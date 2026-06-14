@@ -8,6 +8,7 @@ export interface RegisterBusinessRequest {
   password: string;
   acceptTerms: boolean;
   phoneNumber: string;
+  slug: string;
 }
 
 export interface BusinessRegistrationDto {
@@ -22,6 +23,7 @@ export interface BusinessRegistrationDto {
   termsAcceptedAt: string;
   phoneNumber: string;
   slug: string | null;
+  logoUrl: string | null;
 }
 
 export type RegisterApiResponse = ApiResult<BusinessRegistrationDto>;
@@ -66,3 +68,23 @@ export interface VerifyLoginOtpRequest {
 }
 
 export type VerifyLoginOtpResponse = ApiResult<LoginBusinessData>;
+
+export interface RequestPasswordResetRequest {
+  email: string;
+}
+
+export interface RequestPasswordResetData {
+  challengeId: string;
+  challengeExpiresAtUtc: string;
+}
+
+export type RequestPasswordResetResponse = ApiResult<RequestPasswordResetData | null>;
+
+export interface ResetPasswordRequest {
+  email: string;
+  challengeId: string;
+  otp: string;
+  newPassword: string;
+}
+
+export type ResetPasswordResponse = ApiResult<null>;

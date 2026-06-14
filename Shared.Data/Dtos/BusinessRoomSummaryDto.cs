@@ -10,6 +10,12 @@ public sealed class BusinessRoomSummaryDto
 
     public decimal BasePricePerNight { get; set; }
 
+    public int Quantity { get; set; }
+
+    public Guid? LocationId { get; set; }
+
+    public string? LocationName { get; set; }
+
     public string? PrimaryImageUrl { get; set; }
 
     public int AmenityCount { get; set; }

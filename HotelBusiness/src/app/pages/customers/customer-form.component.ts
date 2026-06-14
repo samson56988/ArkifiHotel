@@ -1,9 +1,9 @@
-import { Component, inject, OnInit } from '@angular/core';
+import { Component, DestroyRef, inject, OnInit, signal } from '@angular/core';
+import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { FormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
 import { ActivatedRoute, Router, RouterLink } from '@angular/router';
-import { Observable, of } from 'rxjs';
 import { finalize } from 'rxjs/operators';
-import type { CustomerDetailApiResponse } from '../../core/models/customers.models';
+import type { ApiResult } from '../../core/models/api-result.model';
 import { BusinessCustomersApiService } from '../../core/services/business-customers-api.service';
 import { ToastService } from '../../core/services/toast.service';
 import { BusinessWorkspaceComponent } from '../../layouts/business-workspace/business-workspace.component';
@@ -21,6 +21,7 @@ export class CustomerFormComponent implements OnInit {
   private readonly route = inject(ActivatedRoute);
   private readonly router = inject(Router);
   private readonly toast = inject(ToastService);
+  private readonly destroyRef = inject(DestroyRef);
 
   readonly form = this.fb.nonNullable.group({
     fullName: ['', [Validators.required, Validators.minLength(2), Validators.maxLength(200)]],
@@ -29,46 +30,58 @@ export class CustomerFormComponent implements OnInit {
     notes: [''],
   });
 
-  customerId: string | null = null;
-  loading = false;
-  saving = false;
+  readonly customerId = signal<string | null>(null);
+  readonly loading = signal(false);
+  readonly saving = signal(false);
 
   get isCreateMode(): boolean {
-    return this.customerId === null;
+    return this.customerId() === null;
   }
 
   ngOnInit(): void {
-    this.customerId = this.route.snapshot.paramMap.get('customerId');
-    this.loading = true;
-
-    const detail$: Observable<CustomerDetailApiResponse> = this.customerId
-      ? this.api.getCustomer(this.customerId)
-      : of<CustomerDetailApiResponse>({
-          success: true,
-          data: null,
-          message: null,
-          code: null,
-          validationErrors: null,
-        });
-
-    detail$.pipe(finalize(() => (this.loading = false))).subscribe((detail) => {
-      if (!this.customerId) {
-        return;
-      }
-
-      if (!detail.success || !detail.data) {
-        this.toast.error(detail.message ?? 'Customer not found.', 'Customer');
-        return;
-      }
-
-      const d = detail.data;
-      this.form.patchValue({
-        fullName: d.fullName,
-        email: d.email,
-        phone: d.phone ?? '',
-        notes: d.notes ?? '',
-      });
+    this.route.paramMap.pipe(takeUntilDestroyed(this.destroyRef)).subscribe((params) => {
+      this.initFromRoute(params.get('customerId'));
     });
+  }
+
+  private initFromRoute(paramId: string | null): void {
+    this.customerId.set(paramId);
+    this.form.reset({ fullName: '', email: '', phone: '', notes: '' });
+
+    if (!paramId) {
+      this.loading.set(false);
+      return;
+    }
+
+    this.loading.set(true);
+    this.api
+      .getCustomer(paramId)
+      .pipe(finalize(() => this.loading.set(false)))
+      .subscribe({
+        next: (detail) => {
+          if (!detail.success || !detail.data) {
+            this.toast.error(detail.message ?? 'Customer not found.', 'Customer');
+            return;
+          }
+
+          const d = detail.data;
+          this.form.patchValue({
+            fullName: d.fullName,
+            email: d.email,
+            phone: d.phone ?? '',
+            notes: d.notes ?? '',
+          });
+        },
+        error: (err: unknown) => {
+          const r = err as ApiResult<unknown>;
+          if (r && typeof r === 'object' && 'message' in r) {
+            this.toast.showFailedApi(r, 'Customer');
+            return;
+          }
+
+          this.toast.error('Could not load customer.', 'Customer');
+        },
+      });
   }
 
   onSubmit(): void {
@@ -85,12 +98,11 @@ export class CustomerFormComponent implements OnInit {
       notes: raw.notes.trim() || null,
     };
 
-    this.saving = true;
-    const req$ = this.isCreateMode
-      ? this.api.createCustomer(body)
-      : this.api.updateCustomer(this.customerId!, body);
+    const id = this.customerId();
+    this.saving.set(true);
+    const req$ = this.isCreateMode ? this.api.createCustomer(body) : this.api.updateCustomer(id!, body);
 
-    req$.pipe(finalize(() => (this.saving = false))).subscribe({
+    req$.pipe(finalize(() => this.saving.set(false))).subscribe({
       next: (res) => {
         if (!res.success || !res.data) {
           this.toast.showFailedApi(res, 'Customer');
@@ -103,17 +115,29 @@ export class CustomerFormComponent implements OnInit {
           return;
         }
 
+        this.form.patchValue({
+          fullName: res.data.fullName,
+          email: res.data.email,
+          phone: res.data.phone ?? '',
+          notes: res.data.notes ?? '',
+        });
         this.toast.success('Customer updated.', 'Customer');
       },
       error: (err: unknown) => {
-        const r = err as { message?: string };
-        this.toast.error(r?.message ?? 'Request failed.', 'Customer');
+        const r = err as ApiResult<unknown>;
+        if (r && typeof r === 'object' && 'message' in r) {
+          this.toast.showFailedApi(r, 'Customer');
+          return;
+        }
+
+        this.toast.error('Request failed.', 'Customer');
       },
     });
   }
 
   deleteCustomer(): void {
-    if (!this.customerId || this.isCreateMode) {
+    const id = this.customerId();
+    if (!id || this.isCreateMode) {
       return;
     }
 
@@ -121,10 +145,10 @@ export class CustomerFormComponent implements OnInit {
       return;
     }
 
-    this.saving = true;
+    this.saving.set(true);
     this.api
-      .deleteCustomer(this.customerId)
-      .pipe(finalize(() => (this.saving = false)))
+      .deleteCustomer(id)
+      .pipe(finalize(() => this.saving.set(false)))
       .subscribe({
         next: (res) => {
           if (!res.success) {
@@ -136,8 +160,13 @@ export class CustomerFormComponent implements OnInit {
           this.toast.success('Customer removed.', 'Customer');
         },
         error: (err: unknown) => {
-          const r = err as { message?: string };
-          this.toast.error(r?.message ?? 'Could not delete.', 'Customer');
+          const r = err as ApiResult<unknown>;
+          if (r && typeof r === 'object' && 'message' in r) {
+            this.toast.showFailedApi(r, 'Customer');
+            return;
+          }
+
+          this.toast.error('Could not delete.', 'Customer');
         },
       });
   }

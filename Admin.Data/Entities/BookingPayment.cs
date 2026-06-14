@@ -21,7 +21,10 @@ public class BookingPayment
 
     public BookingPaymentStatus Status { get; set; }
 
-    /// <summary>Paystack, Flutterwave, or None for manual/offline entries.</summary>
+    /// <summary>Cash, bank transfer, or online gateway.</summary>
+    public BookingPaymentMethod Method { get; set; }
+
+    /// <summary>Paystack, Flutterwave, or None (offline methods use None).</summary>
     public PaymentGatewayProvider Gateway { get; set; }
 
     /// <summary>Gateway transaction or reference id.</summary>

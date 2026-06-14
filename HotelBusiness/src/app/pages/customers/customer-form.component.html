@@ -8,7 +8,7 @@
     <a routerLink="/customers" class="btn btn--ghost">Back to customers</a>
   </header>
 
-  @if (loading) {
+  @if (loading()) {
     <p class="muted">Loading…</p>
   } @else {
     <form class="panel" [formGroup]="form" (ngSubmit)="onSubmit()" novalidate>
@@ -35,11 +35,11 @@
         <textarea id="notes" class="input input--area" rows="3" formControlName="notes"></textarea>
       </div>
       <div class="actions">
-        <button type="submit" class="btn btn--primary" [disabled]="saving">
-          {{ saving ? 'Saving…' : isCreateMode ? 'Create customer' : 'Save changes' }}
+        <button type="submit" class="btn btn--primary" [disabled]="saving()">
+          {{ saving() ? 'Saving…' : isCreateMode ? 'Create customer' : 'Save changes' }}
         </button>
         @if (!isCreateMode) {
-          <button type="button" class="btn btn--danger" [disabled]="saving" (click)="deleteCustomer()">
+          <button type="button" class="btn btn--danger" [disabled]="saving()" (click)="deleteCustomer()">
             Delete
           </button>
         }

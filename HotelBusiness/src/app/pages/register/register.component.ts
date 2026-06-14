@@ -1,4 +1,5 @@
-import { Component, inject } from '@angular/core';
+import { Component, DestroyRef, inject } from '@angular/core';
+import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import {
   AbstractControl,
   FormBuilder,
@@ -7,9 +8,18 @@ import {
   Validators,
 } from '@angular/forms';
 import { Router, RouterLink } from '@angular/router';
-import { finalize } from 'rxjs/operators';
+import { of } from 'rxjs';
+import { debounceTime, distinctUntilChanged, finalize, switchMap } from 'rxjs/operators';
+import { buildStorefrontUrl, CUSTOMER_STOREFRONT_BASE_URL } from '../../core/constants/storefront';
 import { AuthApiService } from '../../core/services/auth-api.service';
+import { RegistrationApiService } from '../../core/services/registration-api.service';
 import { ToastService } from '../../core/services/toast.service';
+import { showAuthRequestError } from '../../core/utils/auth-request-error';
+import {
+  isValidBusinessSlug,
+  normalizeBusinessSlug,
+  suggestSlugFromBusinessName,
+} from '../../core/utils/business-slug';
 
 function passwordsMatch(control: AbstractControl): ValidationErrors | null {
   const password = control.get('password')?.value;
@@ -30,12 +40,17 @@ function passwordsMatch(control: AbstractControl): ValidationErrors | null {
 export class RegisterComponent {
   private readonly fb = inject(FormBuilder);
   private readonly authApi = inject(AuthApiService);
+  private readonly registrationApi = inject(RegistrationApiService);
   private readonly router = inject(Router);
   private readonly toast = inject(ToastService);
+  private readonly destroyRef = inject(DestroyRef);
+
+  readonly storefrontBase = CUSTOMER_STOREFRONT_BASE_URL;
 
   readonly form = this.fb.nonNullable.group(
     {
       propertyName: ['', [Validators.required, Validators.minLength(2)]],
+      slug: ['', [Validators.required, Validators.minLength(3), Validators.maxLength(128)]],
       firstName: ['', [Validators.required, Validators.minLength(2)]],
       lastName: ['', [Validators.required, Validators.minLength(2)]],
       email: ['', [Validators.required, Validators.email]],
@@ -49,6 +64,52 @@ export class RegisterComponent {
 
   submitted = false;
   loading = false;
+  slugChecking = false;
+  slugAvailable: boolean | null = null;
+  slugTouched = false;
+
+  constructor() {
+    this.form.controls.propertyName.valueChanges.pipe(takeUntilDestroyed(this.destroyRef)).subscribe((name) => {
+      if (!this.form.controls.slug.dirty) {
+        this.form.controls.slug.setValue(suggestSlugFromBusinessName(name));
+      }
+    });
+
+    this.form.controls.slug.valueChanges
+      .pipe(
+        debounceTime(350),
+        distinctUntilChanged(),
+        switchMap((raw) => {
+          const slug = normalizeBusinessSlug(raw);
+          if (slug !== raw) {
+            this.form.controls.slug.setValue(slug, { emitEvent: false });
+          }
+
+          if (!isValidBusinessSlug(slug)) {
+            this.slugAvailable = null;
+            return of(null);
+          }
+
+          this.slugChecking = true;
+          return this.registrationApi.checkSlug(slug).pipe(finalize(() => (this.slugChecking = false)));
+        }),
+        takeUntilDestroyed(this.destroyRef),
+      )
+      .subscribe((res) => {
+        if (!res?.success || !res.data) {
+          return;
+        }
+
+        this.slugAvailable = res.data.available;
+        if (res.data.slug !== this.form.controls.slug.value) {
+          this.form.controls.slug.setValue(res.data.slug, { emitEvent: false });
+        }
+      });
+  }
+
+  storefrontPreview(): string {
+    return buildStorefrontUrl(this.form.controls.slug.value);
+  }
 
   onSubmit(): void {
     this.submitted = true;
@@ -58,11 +119,23 @@ export class RegisterComponent {
       return;
     }
 
+    const slug = normalizeBusinessSlug(this.form.controls.slug.value);
+    if (!isValidBusinessSlug(slug)) {
+      this.toast.warning('Enter a valid hotel slug (letters, numbers, hyphens).', 'Registration');
+      return;
+    }
+
+    if (this.slugAvailable === false) {
+      this.toast.warning('That hotel slug is already taken.', 'Registration');
+      return;
+    }
+
     const raw = this.form.getRawValue();
     this.loading = true;
     this.authApi
       .register({
         businessName: raw.propertyName.trim(),
+        slug,
         firstName: raw.firstName.trim(),
         lastName: raw.lastName.trim(),
         email: raw.email.trim(),
@@ -77,6 +150,7 @@ export class RegisterComponent {
             this.toast.success('We sent a verification code to your email.', 'Account created');
             this.form.reset({
               propertyName: '',
+              slug: '',
               firstName: '',
               lastName: '',
               email: '',
@@ -95,14 +169,12 @@ export class RegisterComponent {
 
           this.toast.showFailedApi(result, 'Registration failed');
         },
-        error: () => {
-          this.toast.error('We could not reach the server. Check your connection and try again.', 'Network error');
-        },
+        error: (err: unknown) => showAuthRequestError(this.toast, err, 'Registration failed'),
       });
   }
 
   showError(
-    field: 'propertyName' | 'firstName' | 'lastName' | 'email' | 'phoneNumber' | 'password' | 'confirmPassword',
+    field: 'propertyName' | 'slug' | 'firstName' | 'lastName' | 'email' | 'phoneNumber' | 'password' | 'confirmPassword',
   ): boolean {
     const c = this.form.controls[field];
     return (c.touched || this.submitted) && c.invalid;

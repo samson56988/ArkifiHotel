@@ -1,0 +1,10 @@
+@if (loading()) {
+  <div class="state">Loading your stay…</div>
+} @else if (notFound()) {
+  <div class="state state--error">
+    <h1>Hotel not found</h1>
+    <p>We could not find a storefront for this link.</p>
+  </div>
+} @else if (storefront(); as data) {
+  <app-storefront-renderer [storefront]="data" />
+}

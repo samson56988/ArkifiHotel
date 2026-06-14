@@ -20,17 +20,82 @@ public sealed class BusinessBookingsController : ControllerBase
     }
 
     [HttpGet]
-    [ProducesResponseType(typeof(ApiResult<IReadOnlyList<BookingSummaryDto>>), StatusCodes.Status200OK)]
-    public async Task<IActionResult> List(CancellationToken cancellationToken)
+    [ProducesResponseType(typeof(ApiResult<PagedResultDto<BookingSummaryDto>>), StatusCodes.Status200OK)]
+    [ProducesResponseType(typeof(ApiResult<PagedResultDto<BookingSummaryDto>>), StatusCodes.Status400BadRequest)]
+    public async Task<IActionResult> List(
+        [FromQuery] int page = 1,
+        [FromQuery] int pageSize = 20,
+        [FromQuery] DateOnly? checkInFrom = null,
+        [FromQuery] DateOnly? checkInTo = null,
+        [FromQuery] DateOnly? checkOutFrom = null,
+        [FromQuery] DateOnly? checkOutTo = null,
+        [FromQuery] string? stayPhase = null,
+        [FromQuery] string? status = null,
+        CancellationToken cancellationToken = default)
     {
         var businessId = User.GetBusinessId();
         if (businessId is null)
         {
-            return Unauthorized(ApiResult<IReadOnlyList<BookingSummaryDto>>.Fail("Unauthorized", "Missing business identity."));
+            return Unauthorized(ApiResult<PagedResultDto<BookingSummaryDto>>.Fail("Unauthorized", "Missing business identity."));
         }
 
-        var list = await _bookings.ListAsync(businessId.Value, cancellationToken).ConfigureAwait(false);
-        return Ok(ApiResult<IReadOnlyList<BookingSummaryDto>>.Ok(list));
+        if (checkInFrom.HasValue && checkInTo.HasValue && checkInTo.Value < checkInFrom.Value)
+        {
+            return BadRequest(
+                ApiResult<PagedResultDto<BookingSummaryDto>>.Fail("Validation", "Check-in “to” must be on or after check-in “from”."));
+        }
+
+        if (checkOutFrom.HasValue && checkOutTo.HasValue && checkOutTo.Value < checkOutFrom.Value)
+        {
+            return BadRequest(
+                ApiResult<PagedResultDto<BookingSummaryDto>>.Fail("Validation", "Check-out “to” must be on or after check-out “from”."));
+        }
+
+        var query = new ListBookingsQuery
+        {
+            Page = page,
+            PageSize = pageSize,
+            CheckInFrom = checkInFrom,
+            CheckInTo = checkInTo,
+            CheckOutFrom = checkOutFrom,
+            CheckOutTo = checkOutTo,
+            StayPhase = stayPhase,
+            Status = status,
+        };
+
+        var list = await _bookings.ListAsync(businessId.Value, query, cancellationToken).ConfigureAwait(false);
+        return Ok(ApiResult<PagedResultDto<BookingSummaryDto>>.Ok(list));
+    }
+
+    [HttpGet("availability")]
+    [ProducesResponseType(typeof(ApiResult<IReadOnlyList<RoomAvailabilityDto>>), StatusCodes.Status200OK)]
+    [ProducesResponseType(typeof(ApiResult<IReadOnlyList<RoomAvailabilityDto>>), StatusCodes.Status400BadRequest)]
+    public async Task<IActionResult> GetAvailability(
+        [FromQuery] DateOnly checkInDate,
+        [FromQuery] DateOnly checkOutDate,
+        [FromQuery] Guid? roomId = null,
+        [FromQuery] Guid? locationId = null,
+        CancellationToken cancellationToken = default)
+    {
+        var businessId = User.GetBusinessId();
+        if (businessId is null)
+        {
+            return Unauthorized(ApiResult<IReadOnlyList<RoomAvailabilityDto>>.Fail("Unauthorized", "Missing business identity."));
+        }
+
+        if (checkOutDate <= checkInDate)
+        {
+            return BadRequest(
+                ApiResult<IReadOnlyList<RoomAvailabilityDto>>.Fail(
+                    "Validation",
+                    "Check-out must be after check-in."));
+        }
+
+        var availability = await _bookings
+            .GetAvailabilityAsync(businessId.Value, checkInDate, checkOutDate, roomId, locationId, cancellationToken)
+            .ConfigureAwait(false);
+
+        return Ok(ApiResult<IReadOnlyList<RoomAvailabilityDto>>.Ok(availability));
     }
 
     [HttpGet("{bookingId:guid}")]
@@ -70,7 +135,7 @@ public sealed class BusinessBookingsController : ControllerBase
             return BadRequest(
                 ApiResult<BookingDetailDto>.Fail(
                     "Validation",
-                    "Could not create booking. Check guest details, dates, room selection, and that the room is active with no overlapping reservation."));
+                    "Could not create booking. Select a location, check guest details (including phone), dates, room availability, and confirm payment (cash or bank transfer only)."));
         }
 
         return Created($"/api/business/bookings/{created.Id}", ApiResult<BookingDetailDto>.Ok(created));

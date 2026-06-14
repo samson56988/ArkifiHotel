@@ -1,11 +1,14 @@
-import { Component, inject, OnInit } from '@angular/core';
+import { Component, DestroyRef, inject, OnInit, signal } from '@angular/core';
+import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { FormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
 import { ActivatedRoute, Router, RouterLink } from '@angular/router';
-import { forkJoin, Observable, of } from 'rxjs';
 import { finalize } from 'rxjs/operators';
-import type { FacilityDetailApiResponse, FacilityImageDto, PropertyFacilityDetailDto } from '../../core/models/facilities.models';
+import type { FacilityImageDto, PropertyFacilityDetailDto } from '../../core/models/facilities.models';
+import type { BusinessLocationDto } from '../../core/models/locations.models';
 import { BusinessFacilitiesApiService } from '../../core/services/business-facilities-api.service';
+import { BusinessLocationsApiService } from '../../core/services/business-locations-api.service';
 import { ToastService } from '../../core/services/toast.service';
+import { ALLOWED_IMAGE_ACCEPT, filterAllowedImageFiles } from '../../core/utils/image-upload';
 import { BusinessWorkspaceComponent } from '../../layouts/business-workspace/business-workspace.component';
 
 @Component({
@@ -18,51 +21,78 @@ import { BusinessWorkspaceComponent } from '../../layouts/business-workspace/bus
 export class FacilityFormComponent implements OnInit {
   private readonly fb = inject(FormBuilder);
   private readonly api = inject(BusinessFacilitiesApiService);
+  private readonly locationsApi = inject(BusinessLocationsApiService);
   private readonly route = inject(ActivatedRoute);
   private readonly router = inject(Router);
   private readonly toast = inject(ToastService);
+  private readonly destroyRef = inject(DestroyRef);
 
   readonly form = this.fb.nonNullable.group({
     name: ['', [Validators.required, Validators.minLength(2), Validators.maxLength(200)]],
     description: [''],
+    locationId: ['', Validators.required],
   });
 
-  facilityId: string | null = null;
-  images: FacilityImageDto[] = [];
-  loading = false;
-  saving = false;
+  readonly facilityId = signal<string | null>(null);
+  readonly locations = signal<BusinessLocationDto[]>([]);
+  readonly images = signal<FacilityImageDto[]>([]);
+  readonly loading = signal(false);
+  readonly locationsLoading = signal(false);
+  readonly saving = signal(false);
+  readonly pendingPhotoFiles = signal<File[]>([]);
+  readonly isArchived = signal(false);
 
-  /** Queued on “Add facility”; uploaded right after the facility is created. */
-  pendingPhotoFiles: File[] = [];
-
-  isArchived = false;
+  readonly imageAccept = ALLOWED_IMAGE_ACCEPT;
 
   get isCreateMode(): boolean {
-    return this.facilityId === null;
+    return this.facilityId() === null;
   }
 
   ngOnInit(): void {
-    const paramId = this.route.snapshot.paramMap.get('facilityId');
-    this.facilityId = paramId ?? null;
+    this.loadLocations();
+    this.route.paramMap.pipe(takeUntilDestroyed(this.destroyRef)).subscribe((params) => {
+      this.initFromRoute(params.get('facilityId'));
+    });
+  }
 
-    this.loading = true;
-    const detail$: Observable<FacilityDetailApiResponse> = this.facilityId
-      ? this.api.getFacility(this.facilityId)
-      : of<FacilityDetailApiResponse>({
-          success: true,
-          data: null,
-          message: null,
-          code: null,
-          validationErrors: null,
-        });
-
-    forkJoin({ detail: detail$ })
-      .pipe(finalize(() => (this.loading = false)))
-      .subscribe(({ detail }) => {
-        if (!this.facilityId) {
-          return;
+  private loadLocations(): void {
+    this.locationsLoading.set(true);
+    this.locationsApi
+      .listLocations()
+      .pipe(finalize(() => this.locationsLoading.set(false)))
+      .subscribe((res) => {
+        if (res.success && res.data) {
+          this.locations.set(res.data);
         }
+      });
+  }
 
+  private initFromRoute(paramId: string | null): void {
+    this.resetFormState();
+    this.facilityId.set(paramId);
+
+    if (!paramId) {
+      return;
+    }
+
+    this.loadFacilityForEdit(paramId);
+  }
+
+  private resetFormState(): void {
+    this.form.reset({ name: '', description: '', locationId: '' });
+    this.images.set([]);
+    this.pendingPhotoFiles.set([]);
+    this.isArchived.set(false);
+    this.loading.set(false);
+    this.saving.set(false);
+  }
+
+  private loadFacilityForEdit(paramId: string): void {
+    this.loading.set(true);
+    this.api
+      .getFacility(paramId)
+      .pipe(finalize(() => this.loading.set(false)))
+      .subscribe((detail) => {
         if (!detail.success || !detail.data) {
           this.toast.error(detail.message ?? 'Facility not found.', 'Facility');
           return;
@@ -82,33 +112,34 @@ export class FacilityFormComponent implements OnInit {
     const body = {
       name: raw.name.trim(),
       description: raw.description.trim() || null,
+      locationId: raw.locationId.trim(),
     };
 
-    this.saving = true;
+    this.saving.set(true);
     const req$ = this.isCreateMode
       ? this.api.createFacility(body)
-      : this.api.updateFacility(this.facilityId!, body);
+      : this.api.updateFacility(this.facilityId()!, body);
 
     req$.subscribe({
       next: (res) => {
         if (!res.success || !res.data) {
-          this.saving = false;
+          this.saving.set(false);
           this.toast.showFailedApi(res, 'Facility');
           return;
         }
 
         if (!this.isCreateMode) {
-          this.saving = false;
+          this.saving.set(false);
           this.patchFromFacility(res.data);
           this.toast.success('Facility details saved.', 'Saved');
           return;
         }
 
         const newId = res.data.id;
-        const files = [...this.pendingPhotoFiles];
+        const files = [...this.pendingPhotoFiles()];
         if (files.length === 0) {
-          this.pendingPhotoFiles = [];
-          this.saving = false;
+          this.pendingPhotoFiles.set([]);
+          this.saving.set(false);
           this.toast.success('Facility created.', 'Done');
           void this.router.navigate(['/facilities', newId], { replaceUrl: true });
           return;
@@ -118,8 +149,8 @@ export class FacilityFormComponent implements OnInit {
           .uploadFacilityImages(newId, files)
           .pipe(
             finalize(() => {
-              this.saving = false;
-              this.pendingPhotoFiles = [];
+              this.saving.set(false);
+              this.pendingPhotoFiles.set([]);
             }),
           )
           .subscribe({
@@ -146,7 +177,7 @@ export class FacilityFormComponent implements OnInit {
           });
       },
       error: () => {
-        this.saving = false;
+        this.saving.set(false);
         this.toast.error('Could not reach the API to save the facility.', 'Network');
       },
     });
@@ -160,21 +191,9 @@ export class FacilityFormComponent implements OnInit {
       return;
     }
 
-    const maxEach = 8 * 1024 * 1024;
-    const allowed = /^image\/(jpeg|png|webp|gif)$/i;
-    const skipped: string[] = [];
-    for (const f of picked) {
-      if (f.size > maxEach) {
-        skipped.push(`${f.name} (over 8MB)`);
-        continue;
-      }
-
-      if (!allowed.test(f.type)) {
-        skipped.push(`${f.name} (not JPEG/PNG/WebP/GIF)`);
-        continue;
-      }
-
-      this.pendingPhotoFiles = [...this.pendingPhotoFiles, f];
+    const { accepted, skipped } = filterAllowedImageFiles(picked);
+    if (accepted.length) {
+      this.pendingPhotoFiles.update((current) => [...current, ...accepted]);
     }
 
     if (skipped.length) {
@@ -183,52 +202,63 @@ export class FacilityFormComponent implements OnInit {
   }
 
   removePendingPhoto(index: number): void {
-    this.pendingPhotoFiles = this.pendingPhotoFiles.filter((_, i) => i !== index);
+    this.pendingPhotoFiles.update((files) => files.filter((_, i) => i !== index));
   }
 
   onFilesSelected(event: Event): void {
-    if (!this.facilityId) {
+    const id = this.facilityId();
+    if (!id) {
       return;
     }
 
     const input = event.target as HTMLInputElement;
-    const files = input.files ? Array.from(input.files) : [];
+    const picked = input.files ? Array.from(input.files) : [];
     input.value = '';
-    if (files.length === 0) {
+    if (picked.length === 0) {
       return;
     }
 
-    this.saving = true;
+    const { accepted, skipped } = filterAllowedImageFiles(picked);
+    if (skipped.length) {
+      this.toast.warning(`Skipped: ${skipped.join('; ')}.`, 'Photos');
+    }
+
+    if (accepted.length === 0) {
+      return;
+    }
+
+    this.saving.set(true);
     this.api
-      .uploadFacilityImages(this.facilityId, files)
-      .pipe(finalize(() => (this.saving = false)))
+      .uploadFacilityImages(id, accepted)
+      .pipe(finalize(() => this.saving.set(false)))
       .subscribe((res) => {
         if (!res.success || !res.data?.length) {
           this.toast.showFailedApi(res, 'Upload failed');
           return;
         }
 
-        this.images = [...this.images, ...res.data];
+        this.images.update((current) => [...current, ...res.data!]);
         this.toast.success('Photos uploaded.', 'Facility photos');
       });
   }
 
   removeImage(img: FacilityImageDto): void {
-    if (!this.facilityId) {
+    const id = this.facilityId();
+    if (!id) {
       return;
     }
 
-    this.saving = true;
+    this.saving.set(true);
     this.api
-      .deleteFacilityImage(this.facilityId, img.id)
-      .pipe(finalize(() => (this.saving = false)))
+      .deleteFacilityImage(id, img.id)
+      .pipe(finalize(() => this.saving.set(false)))
       .subscribe((res) => {
         if (!res.success) {
           this.toast.showFailedApi(res, 'Photo');
           return;
         }
 
-        this.images = this.images.filter((i) => i.id !== img.id);
+        this.images.update((current) => current.filter((i) => i.id !== img.id));
         this.toast.info('Photo removed.', 'Facility photos');
       });
   }
@@ -238,7 +268,8 @@ export class FacilityFormComponent implements OnInit {
   }
 
   archiveFacility(): void {
-    if (!this.facilityId || this.isCreateMode) {
+    const id = this.facilityId();
+    if (!id || this.isCreateMode) {
       return;
     }
 
@@ -246,10 +277,10 @@ export class FacilityFormComponent implements OnInit {
       return;
     }
 
-    this.saving = true;
+    this.saving.set(true);
     this.api
-      .archiveFacility(this.facilityId)
-      .pipe(finalize(() => (this.saving = false)))
+      .archiveFacility(id)
+      .pipe(finalize(() => this.saving.set(false)))
       .subscribe({
         next: (res) => {
           if (!res.success || !res.data) {
@@ -267,14 +298,15 @@ export class FacilityFormComponent implements OnInit {
   }
 
   restoreFacility(): void {
-    if (!this.facilityId || this.isCreateMode) {
+    const id = this.facilityId();
+    if (!id || this.isCreateMode) {
       return;
     }
 
-    this.saving = true;
+    this.saving.set(true);
     this.api
-      .restoreFacility(this.facilityId)
-      .pipe(finalize(() => (this.saving = false)))
+      .restoreFacility(id)
+      .pipe(finalize(() => this.saving.set(false)))
       .subscribe({
         next: (res) => {
           if (!res.success || !res.data) {
@@ -292,7 +324,8 @@ export class FacilityFormComponent implements OnInit {
   }
 
   deleteFacility(): void {
-    if (!this.facilityId || this.isCreateMode) {
+    const id = this.facilityId();
+    if (!id || this.isCreateMode) {
       return;
     }
 
@@ -304,10 +337,10 @@ export class FacilityFormComponent implements OnInit {
       return;
     }
 
-    this.saving = true;
+    this.saving.set(true);
     this.api
-      .deleteFacility(this.facilityId)
-      .pipe(finalize(() => (this.saving = false)))
+      .deleteFacility(id)
+      .pipe(finalize(() => this.saving.set(false)))
       .subscribe({
         next: (res) => {
           if (!res.success) {
@@ -325,12 +358,13 @@ export class FacilityFormComponent implements OnInit {
   }
 
   private patchFromFacility(f: PropertyFacilityDetailDto): void {
-    this.facilityId = f.id;
-    this.isArchived = f.isArchived ?? false;
+    this.facilityId.set(f.id);
+    this.isArchived.set(f.isArchived ?? false);
     this.form.patchValue({
       name: f.name,
       description: f.description ?? '',
+      locationId: f.locationId ?? '',
     });
-    this.images = [...f.images].sort((a, b) => a.sortOrder - b.sortOrder);
+    this.images.set([...f.images].sort((a, b) => a.sortOrder - b.sortOrder));
   }
 }

@@ -29,6 +29,16 @@ export const routes: Routes = [
       ),
   },
   {
+    path: 'forgot-password',
+    loadComponent: () =>
+      import('./pages/forgot-password/forgot-password.component').then((m) => m.ForgotPasswordComponent),
+  },
+  {
+    path: 'reset-password',
+    loadComponent: () =>
+      import('./pages/reset-password/reset-password.component').then((m) => m.ResetPasswordComponent),
+  },
+  {
     path: 'dashboard',
     loadComponent: () =>
       import('./pages/dashboard/dashboard.component').then((m) => m.DashboardComponent),
@@ -37,6 +47,16 @@ export const routes: Routes = [
     path: 'rooms',
     loadComponent: () =>
       import('./pages/rooms/rooms-list.component').then((m) => m.RoomsListComponent),
+  },
+  {
+    path: 'amenities',
+    loadComponent: () =>
+      import('./pages/amenities/amenities-list.component').then((m) => m.AmenitiesListComponent),
+  },
+  {
+    path: 'locations',
+    loadComponent: () =>
+      import('./pages/locations/locations-list.component').then((m) => m.LocationsListComponent),
   },
   {
     path: 'rooms/new',
@@ -108,6 +128,16 @@ export const routes: Routes = [
       import('./pages/booking-payments/booking-payments-list.component').then(
         (m) => m.BookingPaymentsListComponent,
       ),
+  },
+  {
+    path: 'profile',
+    loadComponent: () =>
+      import('./pages/business-profile/business-profile.component').then((m) => m.BusinessProfileComponent),
+  },
+  {
+    path: 'storefront-designer',
+    loadComponent: () =>
+      import('./pages/storefront-designer/storefront-designer.component').then((m) => m.StorefrontDesignerComponent),
   },
   { path: '**', redirectTo: '' },
 ];

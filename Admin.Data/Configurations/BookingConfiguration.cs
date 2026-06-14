@@ -54,7 +54,7 @@ public class BookingConfiguration : IEntityTypeConfiguration<Booking>
 
         builder.HasIndex(e => e.BusinessRegistrationId);
         builder.HasIndex(e => e.RoomId);
-        builder.HasIndex(e => e.ConfirmationCode)
+        builder.HasIndex(e => new { e.BusinessRegistrationId, e.ConfirmationCode })
             .IsUnique();
 
         builder.HasIndex(e => new { e.BusinessRegistrationId, e.CheckInDate });
@@ -68,5 +68,12 @@ public class BookingConfiguration : IEntityTypeConfiguration<Booking>
             .WithMany()
             .HasForeignKey(e => e.RoomId)
             .OnDelete(DeleteBehavior.Restrict);
+
+        builder.HasIndex(e => e.LocationId);
+
+        builder.HasOne(e => e.Location)
+            .WithMany()
+            .HasForeignKey(e => e.LocationId)
+            .OnDelete(DeleteBehavior.SetNull);
     }
 }

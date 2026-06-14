@@ -9,6 +9,7 @@ export interface BookingPaymentSummaryDto {
   amount: number;
   currency: string;
   status: string;
+  method: string;
   gateway: string;
   externalReference: string | null;
   createdAt: string;
@@ -19,6 +20,7 @@ export interface CreateBookingPaymentRequest {
   amount: number;
   currency: string;
   status: string;
+  method: string;
   gateway: string;
   externalReference?: string | null;
   notes?: string | null;

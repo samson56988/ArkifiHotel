@@ -11,7 +11,10 @@ public sealed class CreateBookingPaymentRequest
     /// <summary>Pending, Completed, Failed, Refunded, or Cancelled.</summary>
     public string Status { get; set; } = "Pending";
 
-    /// <summary>None, Paystack, or Flutterwave.</summary>
+    /// <summary>Cash, BankTransfer, or Gateway.</summary>
+    public string Method { get; set; } = "Cash";
+
+    /// <summary>When Method is Gateway: Paystack or Flutterwave. Otherwise None.</summary>
     public string Gateway { get; set; } = "None";
 
     public string? ExternalReference { get; set; }

@@ -1,69 +1,136 @@
-<app-business-workspace>
-  <header class="page-head">
-    <div>
-      <p class="eyebrow">Reservations</p>
-      <h1>Bookings</h1>
-      <p class="lead">Create guest stays, share confirmation codes, and update reservation status.</p>
-    </div>
-    <div class="page-head__actions">
-      <a routerLink="/bookings/new" class="btn btn--primary">New booking</a>
-    </div>
-  </header>
-
-  @if (loadFailed) {
-    <p class="muted">We could not load your bookings.</p>
-    <button type="button" class="btn btn--ghost" (click)="load()">Try again</button>
-  } @else if (initialLoadDone && bookings.length === 0) {
-    <p class="muted">No bookings.</p>
-    <a routerLink="/bookings/new" class="btn btn--primary">Create booking</a>
-  } @else if (initialLoadDone) {
-    <div class="table-wrap">
-      <table>
-        <thead>
-          <tr>
-            <th>Guest</th>
-            <th>Room</th>
-            <th>Stay</th>
-            <th>Total</th>
-            <th>Status</th>
-            <th>Code</th>
-          </tr>
-        </thead>
-        <tbody>
-          @for (b of bookings; track b.id) {
-            <tr>
-              <td>
-                <div class="cell">
-                  <div class="cell__text">
-                    <span class="guest-name">{{ b.guestName }}</span>
-                    <span class="guest-email">{{ b.guestEmail }}</span>
-                  </div>
-                </div>
-              </td>
-              <td>{{ b.roomName }}</td>
-              <td>
-                <span class="dates">{{ formatDate(b.checkInDate) }} – {{ formatDate(b.checkOutDate) }}</span>
-                <span class="nights">{{ b.nights }} night{{ b.nights === 1 ? '' : 's' }}</span>
-              </td>
-              <td>{{ b.totalAmount | number: '1.2-2' }} {{ b.currency }}</td>
-              <td>
-                <select
-                  class="status-select"
-                  [value]="b.status"
-                  [disabled]="statusUpdatingId === b.id"
-                  (change)="onStatusChange(b, $event)"
-                  [attr.aria-label]="'Status for ' + b.guestName"
-                >
-                  @for (s of statusOptions; track s) {
-                    <option [value]="s">{{ s }}</option>
-                  }
-                </select>
-              </td>
-              <td><code class="code">{{ b.confirmationCode }}</code></td>
-            </tr>
-          }
-        </tbody>
-      </table>
-    </div>
-  }
-</app-business-workspace>
+<app-business-workspace>
+  <header class="page-head">
+    <div>
+      <p class="eyebrow">Reservations</p>
+      <h1>Bookings</h1>
+      <p class="lead">Create guest stays, filter by dates or stay status, and update reservation status.</p>
+    </div>
+    <div class="page-head__actions">
+      <a routerLink="/bookings/new" class="btn btn--primary">New booking</a>
+    </div>
+  </header>
+
+  <section class="filters panel">
+    <h2>Filters</h2>
+    <div class="filters__grid">
+      <div class="field">
+        <label for="checkInFrom">Check-in from</label>
+        <input id="checkInFrom" class="input" type="date" [ngModel]="draftFilters().checkInFrom" (ngModelChange)="draftFilters.update((f) => ({ ...f, checkInFrom: $event }))" />
+      </div>
+      <div class="field">
+        <label for="checkInTo">Check-in to</label>
+        <input id="checkInTo" class="input" type="date" [ngModel]="draftFilters().checkInTo" (ngModelChange)="draftFilters.update((f) => ({ ...f, checkInTo: $event }))" />
+      </div>
+      <div class="field">
+        <label for="checkOutFrom">Check-out from</label>
+        <input id="checkOutFrom" class="input" type="date" [ngModel]="draftFilters().checkOutFrom" (ngModelChange)="draftFilters.update((f) => ({ ...f, checkOutFrom: $event }))" />
+      </div>
+      <div class="field">
+        <label for="checkOutTo">Check-out to</label>
+        <input id="checkOutTo" class="input" type="date" [ngModel]="draftFilters().checkOutTo" (ngModelChange)="draftFilters.update((f) => ({ ...f, checkOutTo: $event }))" />
+      </div>
+      <div class="field">
+        <label for="stayPhase">Stay</label>
+        <select id="stayPhase" class="input" [ngModel]="draftFilters().stayPhase" (ngModelChange)="draftFilters.update((f) => ({ ...f, stayPhase: $event }))">
+          @for (opt of stayPhaseOptions; track opt.value) {
+            <option [value]="opt.value">{{ opt.label }}</option>
+          }
+        </select>
+      </div>
+      <div class="field">
+        <label for="statusFilter">Booking status</label>
+        <select id="statusFilter" class="input" [ngModel]="draftFilters().status" (ngModelChange)="draftFilters.update((f) => ({ ...f, status: $event }))">
+          <option value="">All statuses</option>
+          @for (s of statusOptions; track s) {
+            <option [value]="s">{{ s }}</option>
+          }
+        </select>
+      </div>
+    </div>
+    <div class="filters__actions">
+      <button type="button" class="btn btn--primary" (click)="applyFilters()" [disabled]="loading()">Apply filters</button>
+      <button type="button" class="btn btn--ghost" (click)="resetFilters()" [disabled]="loading()">Reset</button>
+    </div>
+  </section>
+
+  @if (loading()) {
+    <p class="muted">Loading bookings…</p>
+  } @else if (loadFailed()) {
+    <p class="muted">We could not load your bookings.</p>
+    <button type="button" class="btn btn--ghost" (click)="load()">Try again</button>
+  } @else if (showingEmptyResults() && !hasAppliedFilters()) {
+    <p class="muted">No bookings yet.</p>
+    <a routerLink="/bookings/new" class="btn btn--primary">Create booking</a>
+  } @else if (showingEmptyResults() && hasAppliedFilters()) {
+    <p class="muted">No bookings match these filters.</p>
+    <button type="button" class="btn btn--ghost" (click)="resetFilters()">Clear filters</button>
+  } @else if (initialLoadDone()) {
+    <div class="list-meta">
+      <p class="muted">{{ pageRangeLabel() }} · newest first</p>
+    </div>
+
+    <div class="table-wrap">
+      <table>
+        <thead>
+          <tr>
+            <th>Guest</th>
+            <th>Room</th>
+            <th>Location</th>
+            <th>Stay</th>
+            <th>Total</th>
+            <th>Status</th>
+            <th>Code</th>
+          </tr>
+        </thead>
+        <tbody>
+          @for (b of bookings(); track b.id) {
+            <tr>
+              <td>
+                <div class="cell">
+                  <div class="cell__text">
+                    <span class="guest-name">{{ b.guestName }}</span>
+                    <span class="guest-email">{{ b.guestEmail }}</span>
+                  </div>
+                </div>
+              </td>
+              <td>{{ b.roomName }}</td>
+              <td>{{ b.locationName || '—' }}</td>
+              <td>
+                <span class="dates">{{ formatDate(b.checkInDate) }} – {{ formatDate(b.checkOutDate) }}</span>
+                <span class="nights">{{ b.nights }} night{{ b.nights === 1 ? '' : 's' }}</span>
+                @if (b.isStayClosed) {
+                  <span class="stay-badge stay-badge--closed">Closed</span>
+                } @else {
+                  <span class="stay-badge stay-badge--active">Active</span>
+                }
+              </td>
+              <td>{{ b.totalAmount | number: '1.2-2' }} {{ b.currency }}</td>
+              <td>
+                <select
+                  class="status-select"
+                  [ngModel]="b.status"
+                  (ngModelChange)="onStatusChange(b, $event)"
+                  [disabled]="statusUpdatingId() === b.id"
+                  [attr.aria-label]="'Status for ' + b.guestName"
+                >
+                  @for (s of statusOptions; track s) {
+                    <option [value]="s">{{ s }}</option>
+                  }
+                </select>
+              </td>
+              <td><code class="code">{{ b.confirmationCode }}</code></td>
+            </tr>
+          }
+        </tbody>
+      </table>
+    </div>
+
+    @if (totalPages() > 1) {
+      <nav class="pagination" aria-label="Bookings pagination">
+        <button type="button" class="btn btn--ghost" (click)="goToPage(page() - 1)" [disabled]="page() <= 1">Previous</button>
+        <span class="pagination__info">Page {{ page() }} of {{ totalPages() }}</span>
+        <button type="button" class="btn btn--ghost" (click)="goToPage(page() + 1)" [disabled]="page() >= totalPages()">Next</button>
+      </nav>
+    }
+  }
+</app-business-workspace>

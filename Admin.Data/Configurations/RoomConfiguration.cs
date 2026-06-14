@@ -26,6 +26,10 @@ public class RoomConfiguration : IEntityTypeConfiguration<Room>
             .HasPrecision(12, 2)
             .IsRequired();
 
+        builder.Property(e => e.Quantity)
+            .IsRequired()
+            .HasDefaultValue(1);
+
         builder.Property(e => e.CreatedAt)
             .IsRequired();
 
@@ -40,5 +44,12 @@ public class RoomConfiguration : IEntityTypeConfiguration<Room>
             .WithMany()
             .HasForeignKey(e => e.BusinessRegistrationId)
             .OnDelete(DeleteBehavior.Cascade);
+
+        builder.HasIndex(e => e.LocationId);
+
+        builder.HasOne(e => e.Location)
+            .WithMany(l => l.Rooms)
+            .HasForeignKey(e => e.LocationId)
+            .OnDelete(DeleteBehavior.SetNull);
     }
 }

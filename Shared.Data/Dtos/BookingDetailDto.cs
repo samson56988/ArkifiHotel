@@ -8,6 +8,10 @@ public sealed class BookingDetailDto
 
     public string RoomName { get; set; } = string.Empty;
 
+    public Guid? LocationId { get; set; }
+
+    public string? LocationName { get; set; }
+
     public string GuestName { get; set; } = string.Empty;
 
     public string GuestEmail { get; set; } = string.Empty;

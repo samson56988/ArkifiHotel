@@ -1,5 +1,7 @@
 using Admin.Data;
+using Admin.Data.Entities;
 using Admin.Data.Enums;
+using Admin.Infrastructure.Helpers;
 using Admin.Services.Abstractions;
 using Microsoft.EntityFrameworkCore;
 using Shared.Data.Dtos;
@@ -8,13 +10,13 @@ namespace Admin.Infrastructure.Services;
 
 public sealed class BusinessPaymentConfigurationService : IBusinessPaymentConfigurationService
 {
-    private const int MinSecretLength = 8;
-    private const int MaxSecretLength = 512;
+    private const int MinFieldLength = 4;
+    private const int MaxFieldLength = 512;
 
     private readonly AdminDbContext _db;
-    private readonly IPaymentSecretProtector _crypto;
+    private readonly IConfigurationEncryptionService _crypto;
 
-    public BusinessPaymentConfigurationService(AdminDbContext db, IPaymentSecretProtector crypto)
+    public BusinessPaymentConfigurationService(AdminDbContext db, IConfigurationEncryptionService crypto)
     {
         _db = db;
         _crypto = crypto;
@@ -22,22 +24,19 @@ public sealed class BusinessPaymentConfigurationService : IBusinessPaymentConfig
 
     public async Task<PaymentConfigurationDto?> GetAsync(Guid businessId, CancellationToken cancellationToken = default)
     {
-        var row = await _db.BusinessRegistrations
-            .AsNoTracking()
-            .Select(b => new { b.Id, b.PaymentProvider, b.PaymentSecretProtected })
-            .FirstOrDefaultAsync(b => b.Id == businessId, cancellationToken)
-            .ConfigureAwait(false);
-
-        if (row is null)
+        if (!await BusinessExistsAsync(businessId, cancellationToken).ConfigureAwait(false))
         {
             return null;
         }
 
-        return new PaymentConfigurationDto
-        {
-            Provider = row.PaymentProvider.ToString(),
-            HasSecretKey = !string.IsNullOrEmpty(row.PaymentSecretProtected),
-        };
+        var row = await _db.PaymentConfigurations
+            .AsNoTracking()
+            .FirstOrDefaultAsync(p => p.BusinessRegistrationId == businessId, cancellationToken)
+            .ConfigureAwait(false);
+
+        return row is null
+            ? DefaultDto()
+            : MapDto(row.Gateway, TryDecryptPayload(row.EncryptedJson));
     }
 
     public async Task<(PaymentConfigurationDto? Data, PaymentConfigurationUpdateError? Error)> UpdateAsync(
@@ -45,11 +44,11 @@ public sealed class BusinessPaymentConfigurationService : IBusinessPaymentConfig
         UpdatePaymentConfigurationRequest request,
         CancellationToken cancellationToken = default)
     {
-        var entity = await _db.BusinessRegistrations
+        var business = await _db.BusinessRegistrations
             .FirstOrDefaultAsync(b => b.Id == businessId, cancellationToken)
             .ConfigureAwait(false);
 
-        if (entity is null)
+        if (business is null)
         {
             return (null, PaymentConfigurationUpdateError.NotFound);
         }
@@ -59,62 +58,171 @@ public sealed class BusinessPaymentConfigurationService : IBusinessPaymentConfig
             return (null, PaymentConfigurationUpdateError.InvalidRequest);
         }
 
-        var secret = request.SecretKey?.Trim();
-        var hasIncomingSecret = !string.IsNullOrEmpty(secret);
-        if (hasIncomingSecret && (secret!.Length < MinSecretLength || secret.Length > MaxSecretLength))
-        {
-            return (null, PaymentConfigurationUpdateError.InvalidRequest);
-        }
+        var existing = await _db.PaymentConfigurations
+            .FirstOrDefaultAsync(p => p.BusinessRegistrationId == businessId, cancellationToken)
+            .ConfigureAwait(false);
 
         if (newProvider == PaymentGatewayProvider.None)
         {
-            entity.PaymentProvider = PaymentGatewayProvider.None;
-            entity.PaymentSecretProtected = null;
-            entity.UpdatedAt = DateTimeOffset.UtcNow;
-            await _db.SaveChangesAsync(cancellationToken).ConfigureAwait(false);
-            var cleared = await MapAsync(entity.Id, cancellationToken).ConfigureAwait(false);
-            return (cleared, null);
-        }
-
-        var sameProvider = entity.PaymentProvider == newProvider;
-        var hadSecret = !string.IsNullOrEmpty(entity.PaymentSecretProtected);
-
-        if (!hasIncomingSecret)
-        {
-            if (sameProvider && hadSecret)
+            if (existing is not null)
             {
-                entity.PaymentProvider = newProvider;
-                entity.UpdatedAt = DateTimeOffset.UtcNow;
+                _db.PaymentConfigurations.Remove(existing);
                 await _db.SaveChangesAsync(cancellationToken).ConfigureAwait(false);
-                var kept = await MapAsync(entity.Id, cancellationToken).ConfigureAwait(false);
-                return (kept, null);
             }
 
+            return (DefaultDto(), null);
+        }
+
+        var existingPayload = existing is not null && existing.Gateway == newProvider
+            ? TryDecryptPayload(existing.EncryptedJson)
+            : new PaymentGatewayCredentialPayload();
+
+        var merged = existingPayload.MergeIncoming(
+            newProvider,
+            request.SecretKey,
+            request.ApiKey,
+            request.ContractCode);
+
+        if (!ValidatePayload(newProvider, merged) || !merged.IsCompleteFor(newProvider))
+        {
             return (null, PaymentConfigurationUpdateError.InvalidRequest);
         }
 
-        entity.PaymentProvider = newProvider;
-        entity.PaymentSecretProtected = _crypto.Protect(secret!);
-        entity.UpdatedAt = DateTimeOffset.UtcNow;
+        var plainJson = merged.Serialize();
+        var encrypted = _crypto.Encrypt(plainJson);
+        var now = DateTimeOffset.UtcNow;
+
+        if (existing is null)
+        {
+            existing = new PaymentConfiguration
+            {
+                Id = Guid.NewGuid(),
+                BusinessRegistrationId = businessId,
+                Gateway = newProvider,
+                EncryptedJson = encrypted,
+                CreatedAt = now,
+            };
+            _db.PaymentConfigurations.Add(existing);
+        }
+        else
+        {
+            existing.Gateway = newProvider;
+            existing.EncryptedJson = encrypted;
+            existing.UpdatedAt = now;
+        }
+
         await _db.SaveChangesAsync(cancellationToken).ConfigureAwait(false);
-        var saved = await MapAsync(entity.Id, cancellationToken).ConfigureAwait(false);
-        return (saved, null);
+        return (MapDto(newProvider, merged), null);
     }
 
-    private async Task<PaymentConfigurationDto> MapAsync(Guid businessId, CancellationToken cancellationToken)
+    public async Task<PaymentGatewayCredentialsDto?> GetDecryptedCredentialsAsync(
+        Guid businessId,
+        CancellationToken cancellationToken = default)
     {
-        var row = await _db.BusinessRegistrations
+        var row = await _db.PaymentConfigurations
             .AsNoTracking()
-            .Where(b => b.Id == businessId)
-            .Select(b => new { b.PaymentProvider, b.PaymentSecretProtected })
-            .FirstAsync(cancellationToken)
+            .FirstOrDefaultAsync(p => p.BusinessRegistrationId == businessId, cancellationToken)
             .ConfigureAwait(false);
+
+        if (row is null || row.Gateway == PaymentGatewayProvider.None)
+        {
+            return null;
+        }
+
+        var payload = TryDecryptPayload(row.EncryptedJson);
+        if (!payload.IsCompleteFor(row.Gateway))
+        {
+            return null;
+        }
+
+        return new PaymentGatewayCredentialsDto
+        {
+            Provider = row.Gateway.ToString(),
+            SecretKey = payload.SecretKey,
+            ApiKey = payload.ApiKey,
+            ContractCode = payload.ContractCode,
+        };
+    }
+
+    private PaymentGatewayCredentialPayload TryDecryptPayload(string encryptedJson)
+    {
+        try
+        {
+            var plain = _crypto.Decrypt(encryptedJson);
+            return PaymentGatewayCredentialPayload.Deserialize(plain);
+        }
+        catch
+        {
+            return new PaymentGatewayCredentialPayload();
+        }
+    }
+
+    private static PaymentConfigurationDto DefaultDto()
+    {
+        return new PaymentConfigurationDto
+        {
+            Provider = PaymentGatewayProvider.None.ToString(),
+            IsConfigured = false,
+            HasSecretKey = false,
+            HasApiKey = false,
+            HasContractCode = false,
+        };
+    }
+
+    private static PaymentConfigurationDto MapDto(
+        PaymentGatewayProvider gateway,
+        PaymentGatewayCredentialPayload payload)
+    {
+        if (gateway == PaymentGatewayProvider.None)
+        {
+            return DefaultDto();
+        }
 
         return new PaymentConfigurationDto
         {
-            Provider = row.PaymentProvider.ToString(),
-            HasSecretKey = !string.IsNullOrEmpty(row.PaymentSecretProtected),
+            Provider = gateway.ToString(),
+            IsConfigured = payload.IsCompleteFor(gateway),
+            HasSecretKey = !string.IsNullOrWhiteSpace(payload.SecretKey),
+            HasApiKey = !string.IsNullOrWhiteSpace(payload.ApiKey),
+            HasContractCode = !string.IsNullOrWhiteSpace(payload.ContractCode),
         };
+    }
+
+    private static bool ValidatePayload(PaymentGatewayProvider gateway, PaymentGatewayCredentialPayload payload)
+    {
+        if (!IsValidOptionalField(payload.SecretKey))
+        {
+            return false;
+        }
+
+        if (gateway == PaymentGatewayProvider.Monify)
+        {
+            if (!IsValidOptionalField(payload.ApiKey) || !IsValidOptionalField(payload.ContractCode))
+            {
+                return false;
+            }
+        }
+
+        return true;
+    }
+
+    private static bool IsValidOptionalField(string? value)
+    {
+        if (string.IsNullOrWhiteSpace(value))
+        {
+            return true;
+        }
+
+        var len = value.Trim().Length;
+        return len >= MinFieldLength && len <= MaxFieldLength;
+    }
+
+    private async Task<bool> BusinessExistsAsync(Guid businessId, CancellationToken cancellationToken)
+    {
+        return await _db.BusinessRegistrations
+            .AsNoTracking()
+            .AnyAsync(b => b.Id == businessId, cancellationToken)
+            .ConfigureAwait(false);
     }
 
     private static bool TryParseProvider(string? value, out PaymentGatewayProvider provider)

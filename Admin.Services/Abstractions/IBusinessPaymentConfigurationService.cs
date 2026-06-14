@@ -16,4 +16,9 @@ public interface IBusinessPaymentConfigurationService
         Guid businessId,
         UpdatePaymentConfigurationRequest request,
         CancellationToken cancellationToken = default);
+
+    /// <summary>Decrypts stored gateway credentials for payment processing (never expose to clients).</summary>
+    Task<PaymentGatewayCredentialsDto?> GetDecryptedCredentialsAsync(
+        Guid businessId,
+        CancellationToken cancellationToken = default);
 }

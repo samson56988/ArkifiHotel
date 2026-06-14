@@ -1,6 +1,7 @@
 using Admin.Data;
 using Admin.Data.Entities;
 using Admin.Data.Enums;
+using Admin.Infrastructure.Helpers;
 using Admin.Services.Abstractions;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
@@ -88,6 +89,19 @@ public sealed class BusinessRegistrationService : IBusinessRegistrationService
             return RegisterBusinessResult.Fail("DuplicateEmail", "An account with this email already exists.");
         }
 
+        if (!BusinessSlugHelper.TryValidate(request.Slug, out var slug, out var slugError))
+        {
+            return RegisterBusinessResult.Fail("Validation", slugError ?? "Invalid hotel slug.");
+        }
+
+        if (await _db.BusinessRegistrations
+                .AsNoTracking()
+                .AnyAsync(r => r.Slug == slug, cancellationToken)
+                .ConfigureAwait(false))
+        {
+            return RegisterBusinessResult.Fail("DuplicateSlug", "This hotel slug is already taken. Choose another.");
+        }
+
         var now = DateTimeOffset.UtcNow;
         var entity = new BusinessRegistration
         {
@@ -102,7 +116,7 @@ public sealed class BusinessRegistrationService : IBusinessRegistrationService
             Status = BusinessRegistrationStatus.Inactive,
             TermsAcceptedAt = now,
             CreatedAt = now,
-            Slug = null,
+            Slug = slug,
         };
 
         entity.HashedPassword = _passwordHasher.HashPassword(entity, request.Password);
@@ -171,5 +185,6 @@ public sealed class BusinessRegistrationService : IBusinessRegistrationService
             TermsAcceptedAt = e.TermsAcceptedAt,
             PhoneNumber = e.PhoneNumber,
             Slug = e.Slug,
+            LogoUrl = e.LogoPath,
         };
 }

@@ -33,5 +33,12 @@ public class PropertyFacilityConfiguration : IEntityTypeConfiguration<PropertyFa
             .WithMany()
             .HasForeignKey(e => e.BusinessRegistrationId)
             .OnDelete(DeleteBehavior.Cascade);
+
+        builder.HasIndex(e => e.LocationId);
+
+        builder.HasOne(e => e.Location)
+            .WithMany(l => l.PropertyFacilities)
+            .HasForeignKey(e => e.LocationId)
+            .OnDelete(DeleteBehavior.SetNull);
     }
 }

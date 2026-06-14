@@ -92,6 +92,30 @@ h1 {
   gap: 0.75rem;
 }
 
+.field--phone {
+  min-width: 0;
+}
+
+.phone-row {
+  display: flex;
+  gap: 0.5rem;
+  align-items: stretch;
+}
+
+.phone-row__code {
+  flex: 0 0 min(11rem, 42%);
+  min-width: 0;
+}
+
+.phone-row__number {
+  flex: 1 1 auto;
+  min-width: 0;
+}
+
+.field--phone .hint {
+  margin-top: 0.35rem;
+}
+
 label {
   font-size: 0.82rem;
   font-weight: 600;
@@ -116,6 +140,77 @@ label {
   margin: 0;
   font-size: 0.8rem;
   color: #8b3a3f;
+}
+
+.hint {
+  margin: 0;
+  color: var(--color-muted);
+  font-size: 0.88rem;
+}
+
+.availability {
+  margin: 0 0 0.85rem;
+  padding: 0.65rem 0.75rem;
+  border-radius: 0.55rem;
+  font-size: 0.9rem;
+}
+
+.availability--ok {
+  background: rgba(46, 125, 80, 0.08);
+  border: 1px solid rgba(46, 125, 80, 0.25);
+  color: var(--color-heading);
+}
+
+.availability--bad {
+  background: rgba(139, 58, 63, 0.08);
+  border: 1px solid rgba(139, 58, 63, 0.25);
+  color: #8b3a3f;
+}
+
+.availability__total {
+  display: block;
+  margin-top: 0.25rem;
+  color: var(--color-muted);
+  font-size: 0.85rem;
+}
+
+.check-inline {
+  display: flex;
+  align-items: flex-start;
+  gap: 0.5rem;
+  margin: 0 0 1rem;
+  font-size: 0.9rem;
+  color: var(--color-heading);
+  cursor: pointer;
+}
+
+.check-inline input {
+  margin-top: 0.15rem;
+}
+
+.payment-confirm {
+  padding: 0.65rem 0.75rem;
+  border: 1px solid var(--color-border);
+  border-radius: 0.55rem;
+  background: var(--color-surface);
+}
+
+.payment-total {
+  margin: 0 0 1rem;
+  padding: 0.75rem;
+  border-radius: 0.55rem;
+  background: color-mix(in srgb, var(--color-accent-light) 10%, var(--color-surface));
+  border: 1px solid var(--color-border);
+  font-size: 0.95rem;
+  color: var(--color-heading);
+}
+
+.payment-total__hint {
+  display: block;
+  margin-top: 0.25rem;
+  font-size: 0.85rem;
+  color: var(--color-muted);
+  font-weight: normal;
 }
 
 @media (max-width: 640px) {

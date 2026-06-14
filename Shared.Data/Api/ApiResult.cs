@@ -19,7 +19,7 @@ public sealed class ApiResult<T>
     /// <summary>Optional validation or field-level errors.</summary>
     public IReadOnlyList<string>? ValidationErrors { get; init; }
 
-    public static ApiResult<T> Ok(T data, string? message = null) =>
+    public static ApiResult<T> Ok(T? data, string? message = null) =>
         new()
         {
             Success = true,

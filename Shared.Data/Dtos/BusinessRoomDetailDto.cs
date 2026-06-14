@@ -12,6 +12,12 @@ public sealed class BusinessRoomDetailDto
 
     public decimal BasePricePerNight { get; set; }
 
+    public int Quantity { get; set; }
+
+    public Guid? LocationId { get; set; }
+
+    public string? LocationName { get; set; }
+
     public IReadOnlyList<RoomImageDto> Images { get; set; } = Array.Empty<RoomImageDto>();
 
     public IReadOnlyList<AmenityDto> Amenities { get; set; } = Array.Empty<AmenityDto>();
