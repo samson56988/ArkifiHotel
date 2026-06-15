@@ -1,0 +1,115 @@
+.contact-section {
+  background: var(--primary);
+  padding: 90px 5vw 0;
+  color: #fff;
+}
+
+.contact-top {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 3rem;
+  align-items: start;
+  padding-bottom: 60px;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+}
+
+@media (max-width: 860px) {
+  .contact-top {
+    grid-template-columns: 1fr;
+  }
+}
+
+.contact-info-title {
+  font-family: var(--font-heading, 'Cormorant Garamond', serif);
+  font-size: 1.3rem;
+  font-weight: 700;
+  color: #fff;
+  margin-bottom: 1.25rem;
+}
+
+.contact-info-lead {
+  font-size: 0.875rem;
+  color: rgba(255, 255, 255, 0.6);
+  line-height: 1.65;
+  margin: 0 0 1.5rem;
+  max-width: 28rem;
+}
+
+.contact-info-items {
+  display: flex;
+  flex-direction: column;
+  gap: 0.85rem;
+}
+
+.cinfo-item {
+  display: flex;
+  align-items: flex-start;
+  gap: 0.9rem;
+  background: rgba(255, 255, 255, 0.04);
+  border: 1px solid rgba(255, 255, 255, 0.07);
+  border-radius: 12px;
+  padding: 1rem 1.1rem;
+}
+
+.cinfo-icon {
+  font-size: 1.1rem;
+  flex-shrink: 0;
+}
+
+.cinfo-label {
+  font-size: 0.72rem;
+  color: rgba(255, 255, 255, 0.4);
+  margin-bottom: 2px;
+}
+
+.cinfo-val {
+  font-size: 0.875rem;
+  font-weight: 500;
+  color: rgba(255, 255, 255, 0.85);
+}
+
+.cinfo-val a {
+  color: inherit;
+  text-decoration: none;
+}
+
+.cinfo-val a:hover {
+  color: var(--accent-light, var(--accent));
+}
+
+.footer-bottom {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 28px 0;
+  flex-wrap: wrap;
+  gap: 1rem;
+}
+
+.footer-brand-name {
+  font-family: var(--font-heading, 'Cormorant Garamond', serif);
+  font-size: 1.3rem;
+  font-weight: 700;
+  color: #fff;
+}
+
+.footer-copy {
+  font-size: 0.78rem;
+  color: rgba(255, 255, 255, 0.3);
+  margin-top: 0.25rem;
+}
+
+.footer-powered {
+  font-size: 0.72rem;
+  color: rgba(255, 255, 255, 0.25);
+}
+
+.footer-powered a {
+  color: var(--accent);
+  text-decoration: none;
+  opacity: 0.9;
+}
+
+.footer-powered a:hover {
+  opacity: 1;
+}

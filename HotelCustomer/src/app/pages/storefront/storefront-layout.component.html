@@ -1,0 +1,13 @@
+@if (ctx.loading()) {
+  <div class="state-page">Loading your stay…</div>
+} @else if (ctx.notFound()) {
+  <div class="state-page">
+    <h1>Hotel not found</h1>
+    <p>We could not find a storefront for this link.</p>
+  </div>
+} @else if (ctx.storefront(); as sf) {
+  <div class="hotel" [style]="themeStyle()">
+    <app-hotel-nav [storefront]="sf" [solid]="navSolid() ?? false" />
+    <router-outlet />
+  </div>
+}

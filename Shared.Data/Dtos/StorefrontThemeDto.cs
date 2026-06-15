@@ -145,4 +145,6 @@ public sealed class PublicStorefrontDto
     public IReadOnlyList<PublicStorefrontRoomDto> Rooms { get; set; } = Array.Empty<PublicStorefrontRoomDto>();
 
     public IReadOnlyList<PublicStorefrontFacilityDto> Facilities { get; set; } = Array.Empty<PublicStorefrontFacilityDto>();
+
+    public BusinessSocialProfileDto Social { get; set; } = new();
 }

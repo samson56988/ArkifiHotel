@@ -1,0 +1,49 @@
+.facility-card {
+  background: rgba(255, 255, 255, 0.05);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: var(--radius, 14px);
+  padding: 1.5rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+  transition: background 0.2s, border-color 0.2s;
+}
+
+.facility-card:hover {
+  background: color-mix(in srgb, var(--accent) 10%, transparent);
+  border-color: color-mix(in srgb, var(--accent) 30%, transparent);
+}
+
+.facility-card--light {
+  background: var(--bg-alt);
+  border-color: var(--border);
+}
+
+.facility-card--light:hover {
+  background: color-mix(in srgb, var(--accent) 8%, var(--bg-alt));
+  border-color: color-mix(in srgb, var(--accent) 35%, var(--border));
+}
+
+.facility-card--light .facility-name {
+  color: var(--text);
+}
+
+.facility-card--light .facility-desc {
+  color: color-mix(in srgb, var(--text-mid) 55%, transparent);
+}
+
+.facility-emoji {
+  font-size: 1.75rem;
+}
+
+.facility-name {
+  font-size: 0.9rem;
+  font-weight: 600;
+  color: #fff;
+}
+
+.facility-desc {
+  font-size: 0.78rem;
+  color: rgba(255, 255, 255, 0.45);
+  line-height: 1.55;
+}

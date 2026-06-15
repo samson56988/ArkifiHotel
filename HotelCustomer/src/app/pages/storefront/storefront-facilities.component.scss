@@ -1,0 +1,26 @@
+@import '../../shared/hotel-storefront/hotel-shared';
+
+.page-top {
+  padding: 88px 5vw 0;
+  background: var(--primary);
+}
+
+.back-link {
+  display: inline-flex;
+  font-size: 0.85rem;
+  font-weight: 500;
+  color: rgba(255, 255, 255, 0.55);
+  text-decoration: none;
+}
+
+.back-link:hover {
+  color: var(--accent-light, var(--accent));
+}
+
+.sec-title--light {
+  color: #fff;
+}
+
+.sec-sub--light {
+  color: rgba(255, 255, 255, 0.55);
+}

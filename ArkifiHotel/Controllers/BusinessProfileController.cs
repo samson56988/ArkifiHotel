@@ -82,9 +82,11 @@ public sealed class BusinessProfileController : ControllerBase
     }
 
     [HttpPost("logo")]
+    [Consumes("multipart/form-data")]
+    [RequestSizeLimit(MaxUploadBytes)]
     [ProducesResponseType(typeof(ApiResult<BusinessProfileDto>), StatusCodes.Status200OK)]
     [ProducesResponseType(typeof(ApiResult<BusinessProfileDto>), StatusCodes.Status400BadRequest)]
-    public async Task<IActionResult> UploadLogo([FromForm] IFormFile file, CancellationToken cancellationToken)
+    public async Task<IActionResult> UploadLogo(IFormFile file, CancellationToken cancellationToken)
     {
         var businessId = User.GetBusinessId();
         if (businessId is null)

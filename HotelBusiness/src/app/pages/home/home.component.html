@@ -1,9 +1,8 @@
 <div class="page">
-  <header class="header">
+  <header class="header" [class.header--scrolled]="navScrolled()">
     <div class="header__inner">
-      <a routerLink="/" class="logo" aria-label="ArkifiHub home">
-        <span class="logo__mark">A</span>
-        <span class="logo__text">ArkifiHub</span>
+      <a routerLink="/" class="logo" aria-label="ArkifiStay home">
+        <span class="logo__text">Arkifi<span class="logo__accent">Stay</span></span>
       </a>
       <nav class="nav" aria-label="Primary">
         <a class="nav__link" href="#features">Features</a>
@@ -22,12 +21,12 @@
       <div class="hero__bg" aria-hidden="true"></div>
       <div class="container hero__grid">
         <div class="hero__copy">
-          <p class="eyebrow">The hotel commerce platform</p>
+          <p class="eyebrow">Your Hotel, Online in Minutes</p>
           <h1 id="hero-heading" class="hero__title">
             Your hotel storefront, bookings, and payouts—in one place
           </h1>
           <p class="hero__lead">
-            ArkifiHub is built for owners who want an all-in-one commerce experience for hospitality:
+            ArkifiStay is built for owners who want an all-in-one commerce experience for hospitality:
             launch a branded booking link, list rooms and shortlets, and run your business from a
             powerful admin—while guests pay through the gateways your market already trusts.
           </p>
@@ -48,7 +47,7 @@
             </div>
             <div class="mock-card__body">
               <p class="mock-label">Your live storefront</p>
-              <p class="mock-url">arkifihub.com/your-hotel</p>
+              <p class="mock-url">arkifistay.com/your-hotel</p>
               <div class="mock-rows">
                 <div class="mock-row"><span>Deluxe suite</span><span class="mock-price">NGN 45,000</span></div>
                 <div class="mock-row"><span>Shortlet · 2 nights</span><span class="mock-price">NGN 120,000</span></div>
@@ -76,7 +75,7 @@
         <div class="section__head">
           <h2 class="section__title">Everything guests see—and everything you control</h2>
           <p class="section__sub">
-            From first impression to confirmed booking, ArkifiHub keeps your brand at the center
+            From first impression to confirmed booking, ArkifiStay keeps your brand at the center
             while your team stays organized in the admin.
           </p>
         </div>
@@ -141,7 +140,7 @@
             <h3>Built for hotels &amp; shortlets</h3>
             <p>
               Whether you run a full-service hotel, serviced apartments, or Airbnb-style shortlets,
-              ArkifiHub adapts to how you package and price stays.
+              ArkifiStay adapts to how you package and price stays.
             </p>
           </article>
           <article class="feature-card">
@@ -206,7 +205,7 @@
           <li class="steps__item">
             <span class="steps__num">3</span>
             <h3>Share your link</h3>
-            <p>Send guests your ArkifiHub storefront URL and start taking paid bookings from anywhere.</p>
+            <p>Send guests your ArkifiStay storefront URL and start taking paid bookings from anywhere.</p>
           </li>
         </ol>
       </div>
@@ -231,11 +230,13 @@
   <footer class="footer">
     <div class="container footer__inner">
       <div class="footer__brand">
-        <span class="logo__mark logo__mark--sm">A</span>
-        <span>ArkifiHub</span>
+        <span>Arkifi<span class="logo__accent">Stay</span></span>
       </div>
-      <p class="footer__tagline">Commerce for hotels, shortlets, and modern hospitality.</p>
-      <p class="footer__legal">© {{ year }} ArkifiHub. All rights reserved.</p>
+      <p class="footer__tagline">
+        The platform that gives every hotel and shortlet a professional web presence — built for Africa,
+        ready for the world.
+      </p>
+      <p class="footer__legal">© {{ year }} ArkifiStay. All rights reserved.</p>
     </div>
   </footer>
 </div>

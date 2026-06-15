@@ -17,6 +17,7 @@ import {
   type PublicStorefront,
   type StorefrontTheme,
 } from '../../core/models/storefront-theme.models';
+import { EMPTY_BUSINESS_SOCIAL_PROFILE } from '../../core/models/business-social-profile.models';
 import { BusinessProfileApiService } from '../../core/services/business-profile-api.service';
 import { StorefrontThemeApiService } from '../../core/services/storefront-theme-api.service';
 import { ToastService } from '../../core/services/toast.service';
@@ -247,6 +248,7 @@ export class StorefrontDesignerComponent implements OnInit {
       theme,
       rooms: catalog?.rooms ?? [],
       facilities: catalog?.facilities ?? [],
+      social: catalog?.social ?? EMPTY_BUSINESS_SOCIAL_PROFILE,
     });
   }
 }

@@ -1,6 +1,7 @@
 @let data = storefront();
 @let theme = data.theme;
 @let banner = theme.banner;
+@let social = data.social;
 
 <div class="sf" [class.sf--compact]="compact()" [style]="cssVars()">
   <header class="sf__header">
@@ -168,10 +169,49 @@
           @if (interactive()) {
             <a routerLink="/lookup" class="sf-footer__link">Find your booking</a>
           }
-          <span>Secure payments</span>
-          <span>24/7 support</span>
+          @if (hasGuestContact(social)) {
+            @if (social.contactEmail) {
+              <a class="sf-footer__link" [href]="'mailto:' + social.contactEmail">{{ social.contactEmail }}</a>
+            }
+            @if (social.contactPhone) {
+              <a class="sf-footer__link" [href]="'tel:' + social.contactPhone">{{ social.contactPhone }}</a>
+            }
+          } @else {
+            <span>Secure payments</span>
+            <span>24/7 support</span>
+          }
         </div>
       }
+    }
+    @if (hasSocialLinks(social) || (theme.footer.style !== 'columns' && hasGuestContact(social))) {
+      <div class="sf-footer__connect" [class.sf-footer__connect--centered]="theme.footer.style === 'centered'">
+        @if (hasSocialLinks(social)) {
+          <div class="sf-footer__social" aria-label="Social media">
+            @if (social.facebookUrl) {
+              <a [href]="social.facebookUrl" target="_blank" rel="noopener noreferrer">Facebook</a>
+            }
+            @if (social.instagramUrl) {
+              <a [href]="social.instagramUrl" target="_blank" rel="noopener noreferrer">Instagram</a>
+            }
+            @if (social.tikTokUrl) {
+              <a [href]="social.tikTokUrl" target="_blank" rel="noopener noreferrer">TikTok</a>
+            }
+            @if (social.xUrl) {
+              <a [href]="social.xUrl" target="_blank" rel="noopener noreferrer">X</a>
+            }
+          </div>
+        }
+        @if (theme.footer.style !== 'columns' && hasGuestContact(social)) {
+          <div class="sf-footer__contact">
+            @if (social.contactEmail) {
+              <a [href]="'mailto:' + social.contactEmail">{{ social.contactEmail }}</a>
+            }
+            @if (social.contactPhone) {
+              <a [href]="'tel:' + social.contactPhone">{{ social.contactPhone }}</a>
+            }
+          </div>
+        }
+      </div>
     }
   </footer>
 </div>

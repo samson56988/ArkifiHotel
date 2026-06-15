@@ -92,6 +92,15 @@ export interface StorefrontTheme {
   colors: StorefrontColorPalette;
 }
 
+export interface BusinessSocialProfileDto {
+  facebookUrl: string | null;
+  instagramUrl: string | null;
+  tikTokUrl: string | null;
+  xUrl: string | null;
+  contactEmail: string | null;
+  contactPhone: string | null;
+}
+
 export interface PublicStorefrontRoom {
   id: string;
   name: string;
@@ -116,6 +125,7 @@ export interface PublicStorefront {
   theme: StorefrontTheme;
   rooms: PublicStorefrontRoom[];
   facilities: PublicStorefrontFacility[];
+  social: BusinessSocialProfileDto;
 }
 
 export type StorefrontThemeApiResponse = ApiResult<StorefrontTheme>;

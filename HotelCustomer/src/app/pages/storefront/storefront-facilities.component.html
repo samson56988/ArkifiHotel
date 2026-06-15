@@ -1,0 +1,25 @@
+@if (ctx.storefront(); as sf) {
+  <div class="page-top">
+    <a [routerLink]="['/', sf.slug]" class="back-link">← Back to home</a>
+  </div>
+
+  <section class="section-wrap section-wrap--dark">
+    <div class="section-header">
+      <div class="sec-eyebrow">On Property</div>
+      <h1 class="sec-title sec-title--light">{{ sf.theme.facilities.title }}</h1>
+      <p class="sec-sub sec-sub--light">{{ sf.theme.facilities.subtitle }}</p>
+    </div>
+
+    @if (sf.facilities.length > 0) {
+      <div class="facilities-grid">
+        @for (f of sf.facilities; track f.id) {
+          <app-facility-card [facility]="f" />
+        }
+      </div>
+    } @else {
+      <p class="sec-sub sec-sub--light">Facilities will appear here once added.</p>
+    }
+  </section>
+
+  <app-hotel-footer [storefront]="sf" />
+}

@@ -124,6 +124,15 @@ public sealed class StorefrontThemeService : IStorefrontThemeService
             })
             .ToList();
 
+        var socialEntity = await _db.BusinessSocialProfiles
+            .AsNoTracking()
+            .FirstOrDefaultAsync(p => p.BusinessRegistrationId == business.Id, cancellationToken)
+            .ConfigureAwait(false);
+
+        var social = socialEntity is null
+            ? new BusinessSocialProfileDto()
+            : BusinessSocialProfileService.Map(socialEntity);
+
         return new PublicStorefrontDto
         {
             BusinessId = business.Id,
@@ -133,6 +142,7 @@ public sealed class StorefrontThemeService : IStorefrontThemeService
             Theme = theme,
             Rooms = rooms,
             Facilities = facilities,
+            Social = social,
         };
     }
 

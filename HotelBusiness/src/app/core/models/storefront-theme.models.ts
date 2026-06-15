@@ -1,4 +1,5 @@
 import type { ApiResult } from './api-result.model';
+import type { BusinessSocialProfileDto } from './business-social-profile.models';
 
 export type GlobalFontId =
   | 'modern-sans'
@@ -116,6 +117,7 @@ export interface PublicStorefront {
   theme: StorefrontTheme;
   rooms: PublicStorefrontRoom[];
   facilities: PublicStorefrontFacility[];
+  social: BusinessSocialProfileDto;
 }
 
 export type StorefrontThemeApiResponse = ApiResult<StorefrontTheme>;

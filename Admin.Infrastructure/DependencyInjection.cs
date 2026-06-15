@@ -40,6 +40,7 @@ public static class DependencyInjection
         services.AddScoped<IBusinessRegistrationService, BusinessRegistrationService>();
         services.AddScoped<IBusinessProfileService, BusinessProfileService>();
         services.AddScoped<IStorefrontThemeService, StorefrontThemeService>();
+        services.AddScoped<IBusinessSocialProfileService, BusinessSocialProfileService>();
         services.AddScoped<IBusinessAuthService, BusinessAuthService>();
         services.AddScoped<IBusinessPasswordResetService, BusinessPasswordResetService>();
         services.AddScoped<IBusinessAmenityService, BusinessAmenityService>();

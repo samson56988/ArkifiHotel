@@ -1,0 +1,37 @@
+@let r = room();
+@let sf = storefront();
+<article class="room-card">
+  <div
+    class="room-img"
+    [class.room-img--photo]="!!r.primaryImageUrl"
+    [style.background-image]="r.primaryImageUrl ? 'url(' + r.primaryImageUrl + ')' : null"
+  >
+    @if (!r.primaryImageUrl) {
+      <div class="room-img-emoji">🛏️</div>
+    }
+    <div class="room-img-overlay">
+      @if (r.locationName) {
+        <div class="room-badge">{{ r.locationName }}</div>
+      }
+      <div class="room-avail yes">Available</div>
+    </div>
+  </div>
+  <div class="room-body">
+    <div class="room-name">{{ r.name }}</div>
+    <div class="room-meta">
+      <span>👥 Up to {{ r.maxOccupancy }} guests</span>
+      @if (r.locationName) {
+        <span>📍 {{ r.locationName }}</span>
+      }
+    </div>
+    <div class="room-footer">
+      @if (showPrice() && sf.theme.rooms.showPrice) {
+        <div>
+          <div class="room-price">{{ formatPrice(r.basePricePerNight) }}</div>
+          <div class="room-price-label">per night</div>
+        </div>
+      }
+      <a [routerLink]="['/', sf.slug, 'rooms']" class="btn-book-room">View details</a>
+    </div>
+  </div>
+</article>

@@ -9,7 +9,26 @@ export const routes: Routes = [
   {
     path: ':slug',
     loadComponent: () =>
-      import('./pages/storefront/storefront-page.component').then((m) => m.StorefrontPageComponent),
+      import('./pages/storefront/storefront-layout.component').then((m) => m.StorefrontLayoutComponent),
+    children: [
+      {
+        path: '',
+        loadComponent: () =>
+          import('./pages/storefront/storefront-home.component').then((m) => m.StorefrontHomeComponent),
+      },
+      {
+        path: 'rooms',
+        loadComponent: () =>
+          import('./pages/storefront/storefront-rooms.component').then((m) => m.StorefrontRoomsComponent),
+      },
+      {
+        path: 'facilities',
+        loadComponent: () =>
+          import('./pages/storefront/storefront-facilities.component').then(
+            (m) => m.StorefrontFacilitiesComponent,
+          ),
+      },
+    ],
   },
   {
     path: '',

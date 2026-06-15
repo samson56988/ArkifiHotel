@@ -1,0 +1,18 @@
+@import '../business-profile/business-profile.component.scss';
+
+.panel {
+  max-width: 640px;
+}
+
+.section + .section {
+  margin-top: 1.75rem;
+  padding-top: 1.5rem;
+  border-top: 1px solid var(--color-border, #d8dfd8);
+}
+
+.section h2 {
+  margin: 0 0 0.35rem;
+  font-size: 1.05rem;
+  font-family: var(--font-display);
+  color: var(--color-heading);
+}

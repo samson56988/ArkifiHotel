@@ -1,0 +1,49 @@
+@let sf = storefront();
+<div class="contact-section" id="contact">
+  <div class="contact-top">
+    @if (sf.social.contactEmail || sf.social.contactPhone) {
+      <div class="contact-info">
+        <div class="contact-info-title">Get in touch</div>
+        <div class="contact-info-items">
+          @if (sf.social.contactEmail) {
+            <div class="cinfo-item">
+              <span class="cinfo-icon">✉️</span>
+              <div>
+                <div class="cinfo-label">Email</div>
+                <div class="cinfo-val">
+                  <a [href]="'mailto:' + sf.social.contactEmail">{{ sf.social.contactEmail }}</a>
+                </div>
+              </div>
+            </div>
+          }
+          @if (sf.social.contactPhone) {
+            <div class="cinfo-item">
+              <span class="cinfo-icon">📞</span>
+              <div>
+                <div class="cinfo-label">Phone</div>
+                <div class="cinfo-val">
+                  <a [href]="'tel:' + sf.social.contactPhone">{{ sf.social.contactPhone }}</a>
+                </div>
+              </div>
+            </div>
+          }
+        </div>
+      </div>
+    }
+    <div class="contact-info">
+      <div class="contact-info-title">Find your booking</div>
+      <p class="contact-info-lead">Already booked? Look up your reservation with your confirmation code.</p>
+      <a routerLink="/lookup" class="btn-accent">Find your booking</a>
+    </div>
+  </div>
+
+  <div class="footer-bottom">
+    <div>
+      <div class="footer-brand-name">{{ sf.businessName }}</div>
+      <div class="footer-copy">{{ copyright() }}</div>
+    </div>
+    <div class="footer-powered">
+      Powered by <a href="https://arkifistay.com" target="_blank" rel="noopener">ArkifiStay</a>
+    </div>
+  </div>
+</div>

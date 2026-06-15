@@ -27,6 +27,7 @@ public class AdminDbContext : DbContext
     public DbSet<Customer> Customers => Set<Customer>();
     public DbSet<BookingPayment> BookingPayments => Set<BookingPayment>();
     public DbSet<PaymentConfiguration> PaymentConfigurations => Set<PaymentConfiguration>();
+    public DbSet<BusinessSocialProfile> BusinessSocialProfiles => Set<BusinessSocialProfile>();
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
@@ -46,6 +47,7 @@ public class AdminDbContext : DbContext
         modelBuilder.ApplyConfiguration(new CustomerConfiguration());
         modelBuilder.ApplyConfiguration(new BookingPaymentConfiguration());
         modelBuilder.ApplyConfiguration(new PaymentConfigurationConfiguration());
+        modelBuilder.ApplyConfiguration(new BusinessSocialProfileConfiguration());
         DefaultAmenitySeed.Apply(modelBuilder);
     }
 }

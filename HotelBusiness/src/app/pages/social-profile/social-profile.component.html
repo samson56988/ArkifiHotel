@@ -1,0 +1,71 @@
+<app-business-workspace>
+  <header class="page-head">
+    <div>
+      <p class="eyebrow">Storefront</p>
+      <h1>Social & contact</h1>
+      <p class="lead">
+        Add links to your social pages and guest-facing contact details. Only filled fields appear on your
+        public storefront.
+      </p>
+    </div>
+    <div class="page-head__actions">
+      <a routerLink="/storefront-designer" class="btn btn--ghost">Storefront designer</a>
+    </div>
+  </header>
+
+  @if (loading()) {
+    <p class="muted">Loading…</p>
+  } @else if (loadFailed()) {
+    <p class="muted">We could not load your social profile.</p>
+    <button type="button" class="btn btn--ghost" (click)="load()">Try again</button>
+  } @else {
+    <form class="panel" [formGroup]="form" (ngSubmit)="onSubmit()" novalidate>
+      <section class="section">
+        <h2>Social pages</h2>
+        <p class="hint">Full URLs starting with https://</p>
+
+        <div class="field">
+          <label for="facebookUrl">Facebook</label>
+          <input id="facebookUrl" class="input" type="url" formControlName="facebookUrl" placeholder="https://facebook.com/your-page" />
+        </div>
+
+        <div class="field">
+          <label for="instagramUrl">Instagram</label>
+          <input id="instagramUrl" class="input" type="url" formControlName="instagramUrl" placeholder="https://instagram.com/your-page" />
+        </div>
+
+        <div class="field">
+          <label for="tikTokUrl">TikTok</label>
+          <input id="tikTokUrl" class="input" type="url" formControlName="tikTokUrl" placeholder="https://tiktok.com/@your-page" />
+        </div>
+
+        <div class="field">
+          <label for="xUrl">X (Twitter)</label>
+          <input id="xUrl" class="input" type="url" formControlName="xUrl" placeholder="https://x.com/your-page" />
+        </div>
+      </section>
+
+      <section class="section">
+        <h2>Contact us</h2>
+        <p class="hint">Shown in your storefront footer for guests who want to reach you.</p>
+
+        <div class="field">
+          <label for="contactEmail">Contact email</label>
+          <input id="contactEmail" class="input" type="email" formControlName="contactEmail" autocomplete="email" />
+          @if (form.controls.contactEmail.touched && form.controls.contactEmail.hasError('email')) {
+            <p class="hint hint--error">Enter a valid email address.</p>
+          }
+        </div>
+
+        <div class="field">
+          <label for="contactPhone">Phone number</label>
+          <input id="contactPhone" class="input" type="tel" formControlName="contactPhone" autocomplete="tel" />
+        </div>
+      </section>
+
+      <button type="submit" class="btn btn--primary" [disabled]="saving()">
+        {{ saving() ? 'Saving…' : 'Save changes' }}
+      </button>
+    </form>
+  }
+</app-business-workspace>

@@ -1,0 +1,21 @@
+@let sf = storefront();
+<nav class="hotel-nav" [class.hotel-nav--scrolled]="isSolid()">
+  <a [routerLink]="['/', sf.slug]" class="hotel-nav__logo">{{ sf.businessName }}</a>
+  <ul class="hotel-nav__links">
+    <li>
+      <a [routerLink]="['/', sf.slug, 'rooms']" routerLinkActive="active">Rooms</a>
+    </li>
+    <li>
+      <a [routerLink]="['/', sf.slug, 'facilities']" routerLinkActive="active">Facilities</a>
+    </li>
+    <li>
+      <a [routerLink]="['/', sf.slug]" fragment="about">About</a>
+    </li>
+    <li>
+      <a [routerLink]="['/', sf.slug]" fragment="contact">Contact</a>
+    </li>
+    <li>
+      <a [routerLink]="['/', sf.slug, 'rooms']" class="hotel-nav__book">Book Now</a>
+    </li>
+  </ul>
+</nav>

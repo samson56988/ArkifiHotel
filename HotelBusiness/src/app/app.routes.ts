@@ -139,5 +139,10 @@ export const routes: Routes = [
     loadComponent: () =>
       import('./pages/storefront-designer/storefront-designer.component').then((m) => m.StorefrontDesignerComponent),
   },
+  {
+    path: 'social-profile',
+    loadComponent: () =>
+      import('./pages/social-profile/social-profile.component').then((m) => m.SocialProfileComponent),
+  },
   { path: '**', redirectTo: '' },
 ];

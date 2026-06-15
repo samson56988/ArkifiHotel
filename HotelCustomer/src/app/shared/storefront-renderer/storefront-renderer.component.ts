@@ -2,7 +2,7 @@ import { Component, computed, input } from '@angular/core';
 import { DecimalPipe } from '@angular/common';
 import { RouterLink } from '@angular/router';
 import { resolveSectionFont, themeCssVariables } from '../../core/data/storefront-theme-presets';
-import type { PublicStorefront } from '../../core/models/storefront-theme.models';
+import type { BusinessSocialProfileDto, PublicStorefront } from '../../core/models/storefront-theme.models';
 
 @Component({
   selector: 'app-storefront-renderer',
@@ -49,5 +49,13 @@ export class StorefrontRendererComponent {
     }
 
     document.getElementById(sectionId)?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+  }
+
+  hasSocialLinks(social: BusinessSocialProfileDto | undefined): boolean {
+    return !!(social?.facebookUrl || social?.instagramUrl || social?.tikTokUrl || social?.xUrl);
+  }
+
+  hasGuestContact(social: BusinessSocialProfileDto | undefined): boolean {
+    return !!(social?.contactEmail || social?.contactPhone);
   }
 }

@@ -1,0 +1,40 @@
+@if (ctx.storefront(); as sf) {
+  <div class="page-top">
+    <a [routerLink]="['/', sf.slug]" class="back-link">← Back to home</a>
+  </div>
+
+  <section class="section-wrap">
+    <div class="section-header">
+      <div class="sec-eyebrow">Accommodations</div>
+      <h1 class="sec-title">{{ sf.theme.rooms.title }}</h1>
+      <p class="sec-sub">{{ sf.theme.rooms.subtitle }}</p>
+    </div>
+
+    @if (locationFilters().length > 1) {
+      <div class="rooms-filter">
+        @for (filter of locationFilters(); track filter) {
+          <button
+            type="button"
+            class="filter-pill"
+            [class.active]="activeFilter() === filter"
+            (click)="setFilter(filter)"
+          >
+            {{ filter }}
+          </button>
+        }
+      </div>
+    }
+
+    @if (filteredRooms().length > 0) {
+      <div class="rooms-grid">
+        @for (room of filteredRooms(); track room.id) {
+          <app-room-card [room]="room" [storefront]="sf" />
+        }
+      </div>
+    } @else {
+      <p class="sec-sub">No rooms match this filter.</p>
+    }
+  </section>
+
+  <app-hotel-footer [storefront]="sf" />
+}

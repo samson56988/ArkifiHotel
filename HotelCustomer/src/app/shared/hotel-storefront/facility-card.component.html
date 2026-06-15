@@ -1,0 +1,8 @@
+@let f = facility();
+<article class="facility-card" [class.facility-card--light]="!dark()">
+  <div class="facility-emoji">{{ emoji(f.name) }}</div>
+  <div class="facility-name">{{ f.name }}</div>
+  @if (f.locationName) {
+    <div class="facility-desc">{{ f.locationName }}</div>
+  }
+</article>
