@@ -26,10 +26,16 @@ public class StorefrontBannerImageConfiguration : IEntityTypeConfiguration<Store
             .IsRequired();
 
         builder.HasIndex(e => e.BusinessRegistrationId);
+        builder.HasIndex(e => e.LocationId);
 
         builder.HasOne(e => e.BusinessRegistration)
             .WithMany()
             .HasForeignKey(e => e.BusinessRegistrationId)
             .OnDelete(DeleteBehavior.Cascade);
+
+        builder.HasOne(e => e.Location)
+            .WithMany()
+            .HasForeignKey(e => e.LocationId)
+            .OnDelete(DeleteBehavior.SetNull);
     }
 }

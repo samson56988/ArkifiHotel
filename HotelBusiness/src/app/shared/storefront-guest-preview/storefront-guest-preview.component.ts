@@ -7,7 +7,12 @@ import {
   OnDestroy,
   signal,
 } from '@angular/core';
-import type { PublicStorefront } from '../../core/models/storefront-theme.models';
+import type {
+  PublicStorefront,
+  PublicStorefrontFacility,
+  PublicStorefrontRoom,
+} from '../../core/models/storefront-theme.models';
+import { collectGalleryImages, galleryImages } from '../../core/utils/gallery-images';
 import { hotelThemeStyle, formatNaira, facilityEmoji } from '../../core/utils/hotel-theme';
 import { buildPreviewSocialLinks } from '../../core/utils/storefront-preview';
 import { PreviewRoomSlideComponent } from './preview-room-slide.component';
@@ -28,7 +33,16 @@ export class StorefrontGuestPreviewComponent implements OnDestroy {
 
   readonly heroIndex = signal(0);
   readonly roomIndex = signal(0);
+  readonly pageHeroIndex = signal(0);
+
+  readonly galleryOpen = signal(false);
+  readonly galleryTitle = signal('');
+  readonly galleryImages = signal<string[]>([]);
+  readonly gallerySlideIndex = signal(0);
+  readonly gallerySubtitle = signal('');
+
   private heroTimer?: ReturnType<typeof setInterval>;
+  private pageHeroTimer?: ReturnType<typeof setInterval>;
 
   readonly themeStyle = computed(() => hotelThemeStyle(this.storefront().theme));
 
@@ -67,32 +81,31 @@ export class StorefrontGuestPreviewComponent implements OnDestroy {
     return `${this.roomIndex() + 1} / ${total}`;
   });
 
-  readonly pageHeroImage = computed(() => this.heroImages()[0] ?? null);
-
-  readonly roomPageStats = computed(() => {
-    const rooms = this.storefront().rooms;
-    const prices = rooms.map((r) => r.basePricePerNight);
-    return {
-      total: rooms.length,
-      available: rooms.length,
-      minPrice: prices.length ? Math.min(...prices) : 0,
-    };
-  });
-
-  readonly featuredRoom = computed(() => this.storefront().rooms[0] ?? null);
-
-  readonly gridRooms = computed(() => {
-    const rooms = this.storefront().rooms;
-    const featured = this.featuredRoom();
-    if (!this.storefront().theme.rooms.showFeaturedSection || !featured) {
-      return rooms.slice(0, 4);
+  readonly roomHeroSlides = computed(() => {
+    const fromRooms = collectGalleryImages(this.storefront().rooms);
+    if (fromRooms.length > 0) {
+      return fromRooms;
     }
-    return rooms.filter((r) => r.id !== featured.id).slice(0, 4);
+    return this.heroImages().slice(0, 3);
   });
 
-  readonly featuredFacility = computed(() => this.storefront().facilities[0] ?? null);
+  readonly facilityHeroSlides = computed(() => {
+    const fromFacilities = collectGalleryImages(this.storefront().facilities);
+    if (fromFacilities.length > 0) {
+      return fromFacilities;
+    }
+    return this.heroImages().slice(0, 3);
+  });
 
-  readonly gridFacilities = computed(() => this.storefront().facilities.slice(0, 6));
+  readonly pageHeroSlides = computed(() => {
+    if (this.page() === 'facilities') {
+      return this.facilityHeroSlides();
+    }
+    if (this.page() === 'rooms') {
+      return this.roomHeroSlides();
+    }
+    return [];
+  });
 
   readonly formatPrice = formatNaira;
   readonly facilityEmoji = facilityEmoji;
@@ -108,10 +121,23 @@ export class StorefrontGuestPreviewComponent implements OnDestroy {
         }, 6000);
       }
     });
+
+    effect(() => {
+      const page = this.page();
+      const slides = this.pageHeroSlides();
+      this.pageHeroIndex.set(0);
+      this.stopPageHeroCarousel();
+      if ((page === 'rooms' || page === 'facilities') && slides.length > 1) {
+        this.pageHeroTimer = setInterval(() => {
+          this.pageHeroIndex.update((i) => (i + 1) % slides.length);
+        }, 5000);
+      }
+    });
   }
 
   ngOnDestroy(): void {
     this.stopHeroCarousel();
+    this.stopPageHeroCarousel();
   }
 
   prevRoom(): void {
@@ -137,10 +163,65 @@ export class StorefrontGuestPreviewComponent implements OnDestroy {
     }
   }
 
+  openRoomGallery(room: PublicStorefrontRoom): void {
+    const images = galleryImages(room);
+    this.galleryTitle.set(room.name);
+    this.gallerySubtitle.set(
+      this.storefront().theme.rooms.showPrice
+        ? `${formatNaira(room.basePricePerNight)} / night · ${room.maxOccupancy} guests`
+        : `${room.maxOccupancy} guests`,
+    );
+    this.galleryImages.set(images);
+    this.gallerySlideIndex.set(0);
+    this.galleryOpen.set(true);
+  }
+
+  openFacilityGallery(facility: PublicStorefrontFacility): void {
+    const images = galleryImages(facility);
+    this.galleryTitle.set(facility.name);
+    this.gallerySubtitle.set(facility.locationName ?? '');
+    this.galleryImages.set(images);
+    this.gallerySlideIndex.set(0);
+    this.galleryOpen.set(true);
+  }
+
+  closeGallery(): void {
+    this.galleryOpen.set(false);
+    this.galleryImages.set([]);
+    this.gallerySlideIndex.set(0);
+  }
+
+  prevGallerySlide(): void {
+    const total = this.galleryImages().length;
+    if (total <= 1) {
+      return;
+    }
+    this.gallerySlideIndex.update((i) => (i - 1 + total) % total);
+  }
+
+  nextGallerySlide(): void {
+    const total = this.galleryImages().length;
+    if (total <= 1) {
+      return;
+    }
+    this.gallerySlideIndex.update((i) => (i + 1) % total);
+  }
+
+  goToGallerySlide(index: number): void {
+    this.gallerySlideIndex.set(index);
+  }
+
   private stopHeroCarousel(): void {
     if (this.heroTimer) {
       clearInterval(this.heroTimer);
       this.heroTimer = undefined;
+    }
+  }
+
+  private stopPageHeroCarousel(): void {
+    if (this.pageHeroTimer) {
+      clearInterval(this.pageHeroTimer);
+      this.pageHeroTimer = undefined;
     }
   }
 }

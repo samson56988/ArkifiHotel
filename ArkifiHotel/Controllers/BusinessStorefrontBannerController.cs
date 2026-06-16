@@ -36,7 +36,7 @@ public sealed class BusinessStorefrontBannerController : ControllerBase
 
     [HttpGet("images")]
     [ProducesResponseType(typeof(ApiResult<IReadOnlyList<StorefrontBannerImageDto>>), StatusCodes.Status200OK)]
-    public async Task<IActionResult> List(CancellationToken cancellationToken)
+    public async Task<IActionResult> List([FromQuery] Guid? locationId, CancellationToken cancellationToken)
     {
         var businessId = User.GetBusinessId();
         if (businessId is null)
@@ -44,7 +44,7 @@ public sealed class BusinessStorefrontBannerController : ControllerBase
             return Unauthorized(ApiResult<IReadOnlyList<StorefrontBannerImageDto>>.Fail("Unauthorized", "Missing business identity."));
         }
 
-        var images = await _bannerImages.GetAsync(businessId.Value, cancellationToken).ConfigureAwait(false);
+        var images = await _bannerImages.GetAsync(businessId.Value, locationId, cancellationToken).ConfigureAwait(false);
         return Ok(ApiResult<IReadOnlyList<StorefrontBannerImageDto>>.Ok(MapAbsoluteUrls(images)));
     }
 
@@ -55,6 +55,7 @@ public sealed class BusinessStorefrontBannerController : ControllerBase
     [ProducesResponseType(typeof(ApiResult<IReadOnlyList<StorefrontBannerImageDto>>), StatusCodes.Status400BadRequest)]
     public async Task<IActionResult> UploadImages(
         [FromForm] List<IFormFile> files,
+        [FromForm] Guid locationId,
         CancellationToken cancellationToken)
     {
         var businessId = User.GetBusinessId();
@@ -63,12 +64,17 @@ public sealed class BusinessStorefrontBannerController : ControllerBase
             return Unauthorized(ApiResult<IReadOnlyList<StorefrontBannerImageDto>>.Fail("Unauthorized", "Missing business identity."));
         }
 
+        if (locationId == Guid.Empty)
+        {
+            return BadRequest(ApiResult<IReadOnlyList<StorefrontBannerImageDto>>.Fail("Validation", "Select a branch for these banner photos."));
+        }
+
         if (files is null || files.Count == 0)
         {
             return BadRequest(ApiResult<IReadOnlyList<StorefrontBannerImageDto>>.Fail("Validation", "No files uploaded."));
         }
 
-        var existingCount = await _bannerImages.CountAsync(businessId.Value, cancellationToken).ConfigureAwait(false);
+        var existingCount = await _bannerImages.CountAsync(businessId.Value, locationId, cancellationToken).ConfigureAwait(false);
         if (existingCount >= IStorefrontBannerImageService.MaxImages)
         {
             return BadRequest(
@@ -135,7 +141,7 @@ public sealed class BusinessStorefrontBannerController : ControllerBase
             }
 
             var dto = await _bannerImages
-                .AddImageAsync(businessId.Value, relativePath, file.FileName, cancellationToken)
+                .AddImageAsync(businessId.Value, locationId, relativePath, file.FileName, cancellationToken)
                 .ConfigureAwait(false);
 
             if (dto is null)
@@ -145,7 +151,7 @@ public sealed class BusinessStorefrontBannerController : ControllerBase
             }
         }
 
-        var all = await _bannerImages.GetAsync(businessId.Value, cancellationToken).ConfigureAwait(false);
+        var all = await _bannerImages.GetAsync(businessId.Value, locationId, cancellationToken).ConfigureAwait(false);
         return Ok(ApiResult<IReadOnlyList<StorefrontBannerImageDto>>.Ok(MapAbsoluteUrls(all)));
     }
 
@@ -177,6 +183,8 @@ public sealed class BusinessStorefrontBannerController : ControllerBase
                 Url = ToAbsoluteUrl(i.Url) ?? i.Url,
                 OriginalFileName = i.OriginalFileName,
                 SortOrder = i.SortOrder,
+                LocationId = i.LocationId,
+                LocationName = i.LocationName,
             })
             .ToList();
 

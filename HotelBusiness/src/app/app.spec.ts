@@ -16,6 +16,6 @@ describe('App', () => {
 
   it('should expose product title', () => {
     const fixture = TestBed.createComponent(App);
-    expect(fixture.componentInstance.title()).toBe('ArkifiHub');
+    expect(fixture.componentInstance.title()).toBe('ArkifiStay');
   });
 });

@@ -1,99 +1,42 @@
 @if (ctx.storefront(); as sf) {
-  <header
-    class="page-hero"
-    [class.page-hero--photo]="!!heroImage()"
-    [style.background-image]="heroImage() ? 'url(' + heroImage() + ')' : null"
-  >
+  <header class="page-hero page-hero--carousel">
+    <div class="page-hero__slides" aria-hidden="true">
+      @for (img of heroSlides(); track img; let i = $index) {
+        <div
+          class="page-hero__slide"
+          [class.page-hero__slide--active]="heroIndex() === i"
+          [style.background-image]="'url(' + img + ')'"
+        ></div>
+      }
+    </div>
     <div class="page-hero__inner">
-      <a [routerLink]="['/', sf.slug]" class="back-link">← Back to home</a>
+      <a [routerLink]="ctx.path()" class="back-link">← Back to home</a>
       <div class="sec-eyebrow sec-eyebrow--light">{{ sf.theme.facilities.eyebrow }}</div>
       <h1 class="page-hero__title">{{ sf.theme.facilities.title }}</h1>
       <p class="page-hero__sub">{{ sf.theme.facilities.subtitle }}</p>
-      @if (sf.theme.facilities.showPageStats) {
-        <div class="page-hero__stats">
-          <div class="stat-pill">
-            <span class="stat-pill__num">{{ facilityCount() }}</span>
-            <span class="stat-pill__label">Amenities</span>
-          </div>
-          <div class="stat-pill">
-            <span class="stat-pill__num">{{ categoryGroups().length }}</span>
-            <span class="stat-pill__label">Categories</span>
-          </div>
-          @if (sf.theme.facilities.supportStatValue) {
-            <div class="stat-pill">
-              <span class="stat-pill__num">{{ sf.theme.facilities.supportStatValue }}</span>
-              <span class="stat-pill__label">{{ sf.theme.facilities.supportStatLabel }}</span>
-            </div>
-          }
-        </div>
-      }
     </div>
   </header>
 
-  @if (featuredFacility(); as featured) {
-    <section class="featured-facility">
-      <div
-        class="featured-facility__media"
-        [class.featured-facility__media--photo]="!!featured.primaryImageUrl"
-        [style.background-image]="featured.primaryImageUrl ? 'url(' + featured.primaryImageUrl + ')' : null"
-      >
-        @if (!featured.primaryImageUrl) {
-          <span class="featured-facility__emoji">{{ featured.emoji }}</span>
-        }
-        <span class="featured-facility__badge">Featured</span>
-      </div>
-      <div class="featured-facility__body">
-        <div class="sec-eyebrow">Highlight</div>
-        <h2 class="featured-facility__name">{{ featured.name }}</h2>
-        @if (featured.description) {
-          <p class="featured-facility__desc">{{ featured.description }}</p>
-        }
-        <div class="featured-facility__meta">
-          @if (featured.category) {
-            <span class="meta-tag">{{ featured.category }}</span>
-          }
-          @if (featured.hours) {
-            <span class="meta-hours">🕐 {{ featured.hours }}</span>
-          }
-        </div>
-      </div>
-    </section>
-  }
+  <section class="section-wrap">
+    <div class="section-header">
+      <div class="sec-eyebrow">On property</div>
+      <h2 class="sec-title">Facilities &amp; amenities</h2>
+      <p class="sec-sub">Tap any facility to view photos and details.</p>
+    </div>
 
-  @if (sf.facilities.length > 0) {
-    @for (group of categoryGroups(); track group.category; let even = $even) {
-      <section class="section-wrap" [class.section-wrap--alt]="even">
-        <div class="category-header">
-          <div class="sec-eyebrow">{{ group.category }}</div>
-          <h2 class="sec-title category-title">{{ group.category }}</h2>
-          <p class="sec-sub">{{ group.items.length }} amenit{{ group.items.length === 1 ? 'y' : 'ies' }}</p>
-        </div>
-
-        @if (group.items[0]?.primaryImageUrl) {
-          <div class="facilities-spotlight">
-            <app-facility-card [facility]="group.items[0]" />
-          </div>
-          @if (group.items.length > 1) {
-            <div class="facilities-list">
-              @for (f of group.items.slice(1); track f.id) {
-                <app-facility-card [facility]="f" variant="list" />
-              }
-            </div>
-          }
-        } @else {
-          <div class="facilities-grid">
-            @for (f of group.items; track f.id) {
-              <app-facility-card [facility]="f" />
-            }
-          </div>
+    @if (allFacilities().length > 0) {
+      <div class="facilities-grid">
+        @for (f of allFacilities(); track f.id) {
+          <app-facility-card [facility]="f" [clickable]="true" />
         }
-      </section>
+      </div>
+    } @else {
+      <div class="empty-state">
+        <div class="empty-state__icon">✨</div>
+        <p>Facilities will appear here once added.</p>
+      </div>
     }
-  } @else {
-    <section class="section-wrap">
-      <p class="sec-sub">Facilities will appear here once added.</p>
-    </section>
-  }
+  </section>
 
   @if (sf.theme.facilities.showGuestPerks && sf.theme.facilities.perksItems.length > 0) {
     <section class="guest-perks">

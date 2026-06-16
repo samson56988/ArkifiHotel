@@ -18,54 +18,34 @@
         </ul>
       </nav>
 
-      <header
-        class="page-hero"
-        [class.page-hero--photo]="!!pageHeroImage()"
-        [style.background-image]="pageHeroImage() ? 'url(' + pageHeroImage() + ')' : null"
-      >
+      <header class="page-hero page-hero--carousel">
+        <div class="page-hero__slides" aria-hidden="true">
+          @for (img of pageHeroSlides(); track img; let i = $index) {
+            <div
+              class="page-hero__slide"
+              [class.page-hero__slide--active]="pageHeroIndex() === i"
+              [style.background-image]="'url(' + img + ')'"
+            ></div>
+          }
+        </div>
         <div class="page-hero__inner">
           <span class="back-link">← Back to home</span>
           <div class="sec-eyebrow sec-eyebrow--light">{{ sf.theme.rooms.eyebrow }}</div>
           <h1 class="page-hero__title">{{ sf.theme.rooms.title }}</h1>
           <p class="page-hero__sub">{{ sf.theme.rooms.subtitle }}</p>
-          @if (sf.theme.rooms.showPageStats && sf.rooms.length > 0) {
-            <div class="page-hero__stats">
-              <div class="stat-pill">
-                <span class="stat-pill__num">{{ roomPageStats().total }}</span>
-                <span class="stat-pill__label">Room types</span>
-              </div>
-              <div class="stat-pill">
-                <span class="stat-pill__num">{{ roomPageStats().available }}</span>
-                <span class="stat-pill__label">Available now</span>
-              </div>
-              @if (sf.theme.rooms.showPrice && roomPageStats().minPrice > 0) {
-                <div class="stat-pill">
-                  <span class="stat-pill__num">{{ formatPrice(roomPageStats().minPrice) }}</span>
-                  <span class="stat-pill__label">From / night</span>
-                </div>
-              }
-            </div>
-          }
         </div>
       </header>
 
-      @if (sf.theme.rooms.showFeaturedSection && featuredRoom(); as featured) {
-        <section class="section-wrap section-wrap--alt">
-          <div class="featured-header">
-            <div>
-              <div class="sec-eyebrow">{{ sf.theme.rooms.featuredEyebrow }}</div>
-              <h2 class="sec-title">{{ sf.theme.rooms.featuredTitle }}</h2>
-            </div>
-          </div>
-          <app-preview-room-slide [room]="featured" [storefront]="sf" />
-        </section>
-      }
-
       <section class="section-wrap">
+        <div class="section-header">
+          <div class="sec-eyebrow">Accommodations</div>
+          <h2 class="sec-title">Rooms &amp; amenities</h2>
+          <p class="sec-sub">Tap a room to browse photos.</p>
+        </div>
         @if (sf.rooms.length > 0) {
           <div class="preview-room-grid">
-            @for (room of gridRooms(); track room.id) {
-              <article class="preview-room-card">
+            @for (room of sf.rooms; track room.id) {
+              <article class="preview-room-card preview-room-card--clickable" (click)="openRoomGallery(room)">
                 <div
                   class="preview-room-card__media"
                   [class.preview-room-card__media--photo]="!!room.primaryImageUrl"
@@ -73,8 +53,8 @@
                 ></div>
                 <div class="preview-room-card__body">
                   <h3>{{ room.name }}</h3>
-                  @if (sf.theme.rooms.showPrice) {
-                    <p class="preview-room-card__price">{{ formatPrice(room.basePricePerNight) }} / night</p>
+                  @if ((room.imageUrls?.length ?? 0) > 1) {
+                    <p class="preview-room-card__meta">{{ room.imageUrls!.length }} photos</p>
                   }
                 </div>
               </article>
@@ -117,60 +97,34 @@
         </ul>
       </nav>
 
-      <header
-        class="page-hero"
-        [class.page-hero--photo]="!!pageHeroImage()"
-        [style.background-image]="pageHeroImage() ? 'url(' + pageHeroImage() + ')' : null"
-      >
+      <header class="page-hero page-hero--carousel">
+        <div class="page-hero__slides" aria-hidden="true">
+          @for (img of pageHeroSlides(); track img; let i = $index) {
+            <div
+              class="page-hero__slide"
+              [class.page-hero__slide--active]="pageHeroIndex() === i"
+              [style.background-image]="'url(' + img + ')'"
+            ></div>
+          }
+        </div>
         <div class="page-hero__inner">
           <span class="back-link">← Back to home</span>
           <div class="sec-eyebrow sec-eyebrow--light">{{ sf.theme.facilities.eyebrow }}</div>
           <h1 class="page-hero__title">{{ sf.theme.facilities.title }}</h1>
           <p class="page-hero__sub">{{ sf.theme.facilities.subtitle }}</p>
-          @if (sf.theme.facilities.showPageStats && sf.facilities.length > 0) {
-            <div class="page-hero__stats">
-              <div class="stat-pill">
-                <span class="stat-pill__num">{{ sf.facilities.length }}</span>
-                <span class="stat-pill__label">Amenities</span>
-              </div>
-              @if (sf.theme.facilities.supportStatValue) {
-                <div class="stat-pill">
-                  <span class="stat-pill__num">{{ sf.theme.facilities.supportStatValue }}</span>
-                  <span class="stat-pill__label">{{ sf.theme.facilities.supportStatLabel }}</span>
-                </div>
-              }
-            </div>
-          }
         </div>
       </header>
 
-      @if (featuredFacility(); as featured) {
-        <section class="featured-facility">
-          <div
-            class="featured-facility__media"
-            [class.featured-facility__media--photo]="!!featured.primaryImageUrl"
-            [style.background-image]="featured.primaryImageUrl ? 'url(' + featured.primaryImageUrl + ')' : null"
-          >
-            @if (!featured.primaryImageUrl) {
-              <span class="featured-facility__emoji">{{ facilityEmoji(featured.name) }}</span>
-            }
-          </div>
-          <div class="featured-facility__body">
-            <div class="sec-eyebrow">Highlight</div>
-            <h2 class="featured-facility__name">{{ featured.name }}</h2>
-          </div>
-        </section>
-      } @else {
-        <section class="section-wrap">
-          <p class="preview-empty">Add facilities in your catalog to preview this page.</p>
-        </section>
-      }
-
-      @if (gridFacilities().length > 0) {
-        <section class="section-wrap">
+      <section class="section-wrap">
+        <div class="section-header">
+          <div class="sec-eyebrow">On property</div>
+          <h2 class="sec-title">Facilities &amp; amenities</h2>
+          <p class="sec-sub">Tap any facility to view photos.</p>
+        </div>
+        @if (sf.facilities.length > 0) {
           <div class="preview-facility-grid">
-            @for (f of gridFacilities(); track f.id) {
-              <article class="preview-facility-card">
+            @for (f of sf.facilities; track f.id) {
+              <article class="preview-facility-card preview-facility-card--clickable" (click)="openFacilityGallery(f)">
                 <div
                   class="preview-facility-card__media"
                   [class.preview-facility-card__media--photo]="!!f.primaryImageUrl"
@@ -184,8 +138,10 @@
               </article>
             }
           </div>
-        </section>
-      }
+        } @else {
+          <p class="preview-empty">Add facilities in your catalog to preview this page.</p>
+        }
+      </section>
 
       @if (sf.theme.facilities.showGuestPerks && sf.theme.facilities.perksItems.length > 0) {
         <section class="guest-perks">
@@ -410,4 +366,42 @@
       </div>
     }
   </footer>
+
+  @if (galleryOpen()) {
+    <div class="preview-gallery" (click)="closeGallery()">
+      <div class="preview-gallery__modal" (click)="$event.stopPropagation()">
+        <button type="button" class="preview-gallery__close" (click)="closeGallery()">✕</button>
+        <div class="preview-gallery__stage">
+          @if (galleryImages().length > 0) {
+            @for (img of galleryImages(); track img; let i = $index) {
+              <div
+                class="preview-gallery__slide"
+                [class.preview-gallery__slide--active]="gallerySlideIndex() === i"
+                [style.background-image]="'url(' + img + ')'"
+              ></div>
+            }
+            @if (galleryImages().length > 1) {
+              <button type="button" class="preview-gallery__nav preview-gallery__nav--prev" (click)="prevGallerySlide()">
+                ←
+              </button>
+              <button type="button" class="preview-gallery__nav preview-gallery__nav--next" (click)="nextGallerySlide()">
+                →
+              </button>
+              <span class="preview-gallery__counter"
+                >{{ gallerySlideIndex() + 1 }} / {{ galleryImages().length }}</span
+              >
+            }
+          } @else {
+            <div class="preview-gallery__slide preview-gallery__slide--empty">✨</div>
+          }
+        </div>
+        <div class="preview-gallery__body">
+          <h3>{{ galleryTitle() }}</h3>
+          @if (gallerySubtitle()) {
+            <p>{{ gallerySubtitle() }}</p>
+          }
+        </div>
+      </div>
+    </div>
+  }
 </div>

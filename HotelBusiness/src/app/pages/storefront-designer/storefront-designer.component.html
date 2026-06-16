@@ -116,10 +116,31 @@
               <div class="field banner-photos">
                 <label>Hero banner photos</label>
                 <p class="hint">
-                  Upload up to {{ maxBannerImages }} photos. One photo stays static; two or more rotate as a carousel on your live site.
+                  Upload up to {{ maxBannerImages }} photos per branch. One photo stays static; two or more rotate as a carousel on your live site.
                 </p>
+                @if (locations().length === 0) {
+                  <p class="hint hint--warn">
+                    Add at least one branch under
+                    <a routerLink="/locations">Locations</a>
+                    before uploading banner photos.
+                  </p>
+                } @else {
+                  <div class="field">
+                    <label for="bannerBranch">Branch</label>
+                    <select
+                      id="bannerBranch"
+                      class="input"
+                      [value]="bannerBranchId() ?? ''"
+                      (change)="setBannerBranch($any($event.target).value)"
+                    >
+                      @for (loc of locations(); track loc.id) {
+                        <option [value]="loc.id">{{ loc.name }}</option>
+                      }
+                    </select>
+                  </div>
+                }
                 <div class="banner-photos__grid">
-                  @for (img of bannerImages(); track img.id) {
+                  @for (img of bannerImagesForBranch(); track img.id) {
                     <figure class="banner-photos__item">
                       <img [src]="img.url" [alt]="img.originalFileName ?? 'Banner photo'" />
                       <button
@@ -133,7 +154,7 @@
                       </button>
                     </figure>
                   }
-                  @if (bannerSlotsRemaining() > 0) {
+                  @if (bannerSlotsRemaining() > 0 && locations().length > 0) {
                     <label class="banner-photos__add">
                       <input
                         type="file"

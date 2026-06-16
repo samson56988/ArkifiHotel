@@ -55,25 +55,56 @@
         <div class="form-row">
           <div class="form-group">
             <label class="form-label">Full name</label>
-            <input class="form-input" type="text" placeholder="John Doe" name="name" required />
+            <input
+              class="form-input"
+              type="text"
+              placeholder="John Doe"
+              name="name"
+              [(ngModel)]="guestName"
+              required
+            />
           </div>
           <div class="form-group">
             <label class="form-label">Phone number</label>
-            <input class="form-input" type="tel" placeholder="+234…" name="phone" required />
+            <input
+              class="form-input"
+              type="tel"
+              placeholder="+2348034567890"
+              name="phone"
+              [(ngModel)]="guestPhone"
+              required
+            />
           </div>
         </div>
 
         <div class="form-group">
           <label class="form-label">Email address</label>
-          <input class="form-input" type="email" placeholder="john@email.com" name="email" required />
+          <input
+            class="form-input"
+            type="email"
+            placeholder="john@email.com"
+            name="email"
+            [(ngModel)]="guestEmail"
+            required
+          />
         </div>
+
+        @if (formError()) {
+          <p class="modal-error" role="alert">{{ formError() }}</p>
+        }
 
         <div class="modal-total">
           <span class="modal-total-label">Estimated total</span>
           <span class="modal-total-price">{{ estimatedTotal() }}</span>
         </div>
 
-        <button type="submit" class="btn-submit">Confirm Reservation →</button>
+        <button type="submit" class="btn-submit" [disabled]="submitting()">
+          @if (submitting()) {
+            Redirecting to payment…
+          } @else {
+            Pay &amp; confirm booking →
+          }
+        </button>
       </form>
     </div>
   </div>

@@ -17,11 +17,20 @@ public sealed class StorefrontBannerImageService : IStorefrontBannerImageService
 
     public async Task<IReadOnlyList<StorefrontBannerImageDto>> GetAsync(
         Guid businessId,
+        Guid? locationId = null,
         CancellationToken cancellationToken = default)
     {
-        var rows = await _db.StorefrontBannerImages
+        var query = _db.StorefrontBannerImages
             .AsNoTracking()
-            .Where(i => i.BusinessRegistrationId == businessId)
+            .Include(i => i.Location)
+            .Where(i => i.BusinessRegistrationId == businessId);
+
+        if (locationId.HasValue)
+        {
+            query = query.Where(i => i.LocationId == locationId.Value);
+        }
+
+        var rows = await query
             .OrderBy(i => i.SortOrder)
             .ToListAsync(cancellationToken)
             .ConfigureAwait(false);
@@ -29,13 +38,16 @@ public sealed class StorefrontBannerImageService : IStorefrontBannerImageService
         return rows.Select(Map).ToList();
     }
 
-    public async Task<int> CountAsync(Guid businessId, CancellationToken cancellationToken = default) =>
+    public async Task<int> CountAsync(Guid businessId, Guid locationId, CancellationToken cancellationToken = default) =>
         await _db.StorefrontBannerImages
-            .CountAsync(i => i.BusinessRegistrationId == businessId, cancellationToken)
+            .CountAsync(
+                i => i.BusinessRegistrationId == businessId && i.LocationId == locationId,
+                cancellationToken)
             .ConfigureAwait(false);
 
     public async Task<StorefrontBannerImageDto?> AddImageAsync(
         Guid businessId,
+        Guid locationId,
         string relativePathUnderWwwroot,
         string? originalFileName,
         CancellationToken cancellationToken = default)
@@ -46,23 +58,26 @@ public sealed class StorefrontBannerImageService : IStorefrontBannerImageService
             return null;
         }
 
-        var exists = await _db.BusinessRegistrations
-            .AnyAsync(b => b.Id == businessId, cancellationToken)
+        var location = await _db.BusinessLocations
+            .AsNoTracking()
+            .FirstOrDefaultAsync(
+                l => l.Id == locationId && l.BusinessRegistrationId == businessId,
+                cancellationToken)
             .ConfigureAwait(false);
 
-        if (!exists)
+        if (location is null)
         {
             return null;
         }
 
-        var count = await CountAsync(businessId, cancellationToken).ConfigureAwait(false);
+        var count = await CountAsync(businessId, locationId, cancellationToken).ConfigureAwait(false);
         if (count >= IStorefrontBannerImageService.MaxImages)
         {
             return null;
         }
 
         var maxOrder = await _db.StorefrontBannerImages
-            .Where(i => i.BusinessRegistrationId == businessId)
+            .Where(i => i.BusinessRegistrationId == businessId && i.LocationId == locationId)
             .Select(i => (int?)i.SortOrder)
             .MaxAsync(cancellationToken)
             .ConfigureAwait(false) ?? -1;
@@ -71,6 +86,7 @@ public sealed class StorefrontBannerImageService : IStorefrontBannerImageService
         {
             Id = Guid.NewGuid(),
             BusinessRegistrationId = businessId,
+            LocationId = locationId,
             RelativePath = normalized,
             OriginalFileName = SanitizeOriginalFileName(originalFileName),
             SortOrder = maxOrder + 1,
@@ -80,6 +96,7 @@ public sealed class StorefrontBannerImageService : IStorefrontBannerImageService
         _db.StorefrontBannerImages.Add(entity);
         await _db.SaveChangesAsync(cancellationToken).ConfigureAwait(false);
 
+        entity.Location = location;
         return Map(entity);
     }
 
@@ -106,6 +123,8 @@ public sealed class StorefrontBannerImageService : IStorefrontBannerImageService
             Url = "/" + entity.RelativePath.Replace("\\", "/", StringComparison.Ordinal),
             OriginalFileName = entity.OriginalFileName,
             SortOrder = entity.SortOrder,
+            LocationId = entity.LocationId,
+            LocationName = entity.Location?.Name,
         };
 
     private static string? NormalizeRelativePath(string path)

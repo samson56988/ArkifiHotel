@@ -17,7 +17,7 @@
       <div class="hero__actions">
         <button type="button" class="btn-accent" (click)="openBooking()">Reserve a Room</button>
         @if (sf.theme.about.enabled) {
-          <a [routerLink]="['/', sf.slug]" fragment="about" class="btn-outline-white">Our Story</a>
+          <a [routerLink]="ctx.path()" fragment="about" class="btn-outline-white">Our Story</a>
         }
       </div>
       <div class="hero-info-bar">
@@ -97,7 +97,7 @@
         @if (allRoomsViewed()) {
           <div class="room-carousel__complete">
             <p class="room-carousel__complete-msg">You've seen all our rooms — pick your favourite.</p>
-            <a [routerLink]="['/', sf.slug, 'rooms']" class="btn-accent">View all rooms →</a>
+            <a [routerLink]="ctx.path('rooms')" class="btn-accent">View all rooms →</a>
           </div>
         } @else {
           <p class="room-carousel__hint">

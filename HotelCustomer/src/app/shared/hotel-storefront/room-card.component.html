@@ -1,6 +1,14 @@
 @let r = room();
 @let sf = storefront();
-<article class="room-card" [class.room-card--featured]="variant() === 'featured'">
+<article
+  class="room-card"
+  [class.room-card--featured]="variant() === 'featured'"
+  [class.room-card--clickable]="detailMode() || variant() === 'featured'"
+  (click)="onCardClick()"
+  (keydown.enter)="onCardClick()"
+  [tabindex]="detailMode() || variant() === 'featured' ? 0 : -1"
+  [attr.role]="detailMode() || variant() === 'featured' ? 'button' : null"
+>
   <div
     class="room-img"
     [class.room-img--photo]="!!r.primaryImageUrl"
@@ -48,12 +56,12 @@
       }
       @if (detailMode() || variant() === 'featured') {
         @if (r.available) {
-          <button type="button" class="btn-book-room" (click)="bookRoom()">Book Room</button>
+          <button type="button" class="btn-book-room" (click)="bookRoom($event)">Book Room</button>
         } @else {
           <button type="button" class="btn-book-room btn-book-room--disabled" disabled>Unavailable</button>
         }
       } @else {
-        <a [routerLink]="['/', sf.slug, 'rooms']" class="btn-book-room">View details</a>
+        <a [routerLink]="ctx.path('rooms')" class="btn-book-room">View details</a>
       }
     </div>
   </div>

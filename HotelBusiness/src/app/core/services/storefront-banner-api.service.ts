@@ -12,8 +12,9 @@ export class StorefrontBannerApiService {
   private readonly http = inject(HttpClient);
   private readonly baseUrl = inject(API_BASE_URL);
 
-  listImages(): Observable<ApiResult<StorefrontBannerImageDto[]>> {
-    return this.http.get<unknown>(`${this.baseUrl}/api/business/storefront-banner/images`).pipe(
+  listImages(locationId?: string | null): Observable<ApiResult<StorefrontBannerImageDto[]>> {
+    const query = locationId ? `?locationId=${encodeURIComponent(locationId)}` : '';
+    return this.http.get<unknown>(`${this.baseUrl}/api/business/storefront-banner/images${query}`).pipe(
       map((body) => normalizeApiResult<StorefrontBannerImageDto[]>(body)),
       catchError((err: HttpErrorResponse) =>
         throwError(() => parseHttpApiResult<StorefrontBannerImageDto[]>(err)),
@@ -21,8 +22,9 @@ export class StorefrontBannerApiService {
     );
   }
 
-  uploadImages(files: File[]): Observable<ApiResult<StorefrontBannerImageDto[]>> {
+  uploadImages(files: File[], locationId: string): Observable<ApiResult<StorefrontBannerImageDto[]>> {
     const form = new FormData();
+    form.append('locationId', locationId);
     for (const file of files) {
       form.append('files', file, file.name);
     }

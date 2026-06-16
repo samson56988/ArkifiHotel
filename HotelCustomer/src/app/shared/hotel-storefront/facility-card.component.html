@@ -1,5 +1,14 @@
 @let f = facility();
-<article class="facility-card" [class.facility-card--light]="!dark()" [class.facility-card--list]="variant() === 'list'">
+<article
+  class="facility-card"
+  [class.facility-card--light]="!dark()"
+  [class.facility-card--list]="variant() === 'list'"
+  [class.facility-card--clickable]="clickable()"
+  (click)="onCardClick()"
+  (keydown.enter)="onCardClick()"
+  [tabindex]="clickable() ? 0 : -1"
+  [attr.role]="clickable() ? 'button' : null"
+>
   <div
     class="facility-card__media"
     [class.facility-card__media--photo]="!!f.primaryImageUrl"

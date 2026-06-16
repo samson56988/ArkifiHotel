@@ -1,5 +1,6 @@
 import { ChangeDetectionStrategy, Component, inject, input } from '@angular/core';
 import { RouterLink } from '@angular/router';
+import { StorefrontContextService } from '../../core/services/storefront-context.service';
 import { HotelUiService } from '../../core/services/hotel-ui.service';
 import type { HotelShowcase, ShowcaseRoom } from '../../core/models/hotel-showcase.models';
 import { formatNaira } from '../../core/utils/hotel-theme';
@@ -14,6 +15,7 @@ import { formatNaira } from '../../core/utils/hotel-theme';
 })
 export class RoomCardComponent {
   private readonly ui = inject(HotelUiService);
+  readonly ctx = inject(StorefrontContextService);
 
   readonly room = input.required<ShowcaseRoom>();
   readonly storefront = input.required<HotelShowcase>();
@@ -25,7 +27,14 @@ export class RoomCardComponent {
     return formatNaira(amount);
   }
 
-  bookRoom(): void {
+  onCardClick(): void {
+    if (this.detailMode() || this.variant() === 'featured') {
+      this.ui.openRoomGallery(this.room());
+    }
+  }
+
+  bookRoom(event: Event): void {
+    event.stopPropagation();
     if (this.room().available) {
       this.ui.openBooking(this.room());
     }

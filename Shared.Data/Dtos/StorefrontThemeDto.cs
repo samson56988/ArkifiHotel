@@ -196,6 +196,10 @@ public sealed class PublicStorefrontRoomDto
 
     public string? PrimaryImageUrl { get; set; }
 
+    public IReadOnlyList<string> ImageUrls { get; set; } = Array.Empty<string>();
+
+    public Guid? LocationId { get; set; }
+
     public string? LocationName { get; set; }
 }
 
@@ -206,6 +210,10 @@ public sealed class PublicStorefrontFacilityDto
     public string Name { get; set; } = string.Empty;
 
     public string? PrimaryImageUrl { get; set; }
+
+    public IReadOnlyList<string> ImageUrls { get; set; } = Array.Empty<string>();
+
+    public Guid? LocationId { get; set; }
 
     public string? LocationName { get; set; }
 }
@@ -221,6 +229,13 @@ public sealed class PublicStorefrontDto
     public string? LogoUrl { get; set; }
 
     public StorefrontThemeDto Theme { get; set; } = new();
+
+    public IReadOnlyList<PublicStorefrontLocationDto> Locations { get; set; } = Array.Empty<PublicStorefrontLocationDto>();
+
+    /// <summary>When true, the guest must pick a branch before rooms, facilities, and banners are returned.</summary>
+    public bool RequiresBranchSelection { get; set; }
+
+    public Guid? ActiveLocationId { get; set; }
 
     public IReadOnlyList<PublicStorefrontRoomDto> Rooms { get; set; } = Array.Empty<PublicStorefrontRoomDto>();
 

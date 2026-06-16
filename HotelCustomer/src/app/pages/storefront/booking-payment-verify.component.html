@@ -1,0 +1,67 @@
+<div class="verify-page" [style]="themeStyle()">
+  <div class="verify-card">
+    @if (loading()) {
+      <div class="verify-state verify-state--loading">
+        <div class="verify-spinner" aria-hidden="true"></div>
+        <h1>Verifying payment…</h1>
+        <p>Please wait while we confirm your booking with the payment provider.</p>
+      </div>
+    } @else if (result(); as r) {
+      @if (r.paymentSuccessful && r.booking) {
+        <div class="verify-state verify-state--success">
+          <span class="verify-icon" aria-hidden="true">✓</span>
+          <h1>Booking confirmed</h1>
+          <p class="verify-lead">{{ r.message ?? 'Your payment was successful.' }}</p>
+
+          <dl class="verify-details">
+            <div>
+              <dt>Confirmation code</dt>
+              <dd class="verify-code">{{ r.booking.confirmationCode }}</dd>
+            </div>
+            <div>
+              <dt>Property</dt>
+              <dd>{{ r.booking.propertyName }}</dd>
+            </div>
+            <div>
+              <dt>Room</dt>
+              <dd>{{ r.booking.roomName }}</dd>
+            </div>
+            <div>
+              <dt>Guest</dt>
+              <dd>{{ r.booking.guestName }}</dd>
+            </div>
+            <div>
+              <dt>Check-in</dt>
+              <dd>{{ r.booking.checkInDate }}</dd>
+            </div>
+            <div>
+              <dt>Check-out</dt>
+              <dd>{{ r.booking.checkOutDate }}</dd>
+            </div>
+            <div>
+              <dt>Total paid</dt>
+              <dd>{{ formatPrice(r.booking.totalAmount, r.booking.currency) }}</dd>
+            </div>
+          </dl>
+
+          <p class="verify-note">Save your confirmation code — you will need it to look up this booking.</p>
+          <a [routerLink]="ctx.path()" class="verify-btn">Back to hotel home</a>
+        </div>
+      } @else {
+        <div class="verify-state verify-state--failed">
+          <span class="verify-icon verify-icon--fail" aria-hidden="true">✕</span>
+          <h1>Payment not completed</h1>
+          <p class="verify-lead">{{ r.message ?? 'We could not confirm your payment.' }}</p>
+          <a [routerLink]="ctx.path('rooms')" class="verify-btn verify-btn--outline">Try booking again</a>
+        </div>
+      }
+    } @else {
+      <div class="verify-state verify-state--failed">
+        <span class="verify-icon verify-icon--fail" aria-hidden="true">!</span>
+        <h1>Verification issue</h1>
+        <p class="verify-lead">{{ errorMessage() ?? 'Something went wrong.' }}</p>
+        <a [routerLink]="ctx.path()" class="verify-btn verify-btn--outline">Return to hotel</a>
+      </div>
+    }
+  </div>
+</div>

@@ -10,4 +10,8 @@ public sealed class StorefrontBannerImageDto
     public string? OriginalFileName { get; set; }
 
     public int SortOrder { get; set; }
+
+    public Guid? LocationId { get; set; }
+
+    public string? LocationName { get; set; }
 }

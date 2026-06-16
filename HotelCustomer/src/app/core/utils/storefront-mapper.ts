@@ -1,5 +1,5 @@
 import type { PublicStorefront, PublicStorefrontFacility, PublicStorefrontRoom } from '../models/storefront-theme.models';
-import type { HotelShowcase, ShowcaseFacility, ShowcaseRoom, ShowcaseSocialLink } from '../models/hotel-showcase.models';
+import type { HotelShowcase, ShowcaseFacility, ShowcaseRoom, ShowcaseLocation, ShowcaseSocialLink } from '../models/hotel-showcase.models';
 import { facilityEmoji } from './hotel-theme';
 
 export function mapPublicToShowcase(dto: PublicStorefront): HotelShowcase {
@@ -79,12 +79,21 @@ export function mapPublicToShowcase(dto: PublicStorefront): HotelShowcase {
     aboutStats: dto.theme.about.stats ?? [],
     social: dto.social,
     socialLinks: buildSocialLinks(dto),
+    locations: mapLocations(dto),
+    requiresBranchSelection: dto.requiresBranchSelection ?? false,
+    activeLocationId: dto.activeLocationId ?? null,
+    branchName: activeBranchName(dto),
     rooms: dto.rooms.map(mapRoom),
     facilities: dto.facilities.map(mapFacility),
   };
 }
 
 function mapRoom(room: PublicStorefrontRoom): ShowcaseRoom {
+  const imageUrls = room.imageUrls?.length
+    ? room.imageUrls
+    : room.primaryImageUrl
+      ? [room.primaryImageUrl]
+      : [];
   return {
     id: room.id,
     name: room.name,
@@ -97,11 +106,18 @@ function mapRoom(room: PublicStorefrontRoom): ShowcaseRoom {
     description: '',
     amenities: [],
     primaryImageUrl: room.primaryImageUrl,
+    imageUrls,
+    locationId: room.locationId,
     locationName: room.locationName,
   };
 }
 
 function mapFacility(facility: PublicStorefrontFacility): ShowcaseFacility {
+  const imageUrls = facility.imageUrls?.length
+    ? facility.imageUrls
+    : facility.primaryImageUrl
+      ? [facility.primaryImageUrl]
+      : [];
   return {
     id: facility.id,
     name: facility.name,
@@ -110,8 +126,25 @@ function mapFacility(facility: PublicStorefrontFacility): ShowcaseFacility {
     category: 'Services',
     hours: null,
     primaryImageUrl: facility.primaryImageUrl,
+    imageUrls,
+    locationId: facility.locationId,
     locationName: facility.locationName,
   };
+}
+
+function mapLocations(dto: PublicStorefront): ShowcaseLocation[] {
+  return (dto.locations ?? []).map((l) => ({
+    id: l.id,
+    name: l.name,
+    address: l.address,
+  }));
+}
+
+function activeBranchName(dto: PublicStorefront): string | null {
+  if (!dto.activeLocationId) {
+    return null;
+  }
+  return (dto.locations ?? []).find((l) => l.id === dto.activeLocationId)?.name ?? null;
 }
 
 function buildSocialLinks(dto: PublicStorefront): ShowcaseSocialLink[] {

@@ -43,7 +43,7 @@ function lekkiTheme() {
     { num: '4.9★', label: 'Guest rating' },
     { num: '10k+', label: 'Guests hosted' },
   ];
-  theme.rooms.title = 'Choose your room';
+  theme.rooms.title = 'Our rooms';
   theme.rooms.subtitle = 'Each space is individually designed for comfort, work, and rest.';
   theme.facilities.title = 'Every amenity you need';
   theme.facilities.subtitle = 'Relax, recharge, and enjoy our property.';
@@ -157,6 +157,21 @@ export const MOCK_HOTELS: Record<string, HotelShowcase> = {
         followers: null,
       },
     ],
+    locations: [
+      {
+        id: 'loc-lekki-main',
+        name: 'Main Tower',
+        address: '14 Admiralty Way, Lekki Phase 1, Lagos',
+      },
+      {
+        id: 'loc-lekki-garden',
+        name: 'Garden Wing',
+        address: '18 Bishop Oluwole St, Lekki Phase 1, Lagos',
+      },
+    ],
+    requiresBranchSelection: false,
+    activeLocationId: null,
+    branchName: null,
     rooms: [
       {
         id: 'r1',
@@ -170,6 +185,8 @@ export const MOCK_HOTELS: Record<string, HotelShowcase> = {
         description: 'Our crown jewel — panoramic Lagos views, private terrace, and dedicated in-room butler.',
         amenities: ['Private Balcony', 'Jacuzzi', 'Butler Service', 'Ocean View'],
         primaryImageUrl: IMG.roomSuite,
+        imageUrls: [IMG.roomSuite, IMG.hero1, IMG.roomDeluxe],
+        locationId: 'loc-lekki-main',
         locationName: 'Main Tower',
         featured: true,
       },
@@ -185,6 +202,8 @@ export const MOCK_HOTELS: Record<string, HotelShowcase> = {
         description: 'Floor-to-ceiling windows and a plush sitting area perfect for business or leisure.',
         amenities: ['City View', 'Mini Bar', 'Bathtub', 'Work Desk'],
         primaryImageUrl: IMG.roomDeluxe,
+        imageUrls: [IMG.roomDeluxe, IMG.hero2, IMG.lobby],
+        locationId: 'loc-lekki-main',
         locationName: 'Main Tower',
       },
       {
@@ -199,6 +218,7 @@ export const MOCK_HOTELS: Record<string, HotelShowcase> = {
         description: 'Thoughtfully appointed with garden views and everything you need for a restful stay.',
         amenities: ['Garden View', 'Smart TV', 'Air Conditioning', 'Mini Fridge'],
         primaryImageUrl: IMG.roomDeluxe,
+        locationId: 'loc-lekki-garden',
         locationName: 'Garden Wing',
       },
       {
@@ -213,6 +233,7 @@ export const MOCK_HOTELS: Record<string, HotelShowcase> = {
         description: 'Ideal for colleagues or friends travelling together with a shared workspace.',
         amenities: ['City View', 'Smart TV', 'Work Desk'],
         primaryImageUrl: IMG.roomStudio,
+        locationId: 'loc-lekki-garden',
         locationName: 'Garden Wing',
       },
       {
@@ -227,6 +248,7 @@ export const MOCK_HOTELS: Record<string, HotelShowcase> = {
         description: 'Fully equipped for longer stays — kitchen, laundry, and a true sense of home.',
         amenities: ['Full Kitchen', 'Washing Machine', 'Balcony', 'Smart TV'],
         primaryImageUrl: IMG.roomStudio,
+        locationId: 'loc-lekki-garden',
         locationName: 'Annex',
       },
       {
@@ -241,6 +263,7 @@ export const MOCK_HOTELS: Record<string, HotelShowcase> = {
         description: 'Perfect for families or small groups with full apartment layout and dining area.',
         amenities: ['Full Kitchen', 'Living Room', '2 Bathrooms', 'Dining Area'],
         primaryImageUrl: IMG.roomSuite,
+        locationId: 'loc-lekki-garden',
         locationName: 'Annex',
       },
     ],
@@ -389,6 +412,16 @@ export const MOCK_HOTELS: Record<string, HotelShowcase> = {
         followers: '2.1K',
       },
     ],
+    locations: [
+      {
+        id: 'loc-abuja-main',
+        name: 'Main Building',
+        address: '12 Aguiyi Ironsi Street, Maitama, Abuja',
+      },
+    ],
+    requiresBranchSelection: false,
+    activeLocationId: null,
+    branchName: null,
     rooms: [
       {
         id: 'h1',
@@ -512,6 +545,59 @@ export const MOCK_HOTELS: Record<string, HotelShowcase> = {
 
 export const DEMO_HOTEL_SLUGS = Object.keys(MOCK_HOTELS);
 
-export function getMockHotel(slug: string): HotelShowcase | null {
-  return MOCK_HOTELS[slug] ?? null;
+export function getMockHotel(slug: string, locationRouteId?: string | null): HotelShowcase | null {
+  const base = MOCK_HOTELS[slug];
+  if (!base) {
+    return null;
+  }
+
+  const locations = base.locations ?? [];
+
+  if (!locationRouteId && locations.length > 1) {
+    return {
+      ...base,
+      requiresBranchSelection: true,
+      activeLocationId: null,
+      branchName: null,
+      rooms: [],
+      facilities: [],
+      heroImages: [],
+      galleryImages: [],
+    };
+  }
+
+  const effectiveId =
+    locationRouteId && locationRouteId !== 'default'
+      ? locationRouteId
+      : locations.length === 1
+        ? locations[0].id
+        : null;
+
+  const branchName = effectiveId
+    ? (locations.find((l) => l.id === effectiveId)?.name ?? null)
+    : null;
+
+  const filterByBranch = !!effectiveId && locations.length > 0;
+
+  const rooms = filterByBranch
+    ? base.rooms.filter((r) => r.locationId === effectiveId)
+    : base.rooms;
+  const facilities = filterByBranch
+    ? base.facilities.filter((f) => !f.locationId || f.locationId === effectiveId)
+    : base.facilities;
+
+  const heroImages = filterByBranch
+    ? rooms.map((r) => r.primaryImageUrl).filter((u): u is string => !!u)
+    : base.heroImages;
+
+  return {
+    ...base,
+    requiresBranchSelection: false,
+    activeLocationId: effectiveId,
+    branchName,
+    rooms,
+    facilities,
+    heroImages: heroImages.length > 0 ? heroImages : base.heroImages,
+    galleryImages: base.galleryImages,
+  };
 }

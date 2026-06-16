@@ -7,15 +7,33 @@
   align-items: flex-end;
   padding: 100px 5vw 60px;
   background: linear-gradient(135deg, var(--primary) 0%, color-mix(in srgb, var(--primary) 65%, #2d6a8e) 100%);
-  background-size: cover;
-  background-position: center;
+  overflow: hidden;
 }
 
-.page-hero::after {
+.page-hero__slides {
+  position: absolute;
+  inset: 0;
+}
+
+.page-hero__slide {
+  position: absolute;
+  inset: 0;
+  background-size: cover;
+  background-position: center;
+  opacity: 0;
+  transition: opacity 1s ease;
+}
+
+.page-hero__slide--active {
+  opacity: 1;
+}
+
+.page-hero--carousel::after {
   content: '';
   position: absolute;
   inset: 0;
   background: linear-gradient(to top, rgba(0, 0, 0, 0.72) 0%, rgba(0, 0, 0, 0.35) 55%, rgba(0, 0, 0, 0.25) 100%);
+  z-index: 0;
 }
 
 .page-hero__inner {

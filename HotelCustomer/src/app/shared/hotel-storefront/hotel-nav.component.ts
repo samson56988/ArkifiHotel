@@ -1,6 +1,7 @@
 import { ChangeDetectionStrategy, Component, HostListener, inject, input, signal } from '@angular/core';
 import { RouterLink, RouterLinkActive } from '@angular/router';
 import { HotelUiService } from '../../core/services/hotel-ui.service';
+import { StorefrontContextService } from '../../core/services/storefront-context.service';
 import type { HotelShowcase } from '../../core/models/hotel-showcase.models';
 
 @Component({
@@ -13,6 +14,7 @@ import type { HotelShowcase } from '../../core/models/hotel-showcase.models';
 })
 export class HotelNavComponent {
   private readonly ui = inject(HotelUiService);
+  readonly ctx = inject(StorefrontContextService);
 
   readonly storefront = input.required<HotelShowcase>();
   readonly solid = input(false);

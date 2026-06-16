@@ -9,5 +9,5 @@ import { ToastHostComponent } from './core/components/toast-host/toast-host.comp
   styleUrl: './app.scss'
 })
 export class App {
-  protected readonly title = signal('ArkifiHub');
+  protected readonly title = signal('ArkifiStay');
 }

@@ -94,7 +94,7 @@
 
       <div class="contact-lookup">
         <p class="contact-info-lead contact-info-lead--compact">Already booked? Look up your reservation with your confirmation code.</p>
-        <a routerLink="/lookup" class="footer-btn footer-btn--outline">
+        <a [routerLink]="ctx.path('rooms')" class="footer-btn footer-btn--outline">
           <span>Find your booking</span>
           <span class="footer-btn__arrow" aria-hidden="true">→</span>
         </a>

@@ -964,6 +964,9 @@ namespace Admin.Data.Migrations
                     b.Property<DateTimeOffset>("CreatedAt")
                         .HasColumnType("timestamp with time zone");
 
+                    b.Property<Guid?>("LocationId")
+                        .HasColumnType("uuid");
+
                     b.Property<string>("OriginalFileName")
                         .HasMaxLength(256)
                         .HasColumnType("character varying(256)");
@@ -979,6 +982,8 @@ namespace Admin.Data.Migrations
                     b.HasKey("Id");
 
                     b.HasIndex("BusinessRegistrationId");
+
+                    b.HasIndex("LocationId");
 
                     b.ToTable("StorefrontBannerImages", (string)null);
                 });
@@ -1211,7 +1216,14 @@ namespace Admin.Data.Migrations
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
 
+                    b.HasOne("Admin.Data.Entities.BusinessLocation", "Location")
+                        .WithMany()
+                        .HasForeignKey("LocationId")
+                        .OnDelete(DeleteBehavior.SetNull);
+
                     b.Navigation("BusinessRegistration");
+
+                    b.Navigation("Location");
                 });
 
             modelBuilder.Entity("Admin.Data.Entities.Amenity", b =>

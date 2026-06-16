@@ -11,5 +11,8 @@ public interface IStorefrontThemeService
         StorefrontThemeDto theme,
         CancellationToken cancellationToken = default);
 
-    Task<PublicStorefrontDto?> GetPublicBySlugAsync(string slug, CancellationToken cancellationToken = default);
+    Task<PublicStorefrontDto?> GetPublicBySlugAsync(
+        string slug,
+        Guid? locationId = null,
+        CancellationToken cancellationToken = default);
 }

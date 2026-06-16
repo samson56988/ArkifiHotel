@@ -1,0 +1,128 @@
+.verify-page {
+  min-height: 70vh;
+  display: grid;
+  place-items: center;
+  padding: 2rem 1rem 4rem;
+}
+
+.verify-card {
+  width: min(520px, 100%);
+  background: var(--bg-alt);
+  border: 1px solid var(--border);
+  border-radius: 16px;
+  padding: 2rem 1.75rem;
+  box-shadow: 0 12px 40px rgba(0, 0, 0, 0.08);
+}
+
+.verify-state {
+  text-align: center;
+}
+
+.verify-state h1 {
+  margin: 0 0 0.5rem;
+  font-family: var(--font-heading, 'Cormorant Garamond', serif);
+  font-size: 1.75rem;
+  color: var(--text);
+}
+
+.verify-lead {
+  margin: 0 0 1.25rem;
+  color: color-mix(in srgb, var(--text-mid) 75%, transparent);
+  line-height: 1.6;
+  font-size: 0.92rem;
+}
+
+.verify-icon {
+  display: inline-grid;
+  place-items: center;
+  width: 3rem;
+  height: 3rem;
+  border-radius: 999px;
+  background: color-mix(in srgb, var(--accent) 18%, transparent);
+  color: var(--accent);
+  font-size: 1.35rem;
+  font-weight: 700;
+  margin-bottom: 0.85rem;
+}
+
+.verify-icon--fail {
+  background: color-mix(in srgb, #c0392b 15%, transparent);
+  color: #c0392b;
+}
+
+.verify-spinner {
+  width: 2.5rem;
+  height: 2.5rem;
+  border: 3px solid var(--border);
+  border-top-color: var(--accent);
+  border-radius: 999px;
+  margin: 0 auto 1rem;
+  animation: verify-spin 0.8s linear infinite;
+}
+
+@keyframes verify-spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+.verify-details {
+  margin: 0 0 1rem;
+  text-align: left;
+  display: grid;
+  gap: 0.65rem;
+}
+
+.verify-details div {
+  display: grid;
+  grid-template-columns: 1fr 1.4fr;
+  gap: 0.5rem;
+  padding-bottom: 0.55rem;
+  border-bottom: 1px solid var(--border);
+}
+
+.verify-details dt {
+  font-size: 0.72rem;
+  text-transform: uppercase;
+  letter-spacing: 1px;
+  color: color-mix(in srgb, var(--text-low) 65%, transparent);
+}
+
+.verify-details dd {
+  margin: 0;
+  font-size: 0.88rem;
+  color: var(--text);
+}
+
+.verify-code {
+  font-family: 'DM Mono', monospace;
+  font-weight: 600;
+  color: var(--accent);
+  letter-spacing: 0.05em;
+}
+
+.verify-note {
+  font-size: 0.78rem;
+  color: color-mix(in srgb, var(--text-mid) 70%, transparent);
+  margin: 0 0 1.25rem;
+}
+
+.verify-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0.75rem 1.35rem;
+  border-radius: 10px;
+  background: var(--accent);
+  color: #fff;
+  text-decoration: none;
+  font-weight: 600;
+  font-size: 0.88rem;
+  border: none;
+}
+
+.verify-btn--outline {
+  background: transparent;
+  color: var(--primary);
+  border: 1.5px solid var(--border);
+}

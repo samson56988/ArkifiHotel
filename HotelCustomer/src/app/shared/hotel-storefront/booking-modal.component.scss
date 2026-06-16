@@ -114,6 +114,16 @@
   color: var(--accent);
 }
 
+.modal-error {
+  margin: 0 0 0.85rem;
+  padding: 0.65rem 0.75rem;
+  border-radius: 8px;
+  background: color-mix(in srgb, #c0392b 12%, transparent);
+  color: #a93226;
+  font-size: 0.82rem;
+  line-height: 1.45;
+}
+
 .btn-submit {
   background: var(--accent);
   color: #fff;
@@ -126,6 +136,12 @@
   font-family: inherit;
   width: 100%;
   transition: filter 0.2s, transform 0.2s;
+}
+
+.btn-submit:disabled {
+  opacity: 0.65;
+  cursor: wait;
+  transform: none;
 }
 
 .btn-submit:hover {

@@ -1,7 +1,7 @@
-import { ChangeDetectionStrategy, Component, computed, inject } from '@angular/core';
+import { ChangeDetectionStrategy, Component, computed, inject, OnDestroy, OnInit, signal } from '@angular/core';
 import { RouterLink } from '@angular/router';
 import { StorefrontContextService } from '../../core/services/storefront-context.service';
-import type { ShowcaseFacility } from '../../core/models/hotel-showcase.models';
+import { collectGalleryImages } from '../../core/utils/gallery-images';
 import { FacilityCardComponent } from '../../shared/hotel-storefront/facility-card.component';
 import { HotelFooterComponent } from '../../shared/hotel-storefront/hotel-footer.component';
 
@@ -13,34 +13,37 @@ import { HotelFooterComponent } from '../../shared/hotel-storefront/hotel-footer
   styleUrl: './storefront-facilities.component.scss',
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
-export class StorefrontFacilitiesComponent {
+export class StorefrontFacilitiesComponent implements OnInit, OnDestroy {
   readonly ctx = inject(StorefrontContextService);
+
+  readonly heroIndex = signal(0);
+  private heroTimer?: ReturnType<typeof setInterval>;
 
   readonly storefront = computed(() => this.ctx.storefront()!);
 
-  readonly heroImage = computed(() => {
-    const sf = this.storefront();
-    const featured = sf.facilities.find((f) => f.featured && f.primaryImageUrl);
-    return featured?.primaryImageUrl ?? sf.galleryImages[1] ?? sf.heroImages[0] ?? null;
-  });
-
-  readonly featuredFacility = computed(() => {
-    const facilities = this.storefront().facilities;
-    return facilities.find((f) => f.featured) ?? facilities.find((f) => f.primaryImageUrl) ?? facilities[0] ?? null;
-  });
-
-  readonly categoryGroups = computed(() => {
-    const groups = new Map<string, ShowcaseFacility[]>();
-    for (const f of this.storefront().facilities) {
-      if (f.featured && f.id === this.featuredFacility()?.id) {
-        continue;
-      }
-      const list = groups.get(f.category) ?? [];
-      list.push(f);
-      groups.set(f.category, list);
+  readonly heroSlides = computed(() => {
+    const fromFacilities = collectGalleryImages(this.storefront().facilities);
+    if (fromFacilities.length > 0) {
+      return fromFacilities;
     }
-    return [...groups.entries()].map(([category, items]) => ({ category, items }));
+    const sf = this.storefront();
+    return sf.galleryImages.length > 0 ? sf.galleryImages.slice(0, 4) : sf.heroImages;
   });
 
-  readonly facilityCount = computed(() => this.storefront().facilities.length);
+  readonly allFacilities = computed(() => this.storefront().facilities);
+
+  ngOnInit(): void {
+    const slides = this.heroSlides();
+    if (slides.length > 1) {
+      this.heroTimer = setInterval(() => {
+        this.heroIndex.update((i) => (i + 1) % slides.length);
+      }, 5000);
+    }
+  }
+
+  ngOnDestroy(): void {
+    if (this.heroTimer) {
+      clearInterval(this.heroTimer);
+    }
+  }
 }

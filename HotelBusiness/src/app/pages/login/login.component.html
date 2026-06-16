@@ -3,9 +3,8 @@
 
   <header class="auth-header">
     <div class="auth-header__inner">
-      <a routerLink="/" class="auth-logo" aria-label="ArkifiHub home">
-        <span class="auth-logo__mark">A</span>
-        <span class="auth-logo__text">ArkifiHub</span>
+      <a routerLink="/" class="auth-logo" aria-label="ArkifiStay home">
+        <span class="auth-logo__text">Arkifi<span class="auth-logo__accent">Stay</span></span>
       </a>
       <a routerLink="/register" class="auth-header__link">Create account</a>
     </div>
@@ -43,7 +42,7 @@
             type="password"
             formControlName="password"
             autocomplete="current-password"
-            placeholder="��������"
+            placeholder="Your password"
           />
           @if (showError('password')) {
             <p class="auth-error">At least 8 characters.</p>
@@ -64,7 +63,7 @@
       </form>
 
       <p class="auth-footer-text">
-        New to ArkifiHub?
+        New to ArkifiStay?
         <a routerLink="/register">Register your property</a>
       </p>
     </div>

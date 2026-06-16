@@ -144,6 +144,14 @@ public sealed class BusinessLocationService : IBusinessLocationService
                 .ConfigureAwait(false);
         }
 
+        if (!inUse)
+        {
+            inUse = await _db.StorefrontBannerImages
+                .AsNoTracking()
+                .AnyAsync(i => i.LocationId == locationId, cancellationToken)
+                .ConfigureAwait(false);
+        }
+
         if (inUse)
         {
             return LocationDeleteOutcome.InUse;

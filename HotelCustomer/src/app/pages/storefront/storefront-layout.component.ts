@@ -6,11 +6,12 @@ import { StorefrontContextService } from '../../core/services/storefront-context
 import { hotelThemeStyle } from '../../core/utils/hotel-theme';
 import { BookingModalComponent } from '../../shared/hotel-storefront/booking-modal.component';
 import { HotelNavComponent } from '../../shared/hotel-storefront/hotel-nav.component';
+import { ShowcaseGalleryModalComponent } from '../../shared/hotel-storefront/showcase-gallery-modal.component';
 
 @Component({
   selector: 'app-storefront-layout',
   standalone: true,
-  imports: [RouterOutlet, RouterLink, HotelNavComponent, BookingModalComponent],
+  imports: [RouterOutlet, RouterLink, HotelNavComponent, BookingModalComponent, ShowcaseGalleryModalComponent],
   templateUrl: './storefront-layout.component.html',
   styleUrl: './storefront-layout.component.scss',
   changeDetection: ChangeDetectionStrategy.OnPush,
@@ -41,9 +42,10 @@ export class StorefrontLayoutComponent implements OnInit, OnDestroy {
 
   ngOnInit(): void {
     this.sub = this.route.paramMap.subscribe((params) => {
-      const slug = params.get('slug') ?? '';
+      const slug = this.route.parent?.snapshot.paramMap.get('slug') ?? params.get('slug') ?? '';
+      const locationId = params.get('locationId');
       if (slug) {
-        this.ctx.load(slug).subscribe();
+        this.ctx.load(slug, locationId).subscribe();
       }
     });
   }

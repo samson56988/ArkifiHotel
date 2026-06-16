@@ -21,9 +21,9 @@ public sealed class PublicStorefrontController : ControllerBase
     [HttpGet("{slug}")]
     [ProducesResponseType(typeof(ApiResult<PublicStorefrontDto>), StatusCodes.Status200OK)]
     [ProducesResponseType(typeof(ApiResult<PublicStorefrontDto>), StatusCodes.Status404NotFound)]
-    public async Task<IActionResult> GetBySlug(string slug, CancellationToken cancellationToken)
+    public async Task<IActionResult> GetBySlug(string slug, [FromQuery] Guid? locationId, CancellationToken cancellationToken)
     {
-        var dto = await _themes.GetPublicBySlugAsync(slug, cancellationToken).ConfigureAwait(false);
+        var dto = await _themes.GetPublicBySlugAsync(slug, locationId, cancellationToken).ConfigureAwait(false);
         if (dto is null)
         {
             return NotFound(ApiResult<PublicStorefrontDto>.Fail("NotFound", "Storefront not found."));
@@ -42,6 +42,9 @@ public sealed class PublicStorefrontController : ControllerBase
             LogoUrl = ToAbsoluteUrl(dto.LogoUrl),
             Theme = dto.Theme,
             Social = dto.Social,
+            Locations = dto.Locations,
+            RequiresBranchSelection = dto.RequiresBranchSelection,
+            ActiveLocationId = dto.ActiveLocationId,
             HeroImages = dto.HeroImages
                 .Select(u => ToAbsoluteUrl(u) ?? u)
                 .ToList(),
@@ -54,6 +57,10 @@ public sealed class PublicStorefrontController : ControllerBase
                     BasePricePerNight = r.BasePricePerNight,
                     MaxOccupancy = r.MaxOccupancy,
                     PrimaryImageUrl = ToAbsoluteUrl(r.PrimaryImageUrl),
+                    ImageUrls = r.ImageUrls
+                        .Select(u => ToAbsoluteUrl(u) ?? u)
+                        .ToList(),
+                    LocationId = r.LocationId,
                     LocationName = r.LocationName,
                 })
                 .ToList(),
@@ -63,6 +70,10 @@ public sealed class PublicStorefrontController : ControllerBase
                     Id = f.Id,
                     Name = f.Name,
                     PrimaryImageUrl = ToAbsoluteUrl(f.PrimaryImageUrl),
+                    ImageUrls = f.ImageUrls
+                        .Select(u => ToAbsoluteUrl(u) ?? u)
+                        .ToList(),
+                    LocationId = f.LocationId,
                     LocationName = f.LocationName,
                 })
                 .ToList(),

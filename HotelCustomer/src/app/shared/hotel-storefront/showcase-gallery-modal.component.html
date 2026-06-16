@@ -1,0 +1,117 @@
+@if (ui.galleryOpen()) {
+  <div class="gallery-overlay open" (click)="onOverlayClick($event)" role="dialog" aria-modal="true">
+    <div class="gallery-modal">
+      <button type="button" class="gallery-close" (click)="close()" aria-label="Close">✕</button>
+
+      <div class="gallery-stage">
+        @if (images().length > 0) {
+          @for (img of images(); track img; let i = $index) {
+            <div
+              class="gallery-slide"
+              [class.gallery-slide--active]="ui.gallerySlideIndex() === i"
+              [style.background-image]="'url(' + img + ')'"
+            ></div>
+          }
+          @if (images().length > 1) {
+            <button type="button" class="gallery-nav gallery-nav--prev" (click)="prev()" aria-label="Previous photo">
+              ←
+            </button>
+            <button type="button" class="gallery-nav gallery-nav--next" (click)="next()" aria-label="Next photo">
+              →
+            </button>
+            <div class="gallery-dots">
+              @for (img of images(); track img; let i = $index) {
+                <button
+                  type="button"
+                  class="gallery-dot"
+                  [class.gallery-dot--active]="ui.gallerySlideIndex() === i"
+                  (click)="goTo(i)"
+                  [attr.aria-label]="'Photo ' + (i + 1)"
+                ></button>
+              }
+            </div>
+            <span class="gallery-counter"
+              >{{ ui.gallerySlideIndex() + 1 }} / {{ images().length }}</span
+            >
+          }
+        } @else {
+          <div class="gallery-slide gallery-slide--empty">
+            <span>{{ ui.galleryKind() === 'room' ? '🛏️' : '✨' }}</span>
+          </div>
+        }
+      </div>
+
+      <div class="gallery-body">
+        <h2 class="gallery-title">{{ title() }}</h2>
+
+        @if (ui.galleryKind() === 'room') {
+          @if (room(); as r) {
+            <div class="gallery-meta">
+              <span>{{ r.roomType }}</span>
+              <span>🛏️ {{ r.beds }}</span>
+              <span>👥 {{ r.maxOccupancy }} guests</span>
+              @if (r.size) {
+                <span>📐 {{ r.size }}</span>
+              }
+            </div>
+            @if (r.description) {
+              <p class="gallery-desc">{{ r.description }}</p>
+            }
+            @if (r.amenities.length > 0) {
+              <div class="gallery-tags">
+                @for (tag of r.amenities; track tag) {
+                  <span class="gallery-tag">{{ tag }}</span>
+                }
+              </div>
+            }
+            <div class="gallery-footer">
+              @if (showPrice()) {
+                <div class="gallery-price">
+                  <span class="gallery-price__eyebrow">From</span>
+                  <span class="gallery-price__amount">{{ formatPrice(r.basePricePerNight) }}</span>
+                  <span class="gallery-price__label">per night</span>
+                </div>
+              }
+              <div class="gallery-footer__cta">
+                @if (r.available) {
+                  <button type="button" class="gallery-book-btn" (click)="bookRoom()">
+                    <span class="gallery-book-btn__icon" aria-hidden="true">
+                      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75">
+                        <rect x="3" y="4" width="18" height="18" rx="2" />
+                        <path d="M16 2v4M8 2v4M3 10h18" />
+                      </svg>
+                    </span>
+                    <span class="gallery-book-btn__text">
+                      <span class="gallery-book-btn__label">Book this room</span>
+                      <span class="gallery-book-btn__hint">Choose dates &amp; confirm your stay</span>
+                    </span>
+                    <span class="gallery-book-btn__arrow" aria-hidden="true">→</span>
+                  </button>
+                } @else {
+                  <button type="button" class="gallery-book-btn gallery-book-btn--disabled" disabled>
+                    <span class="gallery-book-btn__text">
+                      <span class="gallery-book-btn__label">Currently unavailable</span>
+                      <span class="gallery-book-btn__hint">Try another room or different dates</span>
+                    </span>
+                  </button>
+                }
+              </div>
+            </div>
+          }
+        } @else {
+          @if (facility(); as f) {
+            @if (f.category) {
+              <p class="gallery-category">{{ f.category }}</p>
+            }
+            @if (f.description) {
+              <p class="gallery-desc">{{ f.description }}</p>
+            }
+            @if (f.hours) {
+              <p class="gallery-hours">🕐 {{ f.hours }}</p>
+            }
+          }
+        }
+      </div>
+    </div>
+  </div>
+}

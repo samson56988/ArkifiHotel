@@ -1,18 +1,21 @@
 @let sf = storefront();
 <nav class="hotel-nav" [class.hotel-nav--scrolled]="isSolid()">
-  <a [routerLink]="['/', sf.slug]" class="hotel-nav__logo">{{ sf.businessName }}</a>
+  <a [routerLink]="ctx.path()" class="hotel-nav__logo">{{ sf.businessName }}</a>
   <ul class="hotel-nav__links">
+    @if (sf.branchName) {
+      <li class="hotel-nav__branch">{{ sf.branchName }}</li>
+    }
     <li>
-      <a [routerLink]="['/', sf.slug, 'rooms']" routerLinkActive="active">Rooms</a>
+      <a [routerLink]="ctx.path('rooms')" routerLinkActive="active">Rooms</a>
     </li>
     <li>
-      <a [routerLink]="['/', sf.slug, 'facilities']" routerLinkActive="active">Facilities</a>
+      <a [routerLink]="ctx.path('facilities')" routerLinkActive="active">Facilities</a>
     </li>
     <li>
-      <a [routerLink]="['/', sf.slug]" fragment="about">About</a>
+      <a [routerLink]="ctx.path()" fragment="about">About</a>
     </li>
     <li>
-      <a [routerLink]="['/', sf.slug]" fragment="contact">Contact</a>
+      <a [routerLink]="ctx.path()" fragment="contact">Contact</a>
     </li>
     <li>
       <a href="#" class="hotel-nav__book" (click)="openBooking($event)">Book Now</a>

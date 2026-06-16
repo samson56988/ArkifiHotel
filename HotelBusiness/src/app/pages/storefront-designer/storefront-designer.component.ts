@@ -22,6 +22,7 @@ import {
 } from '../../core/models/storefront-theme.models';
 import { EMPTY_BUSINESS_SOCIAL_PROFILE } from '../../core/models/business-social-profile.models';
 import { BusinessProfileApiService } from '../../core/services/business-profile-api.service';
+import { BusinessLocationsApiService } from '../../core/services/business-locations-api.service';
 import { BusinessSocialProfileApiService } from '../../core/services/business-social-profile-api.service';
 import { StorefrontBannerApiService } from '../../core/services/storefront-banner-api.service';
 import { StorefrontAboutApiService } from '../../core/services/storefront-about-api.service';
@@ -36,6 +37,7 @@ import {
   type StorefrontBannerImageDto,
 } from '../../core/models/storefront-banner.models';
 import type { StorefrontAboutImageDto } from '../../core/models/storefront-about.models';
+import type { BusinessLocationDto } from '../../core/models/locations.models';
 import { BusinessWorkspaceComponent } from '../../layouts/business-workspace/business-workspace.component';
 import { StorefrontGuestPreviewComponent, type GuestPreviewPage } from '../../shared/storefront-guest-preview/storefront-guest-preview.component';
 
@@ -54,6 +56,7 @@ export class StorefrontDesignerComponent implements OnInit {
   private readonly bannerApi = inject(StorefrontBannerApiService);
   private readonly aboutApi = inject(StorefrontAboutApiService);
   private readonly profileApi = inject(BusinessProfileApiService);
+  private readonly locationsApi = inject(BusinessLocationsApiService);
   private readonly socialApi = inject(BusinessSocialProfileApiService);
   private readonly toast = inject(ToastService);
   private readonly destroyRef = inject(DestroyRef);
@@ -71,6 +74,8 @@ export class StorefrontDesignerComponent implements OnInit {
   readonly profile = signal<BusinessProfileDto | null>(null);
   readonly catalog = signal<PublicStorefront | null>(null);
   readonly bannerImages = signal<StorefrontBannerImageDto[]>([]);
+  readonly locations = signal<BusinessLocationDto[]>([]);
+  readonly bannerBranchId = signal<string | null>(null);
   readonly aboutImage = signal<StorefrontAboutImageDto | null>(null);
   readonly socialProfile = signal(EMPTY_BUSINESS_SOCIAL_PROFILE);
 
@@ -79,8 +84,16 @@ export class StorefrontDesignerComponent implements OnInit {
   readonly maxAboutStats = MAX_ABOUT_STATS;
   readonly maxFacilityPerks = MAX_FACILITY_PERKS;
 
+  readonly bannerImagesForBranch = computed(() => {
+    const branchId = this.bannerBranchId();
+    if (!branchId) {
+      return [];
+    }
+    return this.bannerImages().filter((i) => i.locationId === branchId);
+  });
+
   readonly bannerSlotsRemaining = computed(
-    () => MAX_BANNER_IMAGES - this.bannerImages().length,
+    () => MAX_BANNER_IMAGES - this.bannerImagesForBranch().length,
   );
 
   readonly form = this.fb.nonNullable.group({
@@ -233,6 +246,7 @@ export class StorefrontDesignerComponent implements OnInit {
           }
 
           this.profile.set(profileRes.data);
+          this.loadLocations();
           this.loadBannerImages();
           this.loadAboutImage();
           this.loadSocialProfile();
@@ -352,6 +366,12 @@ export class StorefrontDesignerComponent implements OnInit {
   }
 
   onBannerFilesSelected(event: Event): void {
+    const branchId = this.bannerBranchId();
+    if (!branchId) {
+      this.toast.warning('Select a branch before uploading banner photos.', 'Banner');
+      return;
+    }
+
     const remaining = this.bannerSlotsRemaining();
     if (remaining <= 0) {
       this.toast.warning(`You can upload up to ${MAX_BANNER_IMAGES} banner images.`, 'Banner');
@@ -375,7 +395,7 @@ export class StorefrontDesignerComponent implements OnInit {
 
     this.uploadingBanner.set(true);
     this.bannerApi
-      .uploadImages(accepted)
+      .uploadImages(accepted, branchId)
       .pipe(finalize(() => this.uploadingBanner.set(false)))
       .subscribe({
         next: (res) => {
@@ -383,7 +403,15 @@ export class StorefrontDesignerComponent implements OnInit {
             this.toast.showFailedApi(res, 'Banner');
             return;
           }
-          this.bannerImages.set(res.data);
+          this.bannerImages.update((items) => {
+            const merged = [...items];
+            for (const img of res.data!) {
+              if (!merged.some((m) => m.id === img.id)) {
+                merged.push(img);
+              }
+            }
+            return merged;
+          });
           this.refreshPreview();
           this.toast.success('Banner photo(s) uploaded.', 'Banner');
         },
@@ -419,6 +447,28 @@ export class StorefrontDesignerComponent implements OnInit {
         }
       },
     });
+  }
+
+  private loadLocations(): void {
+    this.locationsApi.listLocations().subscribe({
+      next: (res) => {
+        if (!res.success || !res.data) {
+          return;
+        }
+        this.locations.set(res.data);
+        if (res.data.length === 1) {
+          this.bannerBranchId.set(res.data[0].id);
+        } else if (!this.bannerBranchId() && res.data.length > 0) {
+          this.bannerBranchId.set(res.data[0].id);
+        }
+        this.refreshPreview();
+      },
+    });
+  }
+
+  setBannerBranch(locationId: string): void {
+    this.bannerBranchId.set(locationId);
+    this.refreshPreview();
   }
 
   onAboutFileSelected(event: Event): void {
@@ -577,6 +627,15 @@ export class StorefrontDesignerComponent implements OnInit {
     const theme = this.buildThemeFromForm();
     const catalog = this.catalog();
     const social = this.socialProfile();
+    const previewLocationId = this.bannerBranchId();
+
+    const rooms = (catalog?.rooms ?? []).filter(
+      (r) => !previewLocationId || r.locationId === previewLocationId,
+    );
+    const facilities = (catalog?.facilities ?? []).filter(
+      (f) => !previewLocationId || f.locationId === previewLocationId,
+    );
+    const heroImages = this.bannerImagesForBranch().map((i) => i.url);
 
     this.previewStorefront.set({
       businessId: profile.id,
@@ -584,10 +643,13 @@ export class StorefrontDesignerComponent implements OnInit {
       slug: profile.slug ?? 'preview',
       logoUrl: profile.logoUrl,
       theme,
-      heroImages: this.bannerImages().map((i) => i.url),
+      heroImages,
       aboutImageUrl: this.aboutImage()?.url ?? null,
-      rooms: catalog?.rooms ?? [],
-      facilities: catalog?.facilities ?? [],
+      rooms,
+      facilities,
+      locations: catalog?.locations ?? this.locations().map((l) => ({ id: l.id, name: l.name, address: l.address ?? null })),
+      requiresBranchSelection: false,
+      activeLocationId: previewLocationId,
       social: {
         ...social,
         contactEmail: social.contactEmail || profile.contactEmail || null,

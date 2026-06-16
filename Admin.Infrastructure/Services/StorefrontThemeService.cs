@@ -60,7 +60,10 @@ public sealed class StorefrontThemeService : IStorefrontThemeService
         return (theme, null);
     }
 
-    public async Task<PublicStorefrontDto?> GetPublicBySlugAsync(string slug, CancellationToken cancellationToken = default)
+    public async Task<PublicStorefrontDto?> GetPublicBySlugAsync(
+        string slug,
+        Guid? locationId = null,
+        CancellationToken cancellationToken = default)
     {
         var normalized = BusinessSlugHelper.Normalize(slug);
         if (string.IsNullOrEmpty(normalized))
@@ -81,51 +84,39 @@ public sealed class StorefrontThemeService : IStorefrontThemeService
         var theme = StorefrontThemeDefaults.Deserialize(business.StorefrontThemeJson, business.BusinessName);
         NormalizeTheme(theme);
 
-        var roomRows = await _db.Rooms
+        var locations = await _db.BusinessLocations
             .AsNoTracking()
-            .Include(r => r.Images)
-            .Include(r => r.Location)
-            .Where(r => r.BusinessRegistrationId == business.Id && !r.IsArchived)
-            .OrderBy(r => r.Name)
+            .Where(l => l.BusinessRegistrationId == business.Id)
+            .OrderBy(l => l.Name)
+            .Select(l => new PublicStorefrontLocationDto
+            {
+                Id = l.Id,
+                Name = l.Name,
+                Address = l.Address,
+            })
             .ToListAsync(cancellationToken)
             .ConfigureAwait(false);
 
-        var rooms = roomRows
-            .Select(r => new PublicStorefrontRoomDto
-            {
-                Id = r.Id,
-                Name = r.Name,
-                BasePricePerNight = r.BasePricePerNight,
-                MaxOccupancy = r.MaxOccupancy,
-                PrimaryImageUrl = r.Images
-                    .OrderBy(i => i.SortOrder)
-                    .Select(i => "/" + i.RelativePath.Replace("\\", "/", StringComparison.Ordinal))
-                    .FirstOrDefault(),
-                LocationName = r.Location?.Name,
-            })
-            .ToList();
+        Guid? effectiveLocationId = null;
+        var requiresBranchSelection = false;
 
-        var facilityRows = await _db.PropertyFacilities
-            .AsNoTracking()
-            .Include(f => f.Images)
-            .Include(f => f.Location)
-            .Where(f => f.BusinessRegistrationId == business.Id && !f.IsArchived)
-            .OrderBy(f => f.Name)
-            .ToListAsync(cancellationToken)
-            .ConfigureAwait(false);
-
-        var facilities = facilityRows
-            .Select(f => new PublicStorefrontFacilityDto
+        if (locationId.HasValue)
+        {
+            if (!locations.Any(l => l.Id == locationId.Value))
             {
-                Id = f.Id,
-                Name = f.Name,
-                PrimaryImageUrl = f.Images
-                    .OrderBy(i => i.SortOrder)
-                    .Select(i => "/" + i.RelativePath.Replace("\\", "/", StringComparison.Ordinal))
-                    .FirstOrDefault(),
-                LocationName = f.Location?.Name,
-            })
-            .ToList();
+                return null;
+            }
+
+            effectiveLocationId = locationId;
+        }
+        else if (locations.Count == 1)
+        {
+            effectiveLocationId = locations[0].Id;
+        }
+        else if (locations.Count > 1)
+        {
+            requiresBranchSelection = true;
+        }
 
         var socialEntity = await _db.BusinessSocialProfiles
             .AsNoTracking()
@@ -136,9 +127,103 @@ public sealed class StorefrontThemeService : IStorefrontThemeService
             ? new BusinessSocialProfileDto()
             : BusinessSocialProfileService.Map(socialEntity);
 
-        var bannerImages = await _db.StorefrontBannerImages
+        if (requiresBranchSelection)
+        {
+            return new PublicStorefrontDto
+            {
+                BusinessId = business.Id,
+                BusinessName = business.BusinessName,
+                Slug = business.Slug!,
+                LogoUrl = business.LogoPath,
+                Theme = theme,
+                Locations = locations,
+                RequiresBranchSelection = true,
+                Social = social,
+            };
+        }
+
+        var roomQuery = _db.Rooms
             .AsNoTracking()
-            .Where(i => i.BusinessRegistrationId == business.Id)
+            .Include(r => r.Images)
+            .Include(r => r.Location)
+            .Where(r => r.BusinessRegistrationId == business.Id && !r.IsArchived);
+
+        if (effectiveLocationId.HasValue)
+        {
+            roomQuery = roomQuery.Where(r => r.LocationId == effectiveLocationId);
+        }
+
+        var roomRows = await roomQuery
+            .OrderBy(r => r.Name)
+            .ToListAsync(cancellationToken)
+            .ConfigureAwait(false);
+
+        var rooms = roomRows
+            .Select(r =>
+            {
+                var imageUrls = r.Images
+                    .OrderBy(i => i.SortOrder)
+                    .Select(i => "/" + i.RelativePath.Replace("\\", "/", StringComparison.Ordinal))
+                    .ToList();
+                return new PublicStorefrontRoomDto
+                {
+                    Id = r.Id,
+                    Name = r.Name,
+                    BasePricePerNight = r.BasePricePerNight,
+                    MaxOccupancy = r.MaxOccupancy,
+                    PrimaryImageUrl = imageUrls.FirstOrDefault(),
+                    ImageUrls = imageUrls,
+                    LocationId = r.LocationId,
+                    LocationName = r.Location?.Name,
+                };
+            })
+            .ToList();
+
+        var facilityQuery = _db.PropertyFacilities
+            .AsNoTracking()
+            .Include(f => f.Images)
+            .Include(f => f.Location)
+            .Where(f => f.BusinessRegistrationId == business.Id && !f.IsArchived);
+
+        if (effectiveLocationId.HasValue)
+        {
+            facilityQuery = facilityQuery.Where(f => f.LocationId == effectiveLocationId);
+        }
+
+        var facilityRows = await facilityQuery
+            .OrderBy(f => f.Name)
+            .ToListAsync(cancellationToken)
+            .ConfigureAwait(false);
+
+        var facilities = facilityRows
+            .Select(f =>
+            {
+                var imageUrls = f.Images
+                    .OrderBy(i => i.SortOrder)
+                    .Select(i => "/" + i.RelativePath.Replace("\\", "/", StringComparison.Ordinal))
+                    .ToList();
+                return new PublicStorefrontFacilityDto
+                {
+                    Id = f.Id,
+                    Name = f.Name,
+                    PrimaryImageUrl = imageUrls.FirstOrDefault(),
+                    ImageUrls = imageUrls,
+                    LocationId = f.LocationId,
+                    LocationName = f.Location?.Name,
+                };
+            })
+            .ToList();
+
+        var bannerQuery = _db.StorefrontBannerImages
+            .AsNoTracking()
+            .Where(i => i.BusinessRegistrationId == business.Id);
+
+        if (effectiveLocationId.HasValue)
+        {
+            bannerQuery = bannerQuery.Where(i => i.LocationId == effectiveLocationId);
+        }
+
+        var bannerImages = await bannerQuery
             .OrderBy(i => i.SortOrder)
             .Select(i => "/" + i.RelativePath.Replace("\\", "/", StringComparison.Ordinal))
             .ToListAsync(cancellationToken)
@@ -158,6 +243,9 @@ public sealed class StorefrontThemeService : IStorefrontThemeService
             Slug = business.Slug!,
             LogoUrl = business.LogoPath,
             Theme = theme,
+            Locations = locations,
+            RequiresBranchSelection = false,
+            ActiveLocationId = effectiveLocationId,
             Rooms = rooms,
             Facilities = facilities,
             Social = social,

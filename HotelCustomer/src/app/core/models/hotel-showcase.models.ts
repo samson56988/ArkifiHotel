@@ -27,6 +27,12 @@ export interface ShowcaseSocialLink {
   followers: string | null;
 }
 
+export interface ShowcaseLocation {
+  id: string;
+  name: string;
+  address: string | null;
+}
+
 export interface HotelShowcase extends Omit<PublicStorefront, 'rooms' | 'facilities'> {
   location: string;
   category: string;
@@ -40,6 +46,10 @@ export interface HotelShowcase extends Omit<PublicStorefront, 'rooms' | 'facilit
   aboutStory: string[];
   aboutStats: { num: string; label: string }[];
   socialLinks: ShowcaseSocialLink[];
+  locations: ShowcaseLocation[];
+  requiresBranchSelection: boolean;
+  activeLocationId: string | null;
+  branchName: string | null;
   rooms: ShowcaseRoom[];
   facilities: ShowcaseFacility[];
 }

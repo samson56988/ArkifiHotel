@@ -2,6 +2,7 @@ import { ChangeDetectionStrategy, Component, computed, inject, input } from '@an
 import { FormsModule } from '@angular/forms';
 import { RouterLink } from '@angular/router';
 import { HotelUiService } from '../../core/services/hotel-ui.service';
+import { StorefrontContextService } from '../../core/services/storefront-context.service';
 import type { HotelShowcase } from '../../core/models/hotel-showcase.models';
 
 @Component({
@@ -14,6 +15,7 @@ import type { HotelShowcase } from '../../core/models/hotel-showcase.models';
 })
 export class HotelFooterComponent {
   private readonly ui = inject(HotelUiService);
+  readonly ctx = inject(StorefrontContextService);
 
   readonly storefront = input.required<HotelShowcase>();
 

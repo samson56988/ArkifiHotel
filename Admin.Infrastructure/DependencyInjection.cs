@@ -1,5 +1,6 @@
 using Admin.Data;
 using Admin.Infrastructure.Options;
+using Admin.Infrastructure.Payments;
 using Admin.Infrastructure.Services;
 using Admin.Services.Abstractions;
 using Microsoft.AspNetCore.DataProtection;
@@ -35,6 +36,15 @@ public static class DependencyInjection
 
         services.Configure<JwtOptions>(configuration.GetSection(JwtOptions.SectionName));
         services.Configure<EncryptionSettings>(configuration.GetSection(EncryptionSettings.SectionName));
+        services.Configure<CustomerAppOptions>(configuration.GetSection(CustomerAppOptions.SectionName));
+
+        services.AddHttpClient<PaystackGatewayHandler>();
+        services.AddHttpClient<FlutterwaveGatewayHandler>();
+        services.AddHttpClient<MonifyGatewayHandler>();
+        services.AddScoped<PaymentGatewayRouter>();
+        services.AddScoped<IPaymentGatewayHandler, PaystackGatewayHandler>(sp => sp.GetRequiredService<PaystackGatewayHandler>());
+        services.AddScoped<IPaymentGatewayHandler, FlutterwaveGatewayHandler>(sp => sp.GetRequiredService<FlutterwaveGatewayHandler>());
+        services.AddScoped<IPaymentGatewayHandler, MonifyGatewayHandler>(sp => sp.GetRequiredService<MonifyGatewayHandler>());
 
         services.AddScoped<IBusinessEmailVerificationService, BusinessEmailVerificationService>();
         services.AddScoped<IBusinessRegistrationService, BusinessRegistrationService>();
@@ -51,6 +61,7 @@ public static class DependencyInjection
         services.AddScoped<IBusinessPropertyFacilityService, BusinessPropertyFacilityService>();
         services.AddScoped<IBusinessBookingService, BusinessBookingService>();
         services.AddScoped<IPublicBookingLookupService, PublicBookingLookupService>();
+        services.AddScoped<IPublicGuestBookingService, PublicGuestBookingService>();
         services.AddSingleton<IConfigurationEncryptionService, ConfigurationEncryptionService>();
         services.AddScoped<IBusinessPaymentConfigurationService, BusinessPaymentConfigurationService>();
         services.AddScoped<IBusinessCustomerService, BusinessCustomerService>();
