@@ -2,14 +2,12 @@
   background: rgba(255, 255, 255, 0.05);
   border: 1px solid rgba(255, 255, 255, 0.1);
   border-radius: var(--radius, 14px);
-  padding: 1.5rem;
-  display: flex;
-  flex-direction: column;
-  gap: 0.75rem;
-  transition: background 0.2s, border-color 0.2s;
+  overflow: hidden;
+  transition: background 0.2s, border-color 0.2s, transform 0.2s;
 }
 
 .facility-card:hover {
+  transform: translateY(-3px);
   background: color-mix(in srgb, var(--accent) 10%, transparent);
   border-color: color-mix(in srgb, var(--accent) 30%, transparent);
 }
@@ -28,22 +26,88 @@
   color: var(--text);
 }
 
-.facility-card--light .facility-desc {
-  color: color-mix(in srgb, var(--text-mid) 55%, transparent);
+.facility-card--list {
+  display: grid;
+  grid-template-columns: 140px 1fr;
+}
+
+.facility-card--list .facility-card__media {
+  height: 100%;
+  min-height: 120px;
+}
+
+@media (max-width: 520px) {
+  .facility-card--list {
+    grid-template-columns: 1fr;
+  }
+}
+
+.facility-card__media {
+  height: 140px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: linear-gradient(135deg, var(--primary) 0%, color-mix(in srgb, var(--primary) 70%, #2d6a8e) 100%);
+  background-size: cover;
+  background-position: center;
+  position: relative;
+}
+
+.facility-card__media--photo .facility-emoji {
+  display: none;
+}
+
+.facility-category {
+  position: absolute;
+  top: 10px;
+  left: 10px;
+  background: rgba(0, 0, 0, 0.55);
+  backdrop-filter: blur(4px);
+  color: #fff;
+  font-size: 0.62rem;
+  font-weight: 600;
+  padding: 3px 9px;
+  border-radius: 6px;
+  letter-spacing: 0.6px;
+  text-transform: uppercase;
 }
 
 .facility-emoji {
-  font-size: 1.75rem;
+  font-size: 2rem;
+  opacity: 0.35;
+}
+
+.facility-body {
+  padding: 1rem 1.25rem 1.25rem;
 }
 
 .facility-name {
-  font-size: 0.9rem;
+  font-size: 0.95rem;
   font-weight: 600;
   color: #fff;
 }
 
 .facility-desc {
-  font-size: 0.78rem;
-  color: rgba(255, 255, 255, 0.45);
+  margin: 0.45rem 0 0;
+  font-size: 0.8rem;
   line-height: 1.55;
+  color: rgba(255, 255, 255, 0.55);
+}
+
+.facility-card--light .facility-desc {
+  color: color-mix(in srgb, var(--text) 55%, transparent);
+}
+
+.facility-hours {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+  margin-top: 0.65rem;
+  font-family: 'DM Mono', monospace;
+  font-size: 0.68rem;
+  color: var(--accent);
+}
+
+.facility-hours-icon {
+  font-size: 0.75rem;
 }

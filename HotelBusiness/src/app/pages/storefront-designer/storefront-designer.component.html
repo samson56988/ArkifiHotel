@@ -35,6 +35,7 @@
           <button type="button" class="tabs__btn" [class.tabs__btn--active]="activeTab() === 'rooms'" (click)="setTab('rooms')">Rooms</button>
           <button type="button" class="tabs__btn" [class.tabs__btn--active]="activeTab() === 'facilities'" (click)="setTab('facilities')">Facilities</button>
           <button type="button" class="tabs__btn" [class.tabs__btn--active]="activeTab() === 'footer'" (click)="setTab('footer')">Footer</button>
+          <button type="button" class="tabs__btn" [class.tabs__btn--active]="activeTab() === 'contact'" (click)="setTab('contact')">Contact</button>
           <button type="button" class="tabs__btn" [class.tabs__btn--active]="activeTab() === 'colors'" (click)="setTab('colors')">Colors</button>
         </nav>
 
@@ -74,6 +75,11 @@
                 <label for="subheadline">Subheadline</label>
                 <textarea id="subheadline" class="input input--area" rows="3" formControlName="subheadline"></textarea>
               </div>
+              <div class="field">
+                <label for="badgeText">Hero badge</label>
+                <input id="badgeText" class="input" type="text" formControlName="badgeText" placeholder="e.g. Luxury Boutique Hotel" />
+                <p class="hint">Short label above the headline with the green dot. Leave blank to hide the badge.</p>
+              </div>
               <div class="field-row">
                 <div class="field">
                   <label for="headlineFont">Headline font</label>
@@ -106,12 +112,51 @@
                   <input id="overlay" type="range" min="0" max="90" formControlName="overlayOpacity" />
                 </div>
               </div>
+
+              <div class="field banner-photos">
+                <label>Hero banner photos</label>
+                <p class="hint">
+                  Upload up to {{ maxBannerImages }} photos. One photo stays static; two or more rotate as a carousel on your live site.
+                </p>
+                <div class="banner-photos__grid">
+                  @for (img of bannerImages(); track img.id) {
+                    <figure class="banner-photos__item">
+                      <img [src]="img.url" [alt]="img.originalFileName ?? 'Banner photo'" />
+                      <button
+                        type="button"
+                        class="banner-photos__remove"
+                        [disabled]="uploadingBanner()"
+                        (click)="removeBannerImage(img)"
+                        aria-label="Remove banner photo"
+                      >
+                        ✕
+                      </button>
+                    </figure>
+                  }
+                  @if (bannerSlotsRemaining() > 0) {
+                    <label class="banner-photos__add">
+                      <input
+                        type="file"
+                        [accept]="bannerImageAccept"
+                        multiple
+                        [disabled]="uploadingBanner()"
+                        (change)="onBannerFilesSelected($event)"
+                      />
+                      <span>{{ uploadingBanner() ? 'Uploading…' : '+ Add photo' }}</span>
+                    </label>
+                  }
+                </div>
+              </div>
             </ng-container>
           }
 
           @if (activeTab() === 'about') {
             <ng-container formGroupName="about">
-              <label class="check"><input type="checkbox" formControlName="enabled" /> Show “Who we are” section</label>
+              <label class="check"><input type="checkbox" formControlName="enabled" /> Show “Who we are” on home page</label>
+              <div class="field">
+                <label for="aboutEyebrow">Section eyebrow</label>
+                <input id="aboutEyebrow" class="input" type="text" formControlName="eyebrow" placeholder="Who We Are" />
+              </div>
               <div class="field">
                 <label for="aboutTitle">Section title</label>
                 <input id="aboutTitle" class="input" type="text" formControlName="title" />
@@ -119,6 +164,73 @@
               <div class="field">
                 <label for="aboutDesc">Description</label>
                 <textarea id="aboutDesc" class="input input--area" rows="5" formControlName="description"></textarea>
+                <p class="hint">Use a blank line between paragraphs for multiple blocks of copy.</p>
+              </div>
+              <div class="field-row">
+                <div class="field">
+                  <label for="aboutQuote">Pull quote (optional)</label>
+                  <textarea id="aboutQuote" class="input input--area" rows="2" formControlName="quote"></textarea>
+                </div>
+                <div class="field">
+                  <label for="aboutQuoteBy">Quote attribution</label>
+                  <input id="aboutQuoteBy" class="input" type="text" formControlName="quoteBy" placeholder="— Name, Role" />
+                </div>
+              </div>
+              <label class="check">
+                <input type="checkbox" formControlName="showStats" /> Show highlight stats (e.g. founded year, room count)
+              </label>
+              @if (form.controls.about.controls.showStats.value) {
+                <div class="about-stats-editor">
+                  <p class="hint">Up to {{ maxAboutStats }} stats appear in a row under your about copy.</p>
+                  @for (stat of aboutStatsArray.controls; track $index; let i = $index) {
+                    <div class="field-row about-stat-row" [formGroup]="stat">
+                      <div class="field">
+                        <label [for]="'aboutStatNum' + i">Number / value</label>
+                        <input [id]="'aboutStatNum' + i" class="input" type="text" formControlName="num" placeholder="2012" />
+                      </div>
+                      <div class="field">
+                        <label [for]="'aboutStatLabel' + i">Label</label>
+                        <input [id]="'aboutStatLabel' + i" class="input" type="text" formControlName="label" placeholder="Founded" />
+                      </div>
+                      <button type="button" class="btn btn--ghost about-stat-row__remove" (click)="removeAboutStat(i)">
+                        Remove
+                      </button>
+                    </div>
+                  }
+                  @if (aboutStatsArray.length < maxAboutStats) {
+                    <button type="button" class="btn btn--ghost" (click)="addAboutStat()">+ Add stat</button>
+                  }
+                </div>
+              }
+              <div class="field banner-photos">
+                <label>Section photo</label>
+                <p class="hint">Dedicated image for “Who we are” — separate from hero banner photos.</p>
+                <div class="banner-photos__grid">
+                  @if (aboutImage(); as img) {
+                    <figure class="banner-photos__item">
+                      <img [src]="img.url" [alt]="img.originalFileName ?? 'About section photo'" />
+                      <button
+                        type="button"
+                        class="banner-photos__remove"
+                        [disabled]="uploadingAbout()"
+                        (click)="removeAboutImage()"
+                        aria-label="Remove about photo"
+                      >
+                        ✕
+                      </button>
+                    </figure>
+                  } @else {
+                    <label class="banner-photos__add">
+                      <input
+                        type="file"
+                        [accept]="bannerImageAccept"
+                        [disabled]="uploadingAbout()"
+                        (change)="onAboutFileSelected($event)"
+                      />
+                      <span>{{ uploadingAbout() ? 'Uploading…' : '+ Add photo' }}</span>
+                    </label>
+                  }
+                </div>
               </div>
               <div class="field-row">
                 <div class="field">
@@ -151,13 +263,18 @@
 
           @if (activeTab() === 'rooms') {
             <ng-container formGroupName="rooms">
-              <label class="check"><input type="checkbox" formControlName="enabled" /> Show rooms section</label>
+              <label class="check"><input type="checkbox" formControlName="enabled" /> Show rooms on home page &amp; nav</label>
+              <p class="hint section-intro">Home page carousel and the dedicated <strong>/rooms</strong> page share these titles.</p>
               <div class="field">
-                <label for="roomsTitle">Section title</label>
+                <label for="roomsEyebrow">Page eyebrow</label>
+                <input id="roomsEyebrow" class="input" type="text" formControlName="eyebrow" placeholder="Accommodations" />
+              </div>
+              <div class="field">
+                <label for="roomsTitle">Page title</label>
                 <input id="roomsTitle" class="input" type="text" formControlName="title" />
               </div>
               <div class="field">
-                <label for="roomsSub">Subtitle</label>
+                <label for="roomsSub">Page subtitle</label>
                 <input id="roomsSub" class="input" type="text" formControlName="subtitle" />
               </div>
               <div class="field-row">
@@ -180,18 +297,53 @@
                 </div>
               </div>
               <label class="check"><input type="checkbox" formControlName="showPrice" /> Show nightly price on cards</label>
+
+              <h3 class="designer-subsection">Rooms page — featured room</h3>
+              <label class="check"><input type="checkbox" formControlName="showFeaturedSection" /> Highlight a featured room</label>
+              <div class="field-row">
+                <div class="field">
+                  <label for="featuredEyebrow">Featured eyebrow</label>
+                  <input id="featuredEyebrow" class="input" type="text" formControlName="featuredEyebrow" />
+                </div>
+                <div class="field">
+                  <label for="featuredTitle">Featured heading</label>
+                  <input id="featuredTitle" class="input" type="text" formControlName="featuredTitle" />
+                </div>
+              </div>
+
+              <h3 class="designer-subsection">Rooms page — hero stats</h3>
+              <label class="check"><input type="checkbox" formControlName="showPageStats" /> Show hero stats (room types, availability, from price)</label>
+              <p class="hint">Check-in, check-out, and other guest policies are shown in the footer contact section.</p>
+
+              <h3 class="designer-subsection">Rooms page — booking CTA</h3>
+              <div class="field">
+                <label for="roomsCtaTitle">CTA heading</label>
+                <input id="roomsCtaTitle" class="input" type="text" formControlName="ctaTitle" />
+              </div>
+              <div class="field">
+                <label for="roomsCtaSub">CTA subtitle</label>
+                <input id="roomsCtaSub" class="input" type="text" formControlName="ctaSubtitle" />
+              </div>
+              <div class="field">
+                <label for="roomsCtaBtn">CTA button label</label>
+                <input id="roomsCtaBtn" class="input" type="text" formControlName="ctaButtonText" />
+              </div>
             </ng-container>
           }
 
           @if (activeTab() === 'facilities') {
             <ng-container formGroupName="facilities">
-              <label class="check"><input type="checkbox" formControlName="enabled" /> Show facilities section</label>
+              <label class="check"><input type="checkbox" formControlName="enabled" /> Show facilities in nav &amp; on <strong>/facilities</strong> page</label>
               <div class="field">
-                <label for="facTitle">Section title</label>
+                <label for="facEyebrow">Page eyebrow</label>
+                <input id="facEyebrow" class="input" type="text" formControlName="eyebrow" placeholder="On Property" />
+              </div>
+              <div class="field">
+                <label for="facTitle">Page title</label>
                 <input id="facTitle" class="input" type="text" formControlName="title" />
               </div>
               <div class="field">
-                <label for="facSub">Subtitle</label>
+                <label for="facSub">Page subtitle</label>
                 <input id="facSub" class="input" type="text" formControlName="subtitle" />
               </div>
               <div class="field-row">
@@ -211,6 +363,49 @@
                     <option value="list">Compact list</option>
                   </select>
                 </div>
+              </div>
+
+              <h3 class="designer-subsection">Facilities page — hero stats</h3>
+              <label class="check"><input type="checkbox" formControlName="showPageStats" /> Show hero stats</label>
+              <div class="field-row">
+                <div class="field">
+                  <label for="supportStatValue">Support stat value</label>
+                  <input id="supportStatValue" class="input" type="text" formControlName="supportStatValue" placeholder="24/7" />
+                </div>
+                <div class="field">
+                  <label for="supportStatLabel">Support stat label</label>
+                  <input id="supportStatLabel" class="input" type="text" formControlName="supportStatLabel" placeholder="Guest support" />
+                </div>
+              </div>
+
+              <h3 class="designer-subsection">Facilities page — guest perks</h3>
+              <label class="check"><input type="checkbox" formControlName="showGuestPerks" /> Show guest perks section</label>
+              <div class="field">
+                <label for="perksEyebrow">Perks eyebrow</label>
+                <input id="perksEyebrow" class="input" type="text" formControlName="perksEyebrow" />
+              </div>
+              <div class="field">
+                <label for="perksTitle">Perks heading</label>
+                <input id="perksTitle" class="input" type="text" formControlName="perksTitle" />
+              </div>
+              <div class="field">
+                <label for="perksSub">Perks subtitle</label>
+                <input id="perksSub" class="input" type="text" formControlName="perksSubtitle" />
+              </div>
+              <div class="about-stats-editor">
+                <p class="hint">Up to {{ maxFacilityPerks }} bullet points.</p>
+                @for (perk of perksArray.controls; track $index; let i = $index) {
+                  <div class="field-row about-stat-row" [formGroup]="perk">
+                    <div class="field">
+                      <label [for]="'perkText' + i">Perk {{ i + 1 }}</label>
+                      <input [id]="'perkText' + i" class="input" type="text" formControlName="text" placeholder="Daily housekeeping" />
+                    </div>
+                    <button type="button" class="btn btn--ghost about-stat-row__remove" (click)="removePerk(i)">Remove</button>
+                  </div>
+                }
+                @if (perksArray.length < maxFacilityPerks) {
+                  <button type="button" class="btn btn--ghost" (click)="addPerk()">+ Add perk</button>
+                }
               </div>
             </ng-container>
           }
@@ -243,6 +438,34 @@
                 </select>
               </div>
               <label class="check"><input type="checkbox" formControlName="showContact" /> Show trust links column</label>
+            </ng-container>
+          }
+
+          @if (activeTab() === 'contact') {
+            <ng-container formGroupName="contact">
+              <p class="hint">
+                Social cards, email, and phone are managed on
+                <a routerLink="/social-profile">Social &amp; contact</a> — social cards appear on the guest homepage; email and phone in the footer.
+              </p>
+              <div class="field">
+                <label for="contactLocation">Address / location</label>
+                <input id="contactLocation" class="input" type="text" formControlName="location" placeholder="14 Admiralty Way, Lekki Phase 1, Lagos" />
+                <p class="hint">Shown in the hero info bar and contact footer.</p>
+              </div>
+              <div class="field-row">
+                <div class="field">
+                  <label for="checkIn">Check-in time</label>
+                  <input id="checkIn" class="input" type="text" formControlName="checkIn" placeholder="2:00 PM" />
+                </div>
+                <div class="field">
+                  <label for="checkOut">Check-out time</label>
+                  <input id="checkOut" class="input" type="text" formControlName="checkOut" placeholder="12:00 PM" />
+                </div>
+              </div>
+              <div class="field">
+                <label for="contactIntro">Contact form intro</label>
+                <textarea id="contactIntro" class="input input--area" rows="3" formControlName="introText"></textarea>
+              </div>
             </ng-container>
           }
 
@@ -298,11 +521,37 @@
           <span class="preview-chrome__dot"></span>
           <span class="preview-chrome__dot"></span>
           <span class="preview-chrome__dot"></span>
-          <span class="preview-chrome__label">Live preview</span>
+          <div class="preview-chrome__pages" role="tablist" aria-label="Preview page">
+            <button
+              type="button"
+              class="preview-chrome__page"
+              [class.preview-chrome__page--active]="previewPage() === 'home'"
+              (click)="setPreviewPage('home')"
+            >
+              Home
+            </button>
+            <button
+              type="button"
+              class="preview-chrome__page"
+              [class.preview-chrome__page--active]="previewPage() === 'rooms'"
+              (click)="setPreviewPage('rooms')"
+            >
+              Rooms
+            </button>
+            <button
+              type="button"
+              class="preview-chrome__page"
+              [class.preview-chrome__page--active]="previewPage() === 'facilities'"
+              (click)="setPreviewPage('facilities')"
+            >
+              Facilities
+            </button>
+          </div>
+          <span class="preview-chrome__label">{{ previewPageLabel() }}</span>
         </div>
         <div class="preview-frame">
           @if (previewStorefront(); as preview) {
-            <app-storefront-renderer [storefront]="preview" [compact]="true" />
+            <app-storefront-guest-preview [storefront]="preview" [page]="previewPage()" />
           }
         </div>
       </section>

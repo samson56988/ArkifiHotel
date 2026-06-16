@@ -6,27 +6,31 @@
       [style.background-image]="heroBg() ? 'url(' + heroBg() + ')' : null"
     ></div>
     <div class="hero__content">
-      <div class="hero-tag">
-        <div class="hero-tag-dot"></div>
-        <span>Welcome</span>
-      </div>
+      @if (sf.theme.banner.badgeText) {
+        <div class="hero-tag">
+          <div class="hero-tag-dot"></div>
+          <span>{{ sf.theme.banner.badgeText }}</span>
+        </div>
+      }
       <h1 class="hero__name">{{ sf.theme.banner.headline || sf.businessName }}</h1>
       <p class="hero__tagline">{{ sf.theme.banner.subheadline }}</p>
       <div class="hero__actions">
-        <a [routerLink]="['/', sf.slug, 'rooms']" class="btn-accent">Reserve a Room</a>
+        <button type="button" class="btn-accent" (click)="openBooking()">Reserve a Room</button>
         @if (sf.theme.about.enabled) {
           <a [routerLink]="['/', sf.slug]" fragment="about" class="btn-outline-white">Our Story</a>
         }
       </div>
       <div class="hero-info-bar">
-        <div class="hib-item">
-          <span class="hib-icon">🏨</span>
-          <span class="hib-text">{{ sf.businessName }}</span>
-        </div>
-        @if (sf.rooms.length > 0) {
+        @if (sf.theme.contact.location) {
           <div class="hib-item">
-            <span class="hib-icon">🛏️</span>
-            <span class="hib-text">{{ sf.rooms.length }} room{{ sf.rooms.length === 1 ? '' : 's' }}</span>
+            <span class="hib-icon">📍</span>
+            <span class="hib-text">{{ sf.theme.contact.location }}</span>
+          </div>
+        }
+        @if (sf.stars > 0) {
+          <div class="hib-item">
+            <span class="hib-icon">⭐</span>
+            <span class="hib-text">{{ starDisplay() }} · {{ sf.stars }}-star</span>
           </div>
         }
       </div>
@@ -36,41 +40,69 @@
 
   @if (sf.theme.rooms.enabled && sf.rooms.length > 0) {
     <section class="section-wrap" id="rooms-preview">
-      <div class="section-header section-header--row">
-        <div>
-          <div class="sec-eyebrow">Accommodations</div>
-          <h2 class="sec-title">{{ sf.theme.rooms.title }}</h2>
-          <p class="sec-sub">{{ sf.theme.rooms.subtitle }}</p>
-        </div>
-        @if (hasMoreRooms()) {
-          <a [routerLink]="['/', sf.slug, 'rooms']" class="view-all-link">View all rooms →</a>
-        }
+      <div class="section-header">
+        <div class="sec-eyebrow">{{ sf.theme.rooms.eyebrow }}</div>
+        <h2 class="sec-title">{{ sf.theme.rooms.title }}</h2>
+        <p class="sec-sub">{{ sf.theme.rooms.subtitle }}</p>
       </div>
-      <div class="rooms-grid">
-        @for (room of previewRooms(); track room.id) {
-          <app-room-card [room]="room" [storefront]="sf" />
-        }
-      </div>
-    </section>
-  }
 
-  @if (sf.theme.facilities.enabled && sf.facilities.length > 0) {
-    <section class="section-wrap section-wrap--dark" id="facilities-preview">
-      <div class="section-header section-header--row">
-        <div>
-          <div class="sec-eyebrow">On Property</div>
-          <h2 class="sec-title sec-title--light">{{ sf.theme.facilities.title }}</h2>
-          <p class="sec-sub sec-sub--light">{{ sf.theme.facilities.subtitle }}</p>
+      <div class="room-carousel">
+        <button
+          type="button"
+          class="room-carousel__nav room-carousel__nav--prev"
+          (click)="prevRoom()"
+          aria-label="Previous room"
+        >
+          ←
+        </button>
+
+        <div class="room-carousel__viewport">
+          <div class="room-carousel__track" [style.transform]="'translateX(-' + roomIndex() * 100 + '%)'">
+            @for (room of allRooms(); track room.id) {
+              <div class="room-carousel__slide">
+                <app-room-carousel-slide [room]="room" [storefront]="sf" />
+              </div>
+            }
+          </div>
         </div>
-        @if (hasMoreFacilities()) {
-          <a [routerLink]="['/', sf.slug, 'facilities']" class="view-all-link view-all-link--light"
-            >View all facilities →</a
-          >
-        }
+
+        <button
+          type="button"
+          class="room-carousel__nav room-carousel__nav--next"
+          (click)="nextRoom()"
+          aria-label="Next room"
+        >
+          →
+        </button>
       </div>
-      <div class="facilities-grid">
-        @for (f of previewFacilities(); track f.id) {
-          <app-facility-card [facility]="f" />
+
+      <div class="room-carousel__footer">
+        <div class="room-carousel__meta">
+          <span class="room-carousel__progress">{{ carouselProgress() }}</span>
+          <div class="room-carousel__dots" role="tablist" aria-label="Room carousel">
+            @for (room of allRooms(); track room.id; let i = $index) {
+              <button
+                type="button"
+                class="room-carousel__dot"
+                [class.room-carousel__dot--active]="roomIndex() === i"
+                [class.room-carousel__dot--viewed]="isRoomViewed(room.id)"
+                (click)="goToRoom(i)"
+                [attr.aria-label]="'Go to ' + room.name"
+                [attr.aria-selected]="roomIndex() === i"
+              ></button>
+            }
+          </div>
+        </div>
+
+        @if (allRoomsViewed()) {
+          <div class="room-carousel__complete">
+            <p class="room-carousel__complete-msg">You've seen all our rooms — pick your favourite.</p>
+            <a [routerLink]="['/', sf.slug, 'rooms']" class="btn-accent">View all rooms →</a>
+          </div>
+        } @else {
+          <p class="room-carousel__hint">
+            Browse through {{ roomsRemaining() }} more room{{ roomsRemaining() === 1 ? '' : 's' }} to unlock the full list
+          </p>
         }
       </div>
     </section>
@@ -80,16 +112,51 @@
     <section class="section-wrap section-wrap--alt" id="about">
       <div class="about-layout">
         <div class="about-body">
-          <div class="sec-eyebrow">Who We Are</div>
+          <div class="sec-eyebrow">{{ sf.theme.about.eyebrow }}</div>
           <h2 class="sec-title">{{ sf.theme.about.title }}</h2>
-          <p class="sec-sub about-story">{{ sf.theme.about.description }}</p>
+          @for (para of sf.aboutStory; track para) {
+            <p class="sec-sub about-story">{{ para }}</p>
+          } @empty {
+            <p class="sec-sub about-story">{{ sf.theme.about.description }}</p>
+          }
+          @if (sf.theme.about.quote) {
+            <blockquote class="about-quote">
+              <p>{{ sf.theme.about.quote }}</p>
+              @if (sf.theme.about.quoteBy) {
+                <cite>{{ sf.theme.about.quoteBy }}</cite>
+              }
+            </blockquote>
+          } @else if (sf.aboutQuote) {
+            <blockquote class="about-quote">
+              <p>{{ sf.aboutQuote }}</p>
+              @if (sf.aboutQuoteBy) {
+                <cite>{{ sf.aboutQuoteBy }}</cite>
+              }
+            </blockquote>
+          }
+          @if (sf.theme.about.showStats && sf.theme.about.stats.length > 0) {
+            <div class="about-stats">
+              @for (stat of sf.theme.about.stats; track stat.label) {
+                <div class="about-stat">
+                  <div class="about-stat-num">{{ stat.num }}</div>
+                  <div class="about-stat-label">{{ stat.label }}</div>
+                </div>
+              }
+            </div>
+          }
         </div>
         <div class="about-visual">
-          <div class="about-img-main">
-            @if (sf.logoUrl) {
-              <img [src]="sf.logoUrl" [alt]="sf.businessName + ' logo'" />
-            } @else {
-              <span class="about-img-fallback">🏨</span>
+          <div
+            class="about-img-main"
+            [class.about-img-main--photo]="!!sf.aboutImageUrl"
+            [style.background-image]="sf.aboutImageUrl ? 'url(' + sf.aboutImageUrl + ')' : null"
+          >
+            @if (!sf.aboutImageUrl) {
+              @if (sf.logoUrl) {
+                <img [src]="sf.logoUrl" [alt]="sf.businessName + ' logo'" />
+              } @else {
+                <span class="about-img-fallback">🏨</span>
+              }
             }
           </div>
         </div>
@@ -99,22 +166,28 @@
 
   @if (hasSocial()) {
     <section class="section-wrap" id="social">
-      <div class="social-inner">
-        <div>
+      <div class="social-layout">
+        <div class="social-copy">
           <div class="sec-eyebrow">Stay Connected</div>
           <h2 class="sec-title">Follow our story</h2>
-          <p class="sec-sub">Connect with us on social media for updates, offers, and guest moments.</p>
-          <div class="social-links-list">
-            @for (link of socialLinks(); track link.platform) {
-              <a class="social-link-item" [href]="link.url" target="_blank" rel="noopener noreferrer">
-                <div class="social-icon-wrap"><span>{{ link.emoji }}</span></div>
-                <div>
-                  <div class="social-link-name">{{ link.platform }}</div>
-                </div>
-                <div class="social-link-arrow">→</div>
-              </a>
-            }
-          </div>
+          <p class="sec-sub">Connect with us for updates, offers, and guest moments from {{ sf.businessName }}.</p>
+        </div>
+        <div class="social-cards">
+          @for (link of socialLinks(); track link.platform) {
+            <a class="social-card" [href]="link.url" target="_blank" rel="noopener noreferrer">
+              <div class="social-card-icon" [style.background]="link.color + '18'" [style.border-color]="link.color + '40'">
+                <span>{{ link.emoji }}</span>
+              </div>
+              <div class="social-card-body">
+                <div class="social-card-platform">{{ link.platform }}</div>
+                <div class="social-card-handle">{{ link.handle }}</div>
+              </div>
+              @if (link.followers) {
+                <div class="social-card-followers">{{ link.followers }}</div>
+              }
+              <div class="social-card-arrow">→</div>
+            </a>
+          }
         </div>
       </div>
     </section>

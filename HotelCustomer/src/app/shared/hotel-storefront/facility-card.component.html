@@ -1,8 +1,27 @@
 @let f = facility();
-<article class="facility-card" [class.facility-card--light]="!dark()">
-  <div class="facility-emoji">{{ emoji(f.name) }}</div>
-  <div class="facility-name">{{ f.name }}</div>
-  @if (f.locationName) {
-    <div class="facility-desc">{{ f.locationName }}</div>
-  }
+<article class="facility-card" [class.facility-card--light]="!dark()" [class.facility-card--list]="variant() === 'list'">
+  <div
+    class="facility-card__media"
+    [class.facility-card__media--photo]="!!f.primaryImageUrl"
+    [style.background-image]="f.primaryImageUrl ? 'url(' + f.primaryImageUrl + ')' : null"
+  >
+    @if (!f.primaryImageUrl) {
+      <div class="facility-emoji">{{ f.emoji }}</div>
+    }
+    @if (f.category) {
+      <span class="facility-category">{{ f.category }}</span>
+    }
+  </div>
+  <div class="facility-body">
+    <div class="facility-name">{{ f.name }}</div>
+    @if (f.description) {
+      <p class="facility-desc">{{ f.description }}</p>
+    }
+    @if (f.hours) {
+      <div class="facility-hours">
+        <span class="facility-hours-icon">🕐</span>
+        {{ f.hours }}
+      </div>
+    }
+  </div>
 </article>

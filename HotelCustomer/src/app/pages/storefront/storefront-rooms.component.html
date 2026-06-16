@@ -1,40 +1,123 @@
 @if (ctx.storefront(); as sf) {
-  <div class="page-top">
-    <a [routerLink]="['/', sf.slug]" class="back-link">← Back to home</a>
-  </div>
+  <header
+    class="page-hero"
+    [class.page-hero--photo]="!!heroImage()"
+    [style.background-image]="heroImage() ? 'url(' + heroImage() + ')' : null"
+  >
+    <div class="page-hero__inner">
+      <a [routerLink]="['/', sf.slug]" class="back-link">← Back to home</a>
+      <div class="sec-eyebrow sec-eyebrow--light">{{ sf.theme.rooms.eyebrow }}</div>
+      <h1 class="page-hero__title">{{ sf.theme.rooms.title }}</h1>
+      <p class="page-hero__sub">{{ sf.theme.rooms.subtitle }}</p>
+      @if (sf.theme.rooms.showPageStats) {
+        <div class="page-hero__stats">
+          <div class="stat-pill">
+            <span class="stat-pill__num">{{ stats().total }}</span>
+            <span class="stat-pill__label">Room types</span>
+          </div>
+          <div class="stat-pill">
+            <span class="stat-pill__num">{{ stats().available }}</span>
+            <span class="stat-pill__label">Available now</span>
+          </div>
+          @if (sf.theme.rooms.showPrice && stats().minPrice > 0) {
+            <div class="stat-pill">
+              <span class="stat-pill__num">{{ formatPrice(stats().minPrice) }}</span>
+              <span class="stat-pill__label">From / night</span>
+            </div>
+          }
+        </div>
+      }
+    </div>
+  </header>
+
+  @if (sf.theme.rooms.showFeaturedSection && featuredRoom(); as featured) {
+    <section class="section-wrap section-wrap--alt featured-section">
+      <div class="featured-header">
+        <div>
+          <div class="sec-eyebrow">{{ sf.theme.rooms.featuredEyebrow }}</div>
+          <h2 class="sec-title">{{ sf.theme.rooms.featuredTitle }}</h2>
+        </div>
+        <button type="button" class="btn-outline-dark" (click)="openBooking(featured)">Book featured room</button>
+      </div>
+      <app-room-card [room]="featured" [storefront]="sf" [detailMode]="true" variant="featured" />
+    </section>
+  }
 
   <section class="section-wrap">
-    <div class="section-header">
-      <div class="sec-eyebrow">Accommodations</div>
-      <h1 class="sec-title">{{ sf.theme.rooms.title }}</h1>
-      <p class="sec-sub">{{ sf.theme.rooms.subtitle }}</p>
-    </div>
-
-    @if (locationFilters().length > 1) {
-      <div class="rooms-filter">
-        @for (filter of locationFilters(); track filter) {
-          <button
-            type="button"
-            class="filter-pill"
-            [class.active]="activeFilter() === filter"
-            (click)="setFilter(filter)"
-          >
-            {{ filter }}
-          </button>
+    <div class="filters-bar">
+      <div class="filters-group">
+        <span class="filters-label">Wing</span>
+        <div class="rooms-filter">
+          @for (filter of locationFilters(); track filter) {
+            <button
+              type="button"
+              class="filter-pill"
+              [class.active]="locationFilter() === filter"
+              (click)="setLocationFilter(filter)"
+            >
+              {{ filter }}
+            </button>
+          }
+        </div>
+      </div>
+      <div class="filters-group">
+        <span class="filters-label">Type</span>
+        <div class="rooms-filter">
+          @for (filter of typeFilters(); track filter) {
+            <button
+              type="button"
+              class="filter-pill"
+              [class.active]="typeFilter() === filter"
+              (click)="setTypeFilter(filter)"
+            >
+              {{ filter }}
+            </button>
+          }
+        </div>
+      </div>
+      <div class="filters-group filters-group--sort">
+        <span class="filters-label">Sort</span>
+        <select class="sort-select" [value]="sortBy()" (change)="setSort($any($event.target).value)">
+          <option value="price-asc">Price: low to high</option>
+          <option value="price-desc">Price: high to low</option>
+          <option value="name">Name A–Z</option>
+        </select>
+        @if (hasActiveFilters()) {
+          <button type="button" class="clear-filters" (click)="clearFilters()">Clear filters</button>
         }
       </div>
-    }
+    </div>
 
     @if (filteredRooms().length > 0) {
       <div class="rooms-grid">
         @for (room of filteredRooms(); track room.id) {
-          <app-room-card [room]="room" [storefront]="sf" />
+          <app-room-card [room]="room" [storefront]="sf" [detailMode]="true" />
         }
       </div>
     } @else {
-      <p class="sec-sub">No rooms match this filter.</p>
+      <div class="empty-state">
+        <div class="empty-state__icon">🛏️</div>
+        <p>No rooms match your filters.</p>
+        <button type="button" class="btn-outline-dark" (click)="clearFilters()">Show all rooms</button>
+      </div>
     }
   </section>
+
+  @if (sf.theme.rooms.ctaTitle) {
+    <section class="cta-banner">
+      <div class="cta-banner__inner">
+        <div>
+          <h2 class="cta-banner__title">{{ sf.theme.rooms.ctaTitle }}</h2>
+          @if (sf.theme.rooms.ctaSubtitle) {
+            <p class="cta-banner__sub">{{ sf.theme.rooms.ctaSubtitle }}</p>
+          }
+        </div>
+        <button type="button" class="btn-accent" (click)="openBooking()">
+          {{ sf.theme.rooms.ctaButtonText }}
+        </button>
+      </div>
+    </section>
+  }
 
   <app-hotel-footer [storefront]="sf" />
 }

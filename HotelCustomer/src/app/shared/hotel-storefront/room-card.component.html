@@ -1,6 +1,6 @@
 @let r = room();
 @let sf = storefront();
-<article class="room-card">
+<article class="room-card" [class.room-card--featured]="variant() === 'featured'">
   <div
     class="room-img"
     [class.room-img--photo]="!!r.primaryImageUrl"
@@ -10,20 +10,35 @@
       <div class="room-img-emoji">🛏️</div>
     }
     <div class="room-img-overlay">
-      @if (r.locationName) {
-        <div class="room-badge">{{ r.locationName }}</div>
+      <div class="room-badge">{{ r.roomType }}</div>
+      @if (variant() === 'featured') {
+        <div class="room-featured-label">Featured</div>
       }
-      <div class="room-avail yes">Available</div>
+      <div class="room-avail" [class.yes]="r.available" [class.no]="!r.available">
+        {{ r.available ? '✓ Available' : '✗ Booked' }}
+      </div>
     </div>
   </div>
   <div class="room-body">
+    @if (r.locationName && variant() === 'featured') {
+      <div class="room-location">{{ r.locationName }}</div>
+    }
     <div class="room-name">{{ r.name }}</div>
     <div class="room-meta">
-      <span>👥 Up to {{ r.maxOccupancy }} guests</span>
-      @if (r.locationName) {
-        <span>📍 {{ r.locationName }}</span>
-      }
+      <span>🛏️ {{ r.beds }}</span>
+      <span>👥 {{ r.maxOccupancy }} guests</span>
+      <span>📐 {{ r.size }}</span>
     </div>
+    @if ((detailMode() || variant() === 'featured') && r.description) {
+      <p class="room-desc">{{ r.description }}</p>
+    }
+    @if (r.amenities.length > 0) {
+      <div class="room-amenities">
+        @for (tag of r.amenities.slice(0, variant() === 'featured' ? 8 : detailMode() ? 6 : 4); track tag) {
+          <span class="room-amenity-tag">{{ tag }}</span>
+        }
+      </div>
+    }
     <div class="room-footer">
       @if (showPrice() && sf.theme.rooms.showPrice) {
         <div>
@@ -31,7 +46,15 @@
           <div class="room-price-label">per night</div>
         </div>
       }
-      <a [routerLink]="['/', sf.slug, 'rooms']" class="btn-book-room">View details</a>
+      @if (detailMode() || variant() === 'featured') {
+        @if (r.available) {
+          <button type="button" class="btn-book-room" (click)="bookRoom()">Book Room</button>
+        } @else {
+          <button type="button" class="btn-book-room btn-book-room--disabled" disabled>Unavailable</button>
+        }
+      } @else {
+        <a [routerLink]="['/', sf.slug, 'rooms']" class="btn-book-room">View details</a>
+      }
     </div>
   </div>
 </article>

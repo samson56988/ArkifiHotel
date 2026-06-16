@@ -27,7 +27,9 @@ public sealed class StorefrontThemeService : IStorefrontThemeService
             return null;
         }
 
-        return StorefrontThemeDefaults.Deserialize(entity.StorefrontThemeJson, entity.BusinessName);
+        var theme = StorefrontThemeDefaults.Deserialize(entity.StorefrontThemeJson, entity.BusinessName);
+        NormalizeTheme(theme);
+        return theme;
     }
 
     public async Task<(StorefrontThemeDto? Theme, string? ErrorMessage)> UpdateAsync(
@@ -77,6 +79,7 @@ public sealed class StorefrontThemeService : IStorefrontThemeService
         }
 
         var theme = StorefrontThemeDefaults.Deserialize(business.StorefrontThemeJson, business.BusinessName);
+        NormalizeTheme(theme);
 
         var roomRows = await _db.Rooms
             .AsNoTracking()
@@ -133,6 +136,21 @@ public sealed class StorefrontThemeService : IStorefrontThemeService
             ? new BusinessSocialProfileDto()
             : BusinessSocialProfileService.Map(socialEntity);
 
+        var bannerImages = await _db.StorefrontBannerImages
+            .AsNoTracking()
+            .Where(i => i.BusinessRegistrationId == business.Id)
+            .OrderBy(i => i.SortOrder)
+            .Select(i => "/" + i.RelativePath.Replace("\\", "/", StringComparison.Ordinal))
+            .ToListAsync(cancellationToken)
+            .ConfigureAwait(false);
+
+        var aboutImagePath = await _db.StorefrontAboutImages
+            .AsNoTracking()
+            .Where(i => i.BusinessRegistrationId == business.Id)
+            .Select(i => "/" + i.RelativePath.Replace("\\", "/", StringComparison.Ordinal))
+            .FirstOrDefaultAsync(cancellationToken)
+            .ConfigureAwait(false);
+
         return new PublicStorefrontDto
         {
             BusinessId = business.Id,
@@ -143,6 +161,8 @@ public sealed class StorefrontThemeService : IStorefrontThemeService
             Rooms = rooms,
             Facilities = facilities,
             Social = social,
+            HeroImages = bannerImages,
+            AboutImageUrl = aboutImagePath,
         };
     }
 
@@ -157,22 +177,64 @@ public sealed class StorefrontThemeService : IStorefrontThemeService
         theme.Banner.Subheadline = TrimOrDefault(theme.Banner.Subheadline, string.Empty);
         theme.Banner.TextAlign = TrimOrDefault(theme.Banner.TextAlign, "center");
         theme.Banner.OverlayOpacity = Math.Clamp(theme.Banner.OverlayOpacity, 0, 90);
+        theme.Banner.BadgeText = theme.Banner.BadgeText?.Trim() ?? "Your stay awaits";
 
+        theme.Contact.Location = TrimOrDefault(theme.Contact.Location, string.Empty);
+        theme.Contact.CheckIn = TrimOrDefault(theme.Contact.CheckIn, string.Empty);
+        theme.Contact.CheckOut = TrimOrDefault(theme.Contact.CheckOut, string.Empty);
+        theme.Contact.IntroText = TrimOrDefault(
+            theme.Contact.IntroText,
+            "Questions about your stay? Send us a message and our team will respond within a few hours.");
+
+        theme.About.Eyebrow = TrimOrDefault(theme.About.Eyebrow, "Who We Are");
         theme.About.Title = TrimOrDefault(theme.About.Title, "Who we are");
         theme.About.Description = TrimOrDefault(theme.About.Description, string.Empty);
         theme.About.TitleFont = TrimOrDefault(theme.About.TitleFont, "display");
         theme.About.BodyFont = TrimOrDefault(theme.About.BodyFont, "body");
         theme.About.Layout = TrimOrDefault(theme.About.Layout, "side-by-side");
+        theme.About.Quote = TrimOrDefault(theme.About.Quote, string.Empty);
+        theme.About.QuoteBy = TrimOrDefault(theme.About.QuoteBy, string.Empty);
+        theme.About.Stats = theme.About.Stats
+            .Where(s => !string.IsNullOrWhiteSpace(s.Num) || !string.IsNullOrWhiteSpace(s.Label))
+            .Take(4)
+            .Select(s => new StorefrontAboutStatDto
+            {
+                Num = s.Num?.Trim() ?? string.Empty,
+                Label = s.Label?.Trim() ?? string.Empty,
+            })
+            .ToList();
 
+        theme.Rooms.Eyebrow = TrimOrDefault(theme.Rooms.Eyebrow, "Accommodations");
         theme.Rooms.Title = TrimOrDefault(theme.Rooms.Title, "Our rooms");
         theme.Rooms.Subtitle = TrimOrDefault(theme.Rooms.Subtitle, string.Empty);
         theme.Rooms.TitleFont = TrimOrDefault(theme.Rooms.TitleFont, "display");
         theme.Rooms.CardStyle = TrimOrDefault(theme.Rooms.CardStyle, "elevated");
+        theme.Rooms.FeaturedEyebrow = TrimOrDefault(theme.Rooms.FeaturedEyebrow, "Signature Stay");
+        theme.Rooms.FeaturedTitle = TrimOrDefault(theme.Rooms.FeaturedTitle, "Our most sought-after room");
+        theme.Rooms.PolicyBreakfast = TrimOrDefault(theme.Rooms.PolicyBreakfast, string.Empty);
+        theme.Rooms.PolicyPets = TrimOrDefault(theme.Rooms.PolicyPets, string.Empty);
+        theme.Rooms.PolicyCancellation = TrimOrDefault(theme.Rooms.PolicyCancellation, string.Empty);
+        theme.Rooms.CtaTitle = TrimOrDefault(theme.Rooms.CtaTitle, string.Empty);
+        theme.Rooms.CtaSubtitle = TrimOrDefault(theme.Rooms.CtaSubtitle, string.Empty);
+        theme.Rooms.CtaButtonText = TrimOrDefault(theme.Rooms.CtaButtonText, "Check availability");
 
+        theme.Facilities.Eyebrow = TrimOrDefault(theme.Facilities.Eyebrow, "On Property");
         theme.Facilities.Title = TrimOrDefault(theme.Facilities.Title, "Facilities");
         theme.Facilities.Subtitle = TrimOrDefault(theme.Facilities.Subtitle, string.Empty);
         theme.Facilities.TitleFont = TrimOrDefault(theme.Facilities.TitleFont, "display");
         theme.Facilities.DisplayStyle = TrimOrDefault(theme.Facilities.DisplayStyle, "grid");
+        theme.Facilities.SupportStatValue = TrimOrDefault(theme.Facilities.SupportStatValue, "24/7");
+        theme.Facilities.SupportStatLabel = TrimOrDefault(theme.Facilities.SupportStatLabel, "Guest support");
+        theme.Facilities.PerksEyebrow = TrimOrDefault(theme.Facilities.PerksEyebrow, "Guest Perks");
+        theme.Facilities.PerksTitle = TrimOrDefault(theme.Facilities.PerksTitle, "Everything included in your stay");
+        theme.Facilities.PerksSubtitle = TrimOrDefault(
+            theme.Facilities.PerksSubtitle,
+            "Complimentary access to most on-property amenities for all registered guests.");
+        theme.Facilities.PerksItems = theme.Facilities.PerksItems
+            .Where(i => !string.IsNullOrWhiteSpace(i))
+            .Select(i => i.Trim())
+            .Take(6)
+            .ToList();
 
         theme.Footer.Style = TrimOrDefault(theme.Footer.Style, "columns");
         theme.Footer.Tagline = TrimOrDefault(theme.Footer.Tagline, string.Empty);

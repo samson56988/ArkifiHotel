@@ -1,53 +1,128 @@
-import { ChangeDetectionStrategy, Component, computed, inject } from '@angular/core';
+import { ChangeDetectionStrategy, Component, computed, inject, OnDestroy, OnInit, signal } from '@angular/core';
 import { RouterLink } from '@angular/router';
+import { HotelUiService } from '../../core/services/hotel-ui.service';
 import { StorefrontContextService } from '../../core/services/storefront-context.service';
-import {
-  HOME_FACILITY_PREVIEW_COUNT,
-  HOME_ROOM_PREVIEW_COUNT,
-  heroImageUrl,
-} from '../../core/utils/hotel-theme';
-import { FacilityCardComponent } from '../../shared/hotel-storefront/facility-card.component';
 import { HotelFooterComponent } from '../../shared/hotel-storefront/hotel-footer.component';
-import { RoomCardComponent } from '../../shared/hotel-storefront/room-card.component';
+import { RoomCarouselSlideComponent } from '../../shared/hotel-storefront/room-carousel-slide.component';
 
 @Component({
   selector: 'app-storefront-home',
   standalone: true,
-  imports: [RouterLink, RoomCardComponent, FacilityCardComponent, HotelFooterComponent],
+  imports: [RouterLink, RoomCarouselSlideComponent, HotelFooterComponent],
   templateUrl: './storefront-home.component.html',
   styleUrl: './storefront-home.component.scss',
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
-export class StorefrontHomeComponent {
+export class StorefrontHomeComponent implements OnInit, OnDestroy {
+  private readonly ui = inject(HotelUiService);
   readonly ctx = inject(StorefrontContextService);
 
   readonly storefront = computed(() => this.ctx.storefront()!);
 
-  readonly heroBg = computed(() => heroImageUrl(this.storefront()));
+  readonly heroIndex = signal(0);
+  private heroTimer?: ReturnType<typeof setInterval>;
 
-  readonly previewRooms = computed(() =>
-    this.storefront().rooms.slice(0, HOME_ROOM_PREVIEW_COUNT),
-  );
+  readonly roomIndex = signal(0);
+  readonly viewedRoomIds = signal<Set<string>>(new Set());
 
-  readonly previewFacilities = computed(() =>
-    this.storefront().facilities.slice(0, HOME_FACILITY_PREVIEW_COUNT),
-  );
-
-  readonly hasMoreRooms = computed(() => this.storefront().rooms.length > HOME_ROOM_PREVIEW_COUNT);
-
-  readonly hasMoreFacilities = computed(() =>
-    this.storefront().facilities.length > HOME_FACILITY_PREVIEW_COUNT,
-  );
-
-  readonly socialLinks = computed(() => {
-    const s = this.storefront().social;
-    const links: { platform: string; url: string; emoji: string }[] = [];
-    if (s.instagramUrl) links.push({ platform: 'Instagram', url: s.instagramUrl, emoji: '📸' });
-    if (s.facebookUrl) links.push({ platform: 'Facebook', url: s.facebookUrl, emoji: '👤' });
-    if (s.tikTokUrl) links.push({ platform: 'TikTok', url: s.tikTokUrl, emoji: '🎵' });
-    if (s.xUrl) links.push({ platform: 'X', url: s.xUrl, emoji: '𝕏' });
-    return links;
+  readonly heroBg = computed(() => {
+    const images = this.storefront().heroImages;
+    if (images.length === 0) {
+      return null;
+    }
+    return images[this.heroIndex() % images.length];
   });
 
+  readonly allRooms = computed(() => this.storefront().rooms);
+
+  readonly allRoomsViewed = computed(() => {
+    const rooms = this.allRooms();
+    const viewed = this.viewedRoomIds();
+    return rooms.length > 0 && rooms.every((r) => viewed.has(r.id));
+  });
+
+  readonly roomsRemaining = computed(() => {
+    const rooms = this.allRooms();
+    const viewed = this.viewedRoomIds();
+    return rooms.filter((r) => !viewed.has(r.id)).length;
+  });
+
+  readonly carouselProgress = computed(() => {
+    const total = this.allRooms().length;
+    if (total === 0) {
+      return '0 / 0';
+    }
+    return `${this.roomIndex() + 1} / ${total}`;
+  });
+
+  readonly socialLinks = computed(() =>
+    this.storefront().socialLinks.filter((l) => l.platform !== 'WhatsApp'),
+  );
+
   readonly hasSocial = computed(() => this.socialLinks().length > 0);
+
+  readonly starDisplay = computed(() => '★'.repeat(this.storefront().stars));
+
+  ngOnInit(): void {
+    const images = this.storefront().heroImages;
+    if (images.length > 1) {
+      this.heroTimer = setInterval(() => {
+        this.heroIndex.update((i) => (i + 1) % images.length);
+      }, 6000);
+    }
+
+    const firstRoom = this.allRooms()[0];
+    if (firstRoom) {
+      this.markRoomViewed(firstRoom.id);
+    }
+  }
+
+  ngOnDestroy(): void {
+    if (this.heroTimer) {
+      clearInterval(this.heroTimer);
+    }
+  }
+
+  openBooking(): void {
+    this.ui.openBooking();
+  }
+
+  goToRoom(index: number): void {
+    const rooms = this.allRooms();
+    if (index < 0 || index >= rooms.length) {
+      return;
+    }
+    this.roomIndex.set(index);
+    this.markRoomViewed(rooms[index].id);
+  }
+
+  nextRoom(): void {
+    const rooms = this.allRooms();
+    if (rooms.length === 0) {
+      return;
+    }
+    const next = (this.roomIndex() + 1) % rooms.length;
+    this.goToRoom(next);
+  }
+
+  prevRoom(): void {
+    const rooms = this.allRooms();
+    if (rooms.length === 0) {
+      return;
+    }
+    const prev = (this.roomIndex() - 1 + rooms.length) % rooms.length;
+    this.goToRoom(prev);
+  }
+
+  isRoomViewed(roomId: string): boolean {
+    return this.viewedRoomIds().has(roomId);
+  }
+
+  private markRoomViewed(roomId: string): void {
+    this.viewedRoomIds.update((ids) => {
+      const next = new Set(ids);
+      next.add(roomId);
+      return next;
+    });
+  }
 }

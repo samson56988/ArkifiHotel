@@ -32,7 +32,7 @@ export const routes: Routes = [
   },
   {
     path: '',
-    redirectTo: 'lookup',
+    redirectTo: 'lekki-suites',
     pathMatch: 'full',
   },
 ];

@@ -576,13 +576,37 @@ namespace Admin.Data.Migrations
                     b.Property<DateTimeOffset>("CreatedAt")
                         .HasColumnType("timestamp with time zone");
 
+                    b.Property<string>("FacebookFollowers")
+                        .HasMaxLength(32)
+                        .HasColumnType("character varying(32)");
+
+                    b.Property<string>("FacebookHandle")
+                        .HasMaxLength(128)
+                        .HasColumnType("character varying(128)");
+
                     b.Property<string>("FacebookUrl")
                         .HasMaxLength(512)
                         .HasColumnType("character varying(512)");
 
+                    b.Property<string>("InstagramFollowers")
+                        .HasMaxLength(32)
+                        .HasColumnType("character varying(32)");
+
+                    b.Property<string>("InstagramHandle")
+                        .HasMaxLength(128)
+                        .HasColumnType("character varying(128)");
+
                     b.Property<string>("InstagramUrl")
                         .HasMaxLength(512)
                         .HasColumnType("character varying(512)");
+
+                    b.Property<string>("TikTokFollowers")
+                        .HasMaxLength(32)
+                        .HasColumnType("character varying(32)");
+
+                    b.Property<string>("TikTokHandle")
+                        .HasMaxLength(128)
+                        .HasColumnType("character varying(128)");
 
                     b.Property<string>("TikTokUrl")
                         .HasMaxLength(512)
@@ -590,6 +614,14 @@ namespace Admin.Data.Migrations
 
                     b.Property<DateTimeOffset?>("UpdatedAt")
                         .HasColumnType("timestamp with time zone");
+
+                    b.Property<string>("XFollowers")
+                        .HasMaxLength(32)
+                        .HasColumnType("character varying(32)");
+
+                    b.Property<string>("XHandle")
+                        .HasMaxLength(128)
+                        .HasColumnType("character varying(128)");
 
                     b.Property<string>("XUrl")
                         .HasMaxLength(512)
@@ -891,6 +923,66 @@ namespace Admin.Data.Migrations
                     b.ToTable("RoomImages", (string)null);
                 });
 
+            modelBuilder.Entity("Admin.Data.Entities.StorefrontAboutImage", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uuid");
+
+                    b.Property<Guid>("BusinessRegistrationId")
+                        .HasColumnType("uuid");
+
+                    b.Property<string>("OriginalFileName")
+                        .HasMaxLength(256)
+                        .HasColumnType("character varying(256)");
+
+                    b.Property<string>("RelativePath")
+                        .IsRequired()
+                        .HasMaxLength(512)
+                        .HasColumnType("character varying(512)");
+
+                    b.Property<DateTimeOffset>("UpdatedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("BusinessRegistrationId")
+                        .IsUnique();
+
+                    b.ToTable("StorefrontAboutImages", (string)null);
+                });
+
+            modelBuilder.Entity("Admin.Data.Entities.StorefrontBannerImage", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uuid");
+
+                    b.Property<Guid>("BusinessRegistrationId")
+                        .HasColumnType("uuid");
+
+                    b.Property<DateTimeOffset>("CreatedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<string>("OriginalFileName")
+                        .HasMaxLength(256)
+                        .HasColumnType("character varying(256)");
+
+                    b.Property<string>("RelativePath")
+                        .IsRequired()
+                        .HasMaxLength(512)
+                        .HasColumnType("character varying(512)");
+
+                    b.Property<int>("SortOrder")
+                        .HasColumnType("integer");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("BusinessRegistrationId");
+
+                    b.ToTable("StorefrontBannerImages", (string)null);
+                });
+
             modelBuilder.Entity("Admin.Data.Entities.Amenity", b =>
                 {
                     b.HasOne("Admin.Data.Entities.BusinessRegistration", "BusinessRegistration")
@@ -1098,6 +1190,28 @@ namespace Admin.Data.Migrations
                         .IsRequired();
 
                     b.Navigation("Room");
+                });
+
+            modelBuilder.Entity("Admin.Data.Entities.StorefrontAboutImage", b =>
+                {
+                    b.HasOne("Admin.Data.Entities.BusinessRegistration", "BusinessRegistration")
+                        .WithMany()
+                        .HasForeignKey("BusinessRegistrationId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("BusinessRegistration");
+                });
+
+            modelBuilder.Entity("Admin.Data.Entities.StorefrontBannerImage", b =>
+                {
+                    b.HasOne("Admin.Data.Entities.BusinessRegistration", "BusinessRegistration")
+                        .WithMany()
+                        .HasForeignKey("BusinessRegistrationId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("BusinessRegistration");
                 });
 
             modelBuilder.Entity("Admin.Data.Entities.Amenity", b =>

@@ -1,0 +1,413 @@
+@let sf = storefront();
+<div class="hotel guest-preview" [style]="themeStyle()">
+  @switch (page()) {
+    @case ('rooms') {
+      <nav class="hotel-nav hotel-nav--solid">
+        <span class="hotel-nav__logo">{{ sf.businessName }}</span>
+        <ul class="hotel-nav__links">
+          @if (sf.theme.rooms.enabled) {
+            <li><span class="is-active">Rooms</span></li>
+          }
+          @if (sf.theme.facilities.enabled) {
+            <li><span>Facilities</span></li>
+          }
+          @if (sf.theme.about.enabled) {
+            <li><span>About</span></li>
+          }
+          <li><span class="hotel-nav__book">Book Now</span></li>
+        </ul>
+      </nav>
+
+      <header
+        class="page-hero"
+        [class.page-hero--photo]="!!pageHeroImage()"
+        [style.background-image]="pageHeroImage() ? 'url(' + pageHeroImage() + ')' : null"
+      >
+        <div class="page-hero__inner">
+          <span class="back-link">← Back to home</span>
+          <div class="sec-eyebrow sec-eyebrow--light">{{ sf.theme.rooms.eyebrow }}</div>
+          <h1 class="page-hero__title">{{ sf.theme.rooms.title }}</h1>
+          <p class="page-hero__sub">{{ sf.theme.rooms.subtitle }}</p>
+          @if (sf.theme.rooms.showPageStats && sf.rooms.length > 0) {
+            <div class="page-hero__stats">
+              <div class="stat-pill">
+                <span class="stat-pill__num">{{ roomPageStats().total }}</span>
+                <span class="stat-pill__label">Room types</span>
+              </div>
+              <div class="stat-pill">
+                <span class="stat-pill__num">{{ roomPageStats().available }}</span>
+                <span class="stat-pill__label">Available now</span>
+              </div>
+              @if (sf.theme.rooms.showPrice && roomPageStats().minPrice > 0) {
+                <div class="stat-pill">
+                  <span class="stat-pill__num">{{ formatPrice(roomPageStats().minPrice) }}</span>
+                  <span class="stat-pill__label">From / night</span>
+                </div>
+              }
+            </div>
+          }
+        </div>
+      </header>
+
+      @if (sf.theme.rooms.showFeaturedSection && featuredRoom(); as featured) {
+        <section class="section-wrap section-wrap--alt">
+          <div class="featured-header">
+            <div>
+              <div class="sec-eyebrow">{{ sf.theme.rooms.featuredEyebrow }}</div>
+              <h2 class="sec-title">{{ sf.theme.rooms.featuredTitle }}</h2>
+            </div>
+          </div>
+          <app-preview-room-slide [room]="featured" [storefront]="sf" />
+        </section>
+      }
+
+      <section class="section-wrap">
+        @if (sf.rooms.length > 0) {
+          <div class="preview-room-grid">
+            @for (room of gridRooms(); track room.id) {
+              <article class="preview-room-card">
+                <div
+                  class="preview-room-card__media"
+                  [class.preview-room-card__media--photo]="!!room.primaryImageUrl"
+                  [style.background-image]="room.primaryImageUrl ? 'url(' + room.primaryImageUrl + ')' : null"
+                ></div>
+                <div class="preview-room-card__body">
+                  <h3>{{ room.name }}</h3>
+                  @if (sf.theme.rooms.showPrice) {
+                    <p class="preview-room-card__price">{{ formatPrice(room.basePricePerNight) }} / night</p>
+                  }
+                </div>
+              </article>
+            }
+          </div>
+        } @else {
+          <p class="preview-empty">Add rooms in your catalog to preview this page.</p>
+        }
+      </section>
+
+      @if (sf.theme.rooms.ctaTitle) {
+        <section class="cta-banner">
+          <div class="cta-banner__inner">
+            <div>
+              <h2 class="cta-banner__title">{{ sf.theme.rooms.ctaTitle }}</h2>
+              @if (sf.theme.rooms.ctaSubtitle) {
+                <p class="cta-banner__sub">{{ sf.theme.rooms.ctaSubtitle }}</p>
+              }
+            </div>
+            <span class="btn-accent">{{ sf.theme.rooms.ctaButtonText }}</span>
+          </div>
+        </section>
+      }
+    }
+
+    @case ('facilities') {
+      <nav class="hotel-nav hotel-nav--solid">
+        <span class="hotel-nav__logo">{{ sf.businessName }}</span>
+        <ul class="hotel-nav__links">
+          @if (sf.theme.rooms.enabled) {
+            <li><span>Rooms</span></li>
+          }
+          @if (sf.theme.facilities.enabled) {
+            <li><span class="is-active">Facilities</span></li>
+          }
+          @if (sf.theme.about.enabled) {
+            <li><span>About</span></li>
+          }
+          <li><span class="hotel-nav__book">Book Now</span></li>
+        </ul>
+      </nav>
+
+      <header
+        class="page-hero"
+        [class.page-hero--photo]="!!pageHeroImage()"
+        [style.background-image]="pageHeroImage() ? 'url(' + pageHeroImage() + ')' : null"
+      >
+        <div class="page-hero__inner">
+          <span class="back-link">← Back to home</span>
+          <div class="sec-eyebrow sec-eyebrow--light">{{ sf.theme.facilities.eyebrow }}</div>
+          <h1 class="page-hero__title">{{ sf.theme.facilities.title }}</h1>
+          <p class="page-hero__sub">{{ sf.theme.facilities.subtitle }}</p>
+          @if (sf.theme.facilities.showPageStats && sf.facilities.length > 0) {
+            <div class="page-hero__stats">
+              <div class="stat-pill">
+                <span class="stat-pill__num">{{ sf.facilities.length }}</span>
+                <span class="stat-pill__label">Amenities</span>
+              </div>
+              @if (sf.theme.facilities.supportStatValue) {
+                <div class="stat-pill">
+                  <span class="stat-pill__num">{{ sf.theme.facilities.supportStatValue }}</span>
+                  <span class="stat-pill__label">{{ sf.theme.facilities.supportStatLabel }}</span>
+                </div>
+              }
+            </div>
+          }
+        </div>
+      </header>
+
+      @if (featuredFacility(); as featured) {
+        <section class="featured-facility">
+          <div
+            class="featured-facility__media"
+            [class.featured-facility__media--photo]="!!featured.primaryImageUrl"
+            [style.background-image]="featured.primaryImageUrl ? 'url(' + featured.primaryImageUrl + ')' : null"
+          >
+            @if (!featured.primaryImageUrl) {
+              <span class="featured-facility__emoji">{{ facilityEmoji(featured.name) }}</span>
+            }
+          </div>
+          <div class="featured-facility__body">
+            <div class="sec-eyebrow">Highlight</div>
+            <h2 class="featured-facility__name">{{ featured.name }}</h2>
+          </div>
+        </section>
+      } @else {
+        <section class="section-wrap">
+          <p class="preview-empty">Add facilities in your catalog to preview this page.</p>
+        </section>
+      }
+
+      @if (gridFacilities().length > 0) {
+        <section class="section-wrap">
+          <div class="preview-facility-grid">
+            @for (f of gridFacilities(); track f.id) {
+              <article class="preview-facility-card">
+                <div
+                  class="preview-facility-card__media"
+                  [class.preview-facility-card__media--photo]="!!f.primaryImageUrl"
+                  [style.background-image]="f.primaryImageUrl ? 'url(' + f.primaryImageUrl + ')' : null"
+                >
+                  @if (!f.primaryImageUrl) {
+                    <span>{{ facilityEmoji(f.name) }}</span>
+                  }
+                </div>
+                <h3>{{ f.name }}</h3>
+              </article>
+            }
+          </div>
+        </section>
+      }
+
+      @if (sf.theme.facilities.showGuestPerks && sf.theme.facilities.perksItems.length > 0) {
+        <section class="guest-perks">
+          <div class="guest-perks__inner">
+            <div class="guest-perks__copy">
+              <div class="sec-eyebrow sec-eyebrow--light">{{ sf.theme.facilities.perksEyebrow }}</div>
+              <h2 class="guest-perks__title">{{ sf.theme.facilities.perksTitle }}</h2>
+              @if (sf.theme.facilities.perksSubtitle) {
+                <p class="guest-perks__sub">{{ sf.theme.facilities.perksSubtitle }}</p>
+              }
+            </div>
+            <ul class="perks-list">
+              @for (perk of sf.theme.facilities.perksItems; track perk) {
+                <li><span>✓</span> {{ perk }}</li>
+              }
+            </ul>
+          </div>
+        </section>
+      }
+    }
+
+    @default {
+      <nav class="hotel-nav">
+        <span class="hotel-nav__logo">{{ sf.businessName }}</span>
+        <ul class="hotel-nav__links">
+          @if (sf.theme.rooms.enabled) {
+            <li><span>Rooms</span></li>
+          }
+          @if (sf.theme.facilities.enabled) {
+            <li><span>Facilities</span></li>
+          }
+          @if (sf.theme.about.enabled) {
+            <li><span>About</span></li>
+          }
+          <li><span>Contact</span></li>
+          <li><span class="hotel-nav__book">Book Now</span></li>
+        </ul>
+      </nav>
+
+      <section class="hero">
+        <div
+          class="hero__bg"
+          [class.hero__bg--photo]="!!heroBg()"
+          [style.background-image]="heroBg() ? 'url(' + heroBg() + ')' : null"
+        ></div>
+        <div class="hero__content">
+          @if (sf.theme.banner.badgeText) {
+            <div class="hero-tag">
+              <div class="hero-tag-dot"></div>
+              <span>{{ sf.theme.banner.badgeText }}</span>
+            </div>
+          }
+          <h1 class="hero__name">{{ sf.theme.banner.headline || sf.businessName }}</h1>
+          <p class="hero__tagline">{{ sf.theme.banner.subheadline }}</p>
+          <div class="hero__actions">
+            <span class="btn-accent">Reserve a Room</span>
+            @if (sf.theme.about.enabled) {
+              <span class="btn-outline-white">Our Story</span>
+            }
+          </div>
+          <div class="hero-info-bar">
+            @if (sf.theme.contact.location) {
+              <div class="hib-item">
+                <span class="hib-icon">📍</span>
+                <span class="hib-text">{{ sf.theme.contact.location }}</span>
+              </div>
+            }
+            @if (heroImages().length > 1) {
+              <div class="hib-item">
+                <span class="hib-icon">🖼️</span>
+                <span class="hib-text">{{ heroImages().length }} banner photos</span>
+              </div>
+            }
+          </div>
+        </div>
+        <div class="scroll-hint">Scroll</div>
+      </section>
+
+      @if (sf.theme.rooms.enabled && sf.rooms.length > 0) {
+        <section class="section-wrap">
+          <div class="section-header">
+            <div class="sec-eyebrow">{{ sf.theme.rooms.eyebrow }}</div>
+            <h2 class="sec-title">{{ sf.theme.rooms.title }}</h2>
+            <p class="sec-sub">{{ sf.theme.rooms.subtitle }}</p>
+          </div>
+
+          <div class="room-carousel">
+            <button type="button" class="room-carousel__nav" (click)="prevRoom()" aria-label="Previous room">←</button>
+            <div class="room-carousel__viewport">
+              <div class="room-carousel__track" [style.transform]="'translateX(-' + roomIndex() * 100 + '%)'">
+                @for (room of sf.rooms; track room.id) {
+                  <div class="room-carousel__slide">
+                    <app-preview-room-slide [room]="room" [storefront]="sf" />
+                  </div>
+                }
+              </div>
+            </div>
+            <button type="button" class="room-carousel__nav" (click)="nextRoom()" aria-label="Next room">→</button>
+          </div>
+
+          <div class="room-carousel__footer">
+            <span class="room-carousel__progress">{{ carouselProgress() }}</span>
+            <div class="room-carousel__dots">
+              @for (room of sf.rooms; track room.id; let i = $index) {
+                <button
+                  type="button"
+                  class="room-carousel__dot"
+                  [class.room-carousel__dot--active]="roomIndex() === i"
+                  (click)="goToRoom(i)"
+                  [attr.aria-label]="'Go to ' + room.name"
+                ></button>
+              }
+            </div>
+          </div>
+        </section>
+      }
+
+      @if (sf.theme.about.enabled) {
+        <section class="section-wrap section-wrap--alt">
+          <div class="about-layout">
+            <div class="about-body">
+              <div class="sec-eyebrow">{{ sf.theme.about.eyebrow }}</div>
+              <h2 class="sec-title">{{ sf.theme.about.title }}</h2>
+              @for (para of aboutParagraphs(); track para) {
+                <p class="sec-sub about-story">{{ para }}</p>
+              } @empty {
+                <p class="sec-sub about-story">{{ sf.theme.about.description }}</p>
+              }
+              @if (sf.theme.about.quote) {
+                <blockquote class="about-quote">
+                  <p>{{ sf.theme.about.quote }}</p>
+                  @if (sf.theme.about.quoteBy) {
+                    <cite>{{ sf.theme.about.quoteBy }}</cite>
+                  }
+                </blockquote>
+              }
+              @if (sf.theme.about.showStats && sf.theme.about.stats.length > 0) {
+                <div class="about-stats">
+                  @for (stat of sf.theme.about.stats; track stat.label) {
+                    <div class="about-stat">
+                      <div class="about-stat-num">{{ stat.num }}</div>
+                      <div class="about-stat-label">{{ stat.label }}</div>
+                    </div>
+                  }
+                </div>
+              }
+            </div>
+            <div class="about-visual">
+              <div
+                class="about-img-main"
+                [class.about-img-main--photo]="!!sf.aboutImageUrl"
+                [style.background-image]="sf.aboutImageUrl ? 'url(' + sf.aboutImageUrl + ')' : null"
+              >
+                @if (!sf.aboutImageUrl) {
+                  @if (sf.logoUrl) {
+                    <img [src]="sf.logoUrl" [alt]="sf.businessName + ' logo'" />
+                  } @else {
+                    <span class="about-img-fallback">🏨</span>
+                  }
+                }
+              </div>
+            </div>
+          </div>
+        </section>
+      }
+
+      @if (hasSocial()) {
+        <section class="section-wrap">
+          <div class="social-layout">
+            <div class="social-copy">
+              <div class="sec-eyebrow">Stay Connected</div>
+              <h2 class="sec-title">Follow our story</h2>
+              <p class="sec-sub">Connect with us for updates, offers, and guest moments from {{ sf.businessName }}.</p>
+            </div>
+            <div class="social-cards">
+              @for (link of socialLinks(); track link.platform) {
+                <div class="social-card">
+                  <div
+                    class="social-card-icon"
+                    [style.background]="link.color + '18'"
+                    [style.border-color]="link.color + '40'"
+                  >
+                    <span>{{ link.emoji }}</span>
+                  </div>
+                  <div class="social-card-body">
+                    <div class="social-card-platform">{{ link.platform }}</div>
+                    <div class="social-card-handle">{{ link.handle }}</div>
+                  </div>
+                  @if (link.followers) {
+                    <div class="social-card-followers">{{ link.followers }}</div>
+                  }
+                  <div class="social-card-arrow">→</div>
+                </div>
+              }
+            </div>
+          </div>
+        </section>
+      }
+    }
+  }
+
+  <footer class="preview-footer">
+    <div class="preview-footer__brand">{{ sf.businessName }}</div>
+    @if (sf.theme.footer.tagline) {
+      <p class="preview-footer__tagline">{{ sf.theme.footer.tagline }}</p>
+    }
+    <p class="preview-footer__copy">{{ sf.theme.footer.copyrightText }}</p>
+    @if (sf.theme.contact.location || sf.theme.contact.checkIn || sf.social.contactEmail || sf.social.contactPhone) {
+      <div class="preview-footer__contact">
+        @if (sf.theme.contact.location) {
+          <span>{{ sf.theme.contact.location }}</span>
+        }
+        @if (sf.theme.contact.checkIn && sf.theme.contact.checkOut) {
+          <span>{{ sf.theme.contact.checkIn }} · {{ sf.theme.contact.checkOut }}</span>
+        }
+        @if (sf.social.contactEmail) {
+          <span>{{ sf.social.contactEmail }}</span>
+        }
+        @if (sf.social.contactPhone) {
+          <span>{{ sf.social.contactPhone }}</span>
+        }
+      </div>
+    }
+  </footer>
+</div>

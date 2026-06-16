@@ -3,11 +3,16 @@
 } @else if (ctx.notFound()) {
   <div class="state-page">
     <h1>Hotel not found</h1>
-    <p>We could not find a storefront for this link.</p>
+    <p>Try one of our demo storefronts:</p>
+    <ul class="demo-links">
+      <li><a routerLink="/lekki-suites">Lekki Suites & Shortlets</a></li>
+      <li><a routerLink="/heritage-abuja">Heritage Boutique Hotel</a></li>
+    </ul>
   </div>
 } @else if (ctx.storefront(); as sf) {
   <div class="hotel" [style]="themeStyle()">
     <app-hotel-nav [storefront]="sf" [solid]="navSolid() ?? false" />
     <router-outlet />
+    <app-booking-modal [storefront]="sf" />
   </div>
 }

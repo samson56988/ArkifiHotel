@@ -25,10 +25,12 @@ public static class StorefrontThemeDefaults
                 Subheadline = "Book your stay with us — comfort, style, and warm hospitality.",
                 TextAlign = "center",
                 OverlayOpacity = 55,
+                BadgeText = "Your stay awaits",
             },
             About = new StorefrontAboutSectionDto
             {
                 Enabled = true,
+                Eyebrow = "Who We Are",
                 Title = "Who we are",
                 Description =
                     "We are a hospitality team dedicated to memorable stays. From check-in to checkout, every detail is crafted for comfort and ease.",
@@ -39,19 +41,49 @@ public static class StorefrontThemeDefaults
             Rooms = new StorefrontRoomsSectionDto
             {
                 Enabled = true,
+                Eyebrow = "Accommodations",
                 Title = "Our rooms",
                 Subtitle = "Thoughtfully designed spaces for every traveler.",
                 TitleFont = "display",
                 CardStyle = "elevated",
                 ShowPrice = true,
+                ShowFeaturedSection = true,
+                FeaturedEyebrow = "Signature Stay",
+                FeaturedTitle = "Our most sought-after room",
+                ShowPageStats = true,
+                ShowPolicies = true,
+                PolicyBreakfast = "Complimentary for suite guests",
+                PolicyPets = "Small pets welcome on request",
+                PolicyCancellation = "Free up to 48 hours before arrival",
+                CtaTitle = "Ready to book your stay?",
+                CtaSubtitle = "Reserve directly — no payment required until confirmation.",
+                CtaButtonText = "Check availability",
             },
             Facilities = new StorefrontFacilitiesSectionDto
             {
                 Enabled = true,
+                Eyebrow = "On Property",
                 Title = "Facilities & amenities",
                 Subtitle = "Relax, recharge, and enjoy our property.",
                 TitleFont = "display",
                 DisplayStyle = "grid",
+                ShowPageStats = true,
+                SupportStatValue = "24/7",
+                SupportStatLabel = "Guest support",
+                ShowGuestPerks = true,
+                PerksEyebrow = "Guest Perks",
+                PerksTitle = "Everything included in your stay",
+                PerksSubtitle =
+                    "Complimentary access to most on-property amenities for all registered guests.",
+                PerksItems =
+                [
+                    "Daily housekeeping",
+                    "High-speed WiFi",
+                    "Pool & fitness access",
+                    "Concierge assistance",
+                    "Secure parking",
+                    "Late checkout on request",
+                ],
             },
             Footer = new StorefrontFooterSectionDto
             {
@@ -61,6 +93,7 @@ public static class StorefrontThemeDefaults
                 ShowContact = true,
                 BackgroundStyle = "dark-band",
             },
+            Contact = new StorefrontContactSectionDto(),
             Colors = new StorefrontColorPaletteDto
             {
                 Preset = "sage-luxe",

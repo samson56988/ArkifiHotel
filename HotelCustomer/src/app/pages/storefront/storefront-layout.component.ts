@@ -1,15 +1,16 @@
 import { ChangeDetectionStrategy, Component, computed, inject, OnDestroy, OnInit } from '@angular/core';
-import { ActivatedRoute, NavigationEnd, Router, RouterOutlet } from '@angular/router';
+import { ActivatedRoute, NavigationEnd, Router, RouterLink, RouterOutlet } from '@angular/router';
 import { filter, map, startWith, Subscription } from 'rxjs';
 import { toSignal } from '@angular/core/rxjs-interop';
 import { StorefrontContextService } from '../../core/services/storefront-context.service';
 import { hotelThemeStyle } from '../../core/utils/hotel-theme';
+import { BookingModalComponent } from '../../shared/hotel-storefront/booking-modal.component';
 import { HotelNavComponent } from '../../shared/hotel-storefront/hotel-nav.component';
 
 @Component({
   selector: 'app-storefront-layout',
   standalone: true,
-  imports: [RouterOutlet, HotelNavComponent],
+  imports: [RouterOutlet, RouterLink, HotelNavComponent, BookingModalComponent],
   templateUrl: './storefront-layout.component.html',
   styleUrl: './storefront-layout.component.scss',
   changeDetection: ChangeDetectionStrategy.OnPush,

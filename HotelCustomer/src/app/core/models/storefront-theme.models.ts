@@ -38,32 +38,67 @@ export interface StorefrontBannerSection {
   subheadline: string;
   textAlign: BannerTextAlign;
   overlayOpacity: number;
+  badgeText: string;
+}
+
+export interface StorefrontAboutStat {
+  num: string;
+  label: string;
 }
 
 export interface StorefrontAboutSection {
   enabled: boolean;
+  eyebrow: string;
   title: string;
   description: string;
   titleFont: SectionFontRole;
   bodyFont: SectionFontRole;
   layout: AboutLayoutId;
+  quote: string;
+  quoteBy: string;
+  showStats: boolean;
+  stats: StorefrontAboutStat[];
 }
+
+export const MAX_ABOUT_STATS = 4;
+export const MAX_FACILITY_PERKS = 6;
 
 export interface StorefrontRoomsSection {
   enabled: boolean;
+  eyebrow: string;
   title: string;
   subtitle: string;
   titleFont: SectionFontRole;
   cardStyle: RoomCardStyleId;
   showPrice: boolean;
+  showFeaturedSection: boolean;
+  featuredEyebrow: string;
+  featuredTitle: string;
+  showPageStats: boolean;
+  showPolicies: boolean;
+  policyBreakfast: string;
+  policyPets: string;
+  policyCancellation: string;
+  ctaTitle: string;
+  ctaSubtitle: string;
+  ctaButtonText: string;
 }
 
 export interface StorefrontFacilitiesSection {
   enabled: boolean;
+  eyebrow: string;
   title: string;
   subtitle: string;
   titleFont: SectionFontRole;
   displayStyle: FacilityDisplayStyleId;
+  showPageStats: boolean;
+  supportStatValue: string;
+  supportStatLabel: string;
+  showGuestPerks: boolean;
+  perksEyebrow: string;
+  perksTitle: string;
+  perksSubtitle: string;
+  perksItems: string[];
 }
 
 export interface StorefrontFooterSection {
@@ -72,6 +107,13 @@ export interface StorefrontFooterSection {
   copyrightText: string;
   showContact: boolean;
   backgroundStyle: FooterBackgroundStyleId;
+}
+
+export interface StorefrontContactSection {
+  location: string;
+  checkIn: string;
+  checkOut: string;
+  introText: string;
 }
 
 export interface StorefrontColorPalette {
@@ -89,14 +131,23 @@ export interface StorefrontTheme {
   rooms: StorefrontRoomsSection;
   facilities: StorefrontFacilitiesSection;
   footer: StorefrontFooterSection;
+  contact: StorefrontContactSection;
   colors: StorefrontColorPalette;
 }
 
 export interface BusinessSocialProfileDto {
   facebookUrl: string | null;
+  facebookHandle: string | null;
+  facebookFollowers: string | null;
   instagramUrl: string | null;
+  instagramHandle: string | null;
+  instagramFollowers: string | null;
   tikTokUrl: string | null;
+  tikTokHandle: string | null;
+  tikTokFollowers: string | null;
   xUrl: string | null;
+  xHandle: string | null;
+  xFollowers: string | null;
   contactEmail: string | null;
   contactPhone: string | null;
 }
@@ -126,6 +177,8 @@ export interface PublicStorefront {
   rooms: PublicStorefrontRoom[];
   facilities: PublicStorefrontFacility[];
   social: BusinessSocialProfileDto;
+  heroImages: string[];
+  aboutImageUrl: string | null;
 }
 
 export type StorefrontThemeApiResponse = ApiResult<StorefrontTheme>;
@@ -143,30 +196,65 @@ export function createDefaultTheme(businessName: string): StorefrontTheme {
       subheadline: 'Book your stay with us — comfort, style, and warm hospitality.',
       textAlign: 'center',
       overlayOpacity: 55,
+      badgeText: 'Your stay awaits',
     },
     about: {
       enabled: true,
+      eyebrow: 'Who We Are',
       title: 'Who we are',
       description:
         'We are a hospitality team dedicated to memorable stays. From check-in to checkout, every detail is crafted for comfort and ease.',
       titleFont: 'display',
       bodyFont: 'body',
       layout: 'side-by-side',
+      quote: '',
+      quoteBy: '',
+      showStats: false,
+      stats: [],
     },
     rooms: {
       enabled: true,
+      eyebrow: 'Accommodations',
       title: 'Our rooms',
       subtitle: 'Thoughtfully designed spaces for every traveler.',
       titleFont: 'display',
       cardStyle: 'elevated',
       showPrice: true,
+      showFeaturedSection: true,
+      featuredEyebrow: 'Signature Stay',
+      featuredTitle: 'Our most sought-after room',
+      showPageStats: true,
+      showPolicies: true,
+      policyBreakfast: 'Complimentary for suite guests',
+      policyPets: 'Small pets welcome on request',
+      policyCancellation: 'Free up to 48 hours before arrival',
+      ctaTitle: 'Ready to book your stay?',
+      ctaSubtitle: 'Reserve directly — no payment required until confirmation.',
+      ctaButtonText: 'Check availability',
     },
     facilities: {
       enabled: true,
+      eyebrow: 'On Property',
       title: 'Facilities & amenities',
       subtitle: 'Relax, recharge, and enjoy our property.',
       titleFont: 'display',
       displayStyle: 'grid',
+      showPageStats: true,
+      supportStatValue: '24/7',
+      supportStatLabel: 'Guest support',
+      showGuestPerks: true,
+      perksEyebrow: 'Guest Perks',
+      perksTitle: 'Everything included in your stay',
+      perksSubtitle:
+        'Complimentary access to most on-property amenities for all registered guests.',
+      perksItems: [
+        'Daily housekeeping',
+        'High-speed WiFi',
+        'Pool & fitness access',
+        'Concierge assistance',
+        'Secure parking',
+        'Late checkout on request',
+      ],
     },
     footer: {
       style: 'columns',
@@ -174,6 +262,13 @@ export function createDefaultTheme(businessName: string): StorefrontTheme {
       copyrightText: `© ${year} ${businessName}. All rights reserved.`,
       showContact: true,
       backgroundStyle: 'dark-band',
+    },
+    contact: {
+      location: '',
+      checkIn: '',
+      checkOut: '',
+      introText:
+        'Questions about your stay? Send us a message and our team will respond within a few hours.',
     },
     colors: {
       preset: 'sage-luxe',

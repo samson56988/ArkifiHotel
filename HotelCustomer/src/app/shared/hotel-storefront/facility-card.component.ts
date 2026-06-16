@@ -1,6 +1,5 @@
 import { ChangeDetectionStrategy, Component, input } from '@angular/core';
-import { facilityEmoji } from '../../core/utils/hotel-theme';
-import type { PublicStorefrontFacility } from '../../core/models/storefront-theme.models';
+import type { ShowcaseFacility } from '../../core/models/hotel-showcase.models';
 
 @Component({
   selector: 'app-facility-card',
@@ -10,10 +9,7 @@ import type { PublicStorefrontFacility } from '../../core/models/storefront-them
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class FacilityCardComponent {
-  readonly facility = input.required<PublicStorefrontFacility>();
+  readonly facility = input.required<ShowcaseFacility>();
   readonly dark = input(false);
-
-  emoji(name: string): string {
-    return facilityEmoji(name);
-  }
+  readonly variant = input<'grid' | 'list'>('grid');
 }

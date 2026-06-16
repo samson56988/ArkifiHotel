@@ -20,6 +20,13 @@ export class StorefrontRendererComponent {
 
   readonly cssVars = computed(() => themeCssVariables(this.storefront().theme));
 
+  readonly heroImages = computed(() => this.storefront().heroImages ?? []);
+
+  readonly heroBgImage = computed(() => {
+    const first = this.heroImages()[0];
+    return first ? `url(${first})` : null;
+  });
+
   readonly bannerHeadlineFont = computed(() =>
     resolveSectionFont(this.storefront().theme.globalFont, this.storefront().theme.banner.headlineFont),
   );

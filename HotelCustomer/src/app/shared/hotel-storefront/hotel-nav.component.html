@@ -15,7 +15,7 @@
       <a [routerLink]="['/', sf.slug]" fragment="contact">Contact</a>
     </li>
     <li>
-      <a [routerLink]="['/', sf.slug, 'rooms']" class="hotel-nav__book">Book Now</a>
+      <a href="#" class="hotel-nav__book" (click)="openBooking($event)">Book Now</a>
     </li>
   </ul>
 </nav>

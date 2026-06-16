@@ -30,6 +30,8 @@
   <section
     class="sf-banner sf-banner--{{ banner.style }}"
     [class.sf-banner--grand-hero]="banner.style === 'grand-hero'"
+    [class.sf-banner--has-photo]="heroImages().length > 0"
+    [style.background-image]="heroBgImage()"
   >
     @if (banner.style === 'split-showcase') {
       <div

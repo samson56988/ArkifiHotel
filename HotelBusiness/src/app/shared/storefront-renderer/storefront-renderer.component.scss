@@ -115,6 +115,11 @@
     radial-gradient(circle at 20% 20%, color-mix(in srgb, var(--sf-accent) 50%, transparent), transparent 55%);
 }
 
+.sf-banner--has-photo.sf-banner--grand-hero {
+  background-size: cover;
+  background-position: center;
+}
+
 .sf-banner--split-showcase {
   display: grid;
   grid-template-columns: 1.1fr 0.9fr;

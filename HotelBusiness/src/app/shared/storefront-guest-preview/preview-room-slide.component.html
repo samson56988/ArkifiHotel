@@ -1,0 +1,34 @@
+@let r = room();
+@let sf = storefront();
+<article class="carousel-room">
+  <div
+    class="carousel-room__bg"
+    [class.carousel-room__bg--photo]="!!r.primaryImageUrl"
+    [style.background-image]="r.primaryImageUrl ? 'url(' + r.primaryImageUrl + ')' : null"
+  ></div>
+  <div class="carousel-room__shade"></div>
+
+  <div class="carousel-room__top">
+    <span class="carousel-room__type">Room</span>
+    <span class="carousel-room__avail is-available">✓ Available</span>
+  </div>
+
+  <div class="carousel-room__body">
+    @if (r.locationName) {
+      <div class="carousel-room__location">{{ r.locationName }}</div>
+    }
+    <h3 class="carousel-room__name">{{ r.name }}</h3>
+    <div class="carousel-room__meta">
+      <span>👥 {{ r.maxOccupancy }} guests</span>
+    </div>
+    <div class="carousel-room__footer">
+      @if (sf.theme.rooms.showPrice) {
+        <div class="carousel-room__price-block">
+          <div class="carousel-room__price">{{ formatPrice(r.basePricePerNight) }}</div>
+          <div class="carousel-room__price-label">per night</div>
+        </div>
+      }
+      <span class="carousel-room__book carousel-room__book--preview">Book this room</span>
+    </div>
+  </div>
+</article>

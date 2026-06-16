@@ -1,0 +1,52 @@
+@let r = room();
+@let sf = storefront();
+<article class="carousel-room">
+  <div
+    class="carousel-room__bg"
+    [class.carousel-room__bg--photo]="!!r.primaryImageUrl"
+    [style.background-image]="r.primaryImageUrl ? 'url(' + r.primaryImageUrl + ')' : null"
+  ></div>
+  <div class="carousel-room__shade"></div>
+
+  <div class="carousel-room__top">
+    <span class="carousel-room__type">{{ r.roomType }}</span>
+    <span class="carousel-room__avail" [class.is-available]="r.available" [class.is-booked]="!r.available">
+      {{ r.available ? '✓ Available' : '✗ Booked' }}
+    </span>
+  </div>
+
+  <div class="carousel-room__body">
+    @if (r.locationName) {
+      <div class="carousel-room__location">{{ r.locationName }}</div>
+    }
+    <h3 class="carousel-room__name">{{ r.name }}</h3>
+    <div class="carousel-room__meta">
+      <span>🛏️ {{ r.beds }}</span>
+      <span>👥 {{ r.maxOccupancy }} guests</span>
+      <span>📐 {{ r.size }}</span>
+    </div>
+    @if (r.description) {
+      <p class="carousel-room__desc">{{ r.description }}</p>
+    }
+    @if (r.amenities.length > 0) {
+      <div class="carousel-room__amenities">
+        @for (tag of r.amenities.slice(0, 5); track tag) {
+          <span class="carousel-room__tag">{{ tag }}</span>
+        }
+      </div>
+    }
+    <div class="carousel-room__footer">
+      @if (sf.theme.rooms.showPrice) {
+        <div class="carousel-room__price-block">
+          <div class="carousel-room__price">{{ formatPrice(r.basePricePerNight) }}</div>
+          <div class="carousel-room__price-label">per night</div>
+        </div>
+      }
+      @if (r.available) {
+        <button type="button" class="carousel-room__book" (click)="bookRoom()">Book this room</button>
+      } @else {
+        <button type="button" class="carousel-room__book carousel-room__book--disabled" disabled>Unavailable</button>
+      }
+    </div>
+  </div>
+</article>

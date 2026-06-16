@@ -22,9 +22,17 @@ export class SocialProfileComponent implements OnInit {
 
   readonly form = this.fb.nonNullable.group({
     facebookUrl: [''],
+    facebookHandle: [''],
+    facebookFollowers: [''],
     instagramUrl: [''],
+    instagramHandle: [''],
+    instagramFollowers: [''],
     tikTokUrl: [''],
+    tikTokHandle: [''],
+    tikTokFollowers: [''],
     xUrl: [''],
+    xHandle: [''],
+    xFollowers: [''],
     contactEmail: ['', Validators.email],
     contactPhone: ['', Validators.maxLength(32)],
   });
@@ -78,9 +86,17 @@ export class SocialProfileComponent implements OnInit {
     this.api
       .updateProfile({
         facebookUrl: raw.facebookUrl.trim() || null,
+        facebookHandle: raw.facebookHandle.trim() || null,
+        facebookFollowers: raw.facebookFollowers.trim() || null,
         instagramUrl: raw.instagramUrl.trim() || null,
+        instagramHandle: raw.instagramHandle.trim() || null,
+        instagramFollowers: raw.instagramFollowers.trim() || null,
         tikTokUrl: raw.tikTokUrl.trim() || null,
+        tikTokHandle: raw.tikTokHandle.trim() || null,
+        tikTokFollowers: raw.tikTokFollowers.trim() || null,
         xUrl: raw.xUrl.trim() || null,
+        xHandle: raw.xHandle.trim() || null,
+        xFollowers: raw.xFollowers.trim() || null,
         contactEmail: raw.contactEmail.trim() || null,
         contactPhone: raw.contactPhone.trim() || null,
       })
@@ -110,9 +126,17 @@ export class SocialProfileComponent implements OnInit {
   private applyProfile(data: BusinessSocialProfileDto): void {
     this.form.patchValue({
       facebookUrl: data.facebookUrl ?? '',
+      facebookHandle: data.facebookHandle ?? '',
+      facebookFollowers: data.facebookFollowers ?? '',
       instagramUrl: data.instagramUrl ?? '',
+      instagramHandle: data.instagramHandle ?? '',
+      instagramFollowers: data.instagramFollowers ?? '',
       tikTokUrl: data.tikTokUrl ?? '',
+      tikTokHandle: data.tikTokHandle ?? '',
+      tikTokFollowers: data.tikTokFollowers ?? '',
       xUrl: data.xUrl ?? '',
+      xHandle: data.xHandle ?? '',
+      xFollowers: data.xFollowers ?? '',
       contactEmail: data.contactEmail ?? '',
       contactPhone: data.contactPhone ?? '',
     });

@@ -15,6 +15,8 @@ public sealed class StorefrontThemeDto
 
     public StorefrontFooterSectionDto Footer { get; set; } = new();
 
+    public StorefrontContactSectionDto Contact { get; set; } = new();
+
     public StorefrontColorPaletteDto Colors { get; set; } = new();
 }
 
@@ -33,11 +35,23 @@ public sealed class StorefrontBannerSectionDto
     public string TextAlign { get; set; } = "center";
 
     public int OverlayOpacity { get; set; } = 55;
+
+    /// <summary>Short label in the hero badge (e.g. “Luxury Boutique Hotel”).</summary>
+    public string BadgeText { get; set; } = "Your stay awaits";
+}
+
+public sealed class StorefrontAboutStatDto
+{
+    public string Num { get; set; } = string.Empty;
+
+    public string Label { get; set; } = string.Empty;
 }
 
 public sealed class StorefrontAboutSectionDto
 {
     public bool Enabled { get; set; } = true;
+
+    public string Eyebrow { get; set; } = "Who We Are";
 
     public string Title { get; set; } = "Who we are";
 
@@ -48,11 +62,22 @@ public sealed class StorefrontAboutSectionDto
     public string BodyFont { get; set; } = "body";
 
     public string Layout { get; set; } = "side-by-side";
+
+    public string Quote { get; set; } = string.Empty;
+
+    public string QuoteBy { get; set; } = string.Empty;
+
+    /// <summary>When true, highlight stats (e.g. founded year, room count) show under the about copy.</summary>
+    public bool ShowStats { get; set; }
+
+    public List<StorefrontAboutStatDto> Stats { get; set; } = new();
 }
 
 public sealed class StorefrontRoomsSectionDto
 {
     public bool Enabled { get; set; } = true;
+
+    public string Eyebrow { get; set; } = "Accommodations";
 
     public string Title { get; set; } = "Our rooms";
 
@@ -63,11 +88,35 @@ public sealed class StorefrontRoomsSectionDto
     public string CardStyle { get; set; } = "elevated";
 
     public bool ShowPrice { get; set; } = true;
+
+    public bool ShowFeaturedSection { get; set; } = true;
+
+    public string FeaturedEyebrow { get; set; } = "Signature Stay";
+
+    public string FeaturedTitle { get; set; } = "Our most sought-after room";
+
+    public bool ShowPageStats { get; set; } = true;
+
+    public bool ShowPolicies { get; set; } = true;
+
+    public string PolicyBreakfast { get; set; } = "Complimentary for suite guests";
+
+    public string PolicyPets { get; set; } = "Small pets welcome on request";
+
+    public string PolicyCancellation { get; set; } = "Free up to 48 hours before arrival";
+
+    public string CtaTitle { get; set; } = "Ready to book your stay?";
+
+    public string CtaSubtitle { get; set; } = "Reserve directly — no payment required until confirmation.";
+
+    public string CtaButtonText { get; set; } = "Check availability";
 }
 
 public sealed class StorefrontFacilitiesSectionDto
 {
     public bool Enabled { get; set; } = true;
+
+    public string Eyebrow { get; set; } = "On Property";
 
     public string Title { get; set; } = "Facilities & amenities";
 
@@ -76,6 +125,37 @@ public sealed class StorefrontFacilitiesSectionDto
     public string TitleFont { get; set; } = "display";
 
     public string DisplayStyle { get; set; } = "grid";
+
+    public bool ShowPageStats { get; set; } = true;
+
+    public string SupportStatValue { get; set; } = "24/7";
+
+    public string SupportStatLabel { get; set; } = "Guest support";
+
+    public bool ShowGuestPerks { get; set; } = true;
+
+    public string PerksEyebrow { get; set; } = "Guest Perks";
+
+    public string PerksTitle { get; set; } = "Everything included in your stay";
+
+    public string PerksSubtitle { get; set; } =
+        "Complimentary access to most on-property amenities for all registered guests.";
+
+    public List<string> PerksItems { get; set; } = new();
+}
+
+public sealed class StorefrontContactSectionDto
+{
+    /// <summary>Guest-facing address shown in the hero and contact footer.</summary>
+    public string Location { get; set; } = string.Empty;
+
+    public string CheckIn { get; set; } = string.Empty;
+
+    public string CheckOut { get; set; } = string.Empty;
+
+    /// <summary>Intro copy above the contact form.</summary>
+    public string IntroText { get; set; } =
+        "Questions about your stay? Send us a message and our team will respond within a few hours.";
 }
 
 public sealed class StorefrontFooterSectionDto
@@ -147,4 +227,10 @@ public sealed class PublicStorefrontDto
     public IReadOnlyList<PublicStorefrontFacilityDto> Facilities { get; set; } = Array.Empty<PublicStorefrontFacilityDto>();
 
     public BusinessSocialProfileDto Social { get; set; } = new();
+
+    /// <summary>Hero banner images in carousel order (max 3). One image = static hero; two or more = carousel.</summary>
+    public IReadOnlyList<string> HeroImages { get; set; } = Array.Empty<string>();
+
+    /// <summary>Dedicated “Who we are” section photo (not used in hero banner).</summary>
+    public string? AboutImageUrl { get; set; }
 }

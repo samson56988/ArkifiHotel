@@ -4,8 +4,8 @@
       <p class="eyebrow">Storefront</p>
       <h1>Social & contact</h1>
       <p class="lead">
-        Add links to your social pages and guest-facing contact details. Only filled fields appear on your
-        public storefront.
+        Configure social cards on your guest homepage and contact details in the footer. Only filled
+        platforms appear on your live site.
       </p>
     </div>
     <div class="page-head__actions">
@@ -22,26 +22,78 @@
     <form class="panel" [formGroup]="form" (ngSubmit)="onSubmit()" novalidate>
       <section class="section">
         <h2>Social pages</h2>
-        <p class="hint">Full URLs starting with https://</p>
+        <p class="hint">Add a profile URL plus the handle and follower count shown on your storefront.</p>
 
-        <div class="field">
-          <label for="facebookUrl">Facebook</label>
-          <input id="facebookUrl" class="input" type="url" formControlName="facebookUrl" placeholder="https://facebook.com/your-page" />
+        <div class="social-platform">
+          <h3 class="social-platform__title">Instagram</h3>
+          <div class="field">
+            <label for="instagramUrl">Profile URL</label>
+            <input id="instagramUrl" class="input" type="url" formControlName="instagramUrl" placeholder="https://instagram.com/your-page" />
+          </div>
+          <div class="field-row">
+            <div class="field">
+              <label for="instagramHandle">Handle</label>
+              <input id="instagramHandle" class="input" type="text" formControlName="instagramHandle" placeholder="@lekkisuites" />
+            </div>
+            <div class="field">
+              <label for="instagramFollowers">Followers</label>
+              <input id="instagramFollowers" class="input" type="text" formControlName="instagramFollowers" placeholder="12.4K" />
+            </div>
+          </div>
         </div>
 
-        <div class="field">
-          <label for="instagramUrl">Instagram</label>
-          <input id="instagramUrl" class="input" type="url" formControlName="instagramUrl" placeholder="https://instagram.com/your-page" />
+        <div class="social-platform">
+          <h3 class="social-platform__title">Facebook</h3>
+          <div class="field">
+            <label for="facebookUrl">Profile URL</label>
+            <input id="facebookUrl" class="input" type="url" formControlName="facebookUrl" placeholder="https://facebook.com/your-page" />
+          </div>
+          <div class="field-row">
+            <div class="field">
+              <label for="facebookHandle">Display name</label>
+              <input id="facebookHandle" class="input" type="text" formControlName="facebookHandle" placeholder="Lekki Suites Official" />
+            </div>
+            <div class="field">
+              <label for="facebookFollowers">Followers</label>
+              <input id="facebookFollowers" class="input" type="text" formControlName="facebookFollowers" placeholder="8.1K" />
+            </div>
+          </div>
         </div>
 
-        <div class="field">
-          <label for="tikTokUrl">TikTok</label>
-          <input id="tikTokUrl" class="input" type="url" formControlName="tikTokUrl" placeholder="https://tiktok.com/@your-page" />
+        <div class="social-platform">
+          <h3 class="social-platform__title">TikTok</h3>
+          <div class="field">
+            <label for="tikTokUrl">Profile URL</label>
+            <input id="tikTokUrl" class="input" type="url" formControlName="tikTokUrl" placeholder="https://tiktok.com/@your-page" />
+          </div>
+          <div class="field-row">
+            <div class="field">
+              <label for="tikTokHandle">Handle</label>
+              <input id="tikTokHandle" class="input" type="text" formControlName="tikTokHandle" placeholder="@lekkisuites.ng" />
+            </div>
+            <div class="field">
+              <label for="tikTokFollowers">Followers</label>
+              <input id="tikTokFollowers" class="input" type="text" formControlName="tikTokFollowers" placeholder="4.3K" />
+            </div>
+          </div>
         </div>
 
-        <div class="field">
-          <label for="xUrl">X (Twitter)</label>
-          <input id="xUrl" class="input" type="url" formControlName="xUrl" placeholder="https://x.com/your-page" />
+        <div class="social-platform">
+          <h3 class="social-platform__title">X (Twitter)</h3>
+          <div class="field">
+            <label for="xUrl">Profile URL</label>
+            <input id="xUrl" class="input" type="url" formControlName="xUrl" placeholder="https://x.com/your-page" />
+          </div>
+          <div class="field-row">
+            <div class="field">
+              <label for="xHandle">Handle</label>
+              <input id="xHandle" class="input" type="text" formControlName="xHandle" placeholder="@yourhotel" />
+            </div>
+            <div class="field">
+              <label for="xFollowers">Followers</label>
+              <input id="xFollowers" class="input" type="text" formControlName="xFollowers" placeholder="2.5K" />
+            </div>
+          </div>
         </div>
       </section>
 

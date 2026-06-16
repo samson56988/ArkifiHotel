@@ -1,6 +1,7 @@
-import { ChangeDetectionStrategy, Component, HostListener, input, signal } from '@angular/core';
+import { ChangeDetectionStrategy, Component, HostListener, inject, input, signal } from '@angular/core';
 import { RouterLink, RouterLinkActive } from '@angular/router';
-import type { PublicStorefront } from '../../core/models/storefront-theme.models';
+import { HotelUiService } from '../../core/services/hotel-ui.service';
+import type { HotelShowcase } from '../../core/models/hotel-showcase.models';
 
 @Component({
   selector: 'app-hotel-nav',
@@ -11,8 +12,9 @@ import type { PublicStorefront } from '../../core/models/storefront-theme.models
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class HotelNavComponent {
-  readonly storefront = input.required<PublicStorefront>();
-  /** When true, nav uses solid background (subpages without hero). */
+  private readonly ui = inject(HotelUiService);
+
+  readonly storefront = input.required<HotelShowcase>();
   readonly solid = input(false);
 
   readonly scrolled = signal(false);
@@ -24,5 +26,10 @@ export class HotelNavComponent {
 
   isSolid(): boolean {
     return this.solid() || this.scrolled();
+  }
+
+  openBooking(event: Event): void {
+    event.preventDefault();
+    this.ui.openBooking();
   }
 }

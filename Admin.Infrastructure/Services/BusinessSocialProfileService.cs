@@ -83,9 +83,17 @@ public sealed class BusinessSocialProfileService : IBusinessSocialProfileService
         }
 
         entity.FacebookUrl = facebook;
+        entity.FacebookHandle = NormalizeDisplayField(request.FacebookHandle, 128);
+        entity.FacebookFollowers = NormalizeDisplayField(request.FacebookFollowers, 32);
         entity.InstagramUrl = instagram;
+        entity.InstagramHandle = NormalizeDisplayField(request.InstagramHandle, 128);
+        entity.InstagramFollowers = NormalizeDisplayField(request.InstagramFollowers, 32);
         entity.TikTokUrl = tikTok;
+        entity.TikTokHandle = NormalizeDisplayField(request.TikTokHandle, 128);
+        entity.TikTokFollowers = NormalizeDisplayField(request.TikTokFollowers, 32);
         entity.XUrl = xUrl;
+        entity.XHandle = NormalizeDisplayField(request.XHandle, 128);
+        entity.XFollowers = NormalizeDisplayField(request.XFollowers, 32);
         entity.ContactEmail = contactEmail;
         entity.ContactPhone = contactPhone;
         entity.UpdatedAt = now;
@@ -98,9 +106,17 @@ public sealed class BusinessSocialProfileService : IBusinessSocialProfileService
         new()
         {
             FacebookUrl = entity.FacebookUrl,
+            FacebookHandle = entity.FacebookHandle,
+            FacebookFollowers = entity.FacebookFollowers,
             InstagramUrl = entity.InstagramUrl,
+            InstagramHandle = entity.InstagramHandle,
+            InstagramFollowers = entity.InstagramFollowers,
             TikTokUrl = entity.TikTokUrl,
+            TikTokHandle = entity.TikTokHandle,
+            TikTokFollowers = entity.TikTokFollowers,
             XUrl = entity.XUrl,
+            XHandle = entity.XHandle,
+            XFollowers = entity.XFollowers,
             ContactEmail = entity.ContactEmail,
             ContactPhone = entity.ContactPhone,
         };
@@ -142,5 +158,16 @@ public sealed class BusinessSocialProfileService : IBusinessSocialProfileService
         }
 
         return value.Trim();
+    }
+
+    private static string? NormalizeDisplayField(string? value, int maxLength)
+    {
+        var trimmed = NormalizeOptional(value);
+        if (trimmed is null)
+        {
+            return null;
+        }
+
+        return trimmed.Length > maxLength ? trimmed[..maxLength] : trimmed;
     }
 }

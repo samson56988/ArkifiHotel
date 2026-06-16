@@ -1,0 +1,148 @@
+:host {
+  display: block;
+  width: 100%;
+}
+
+.carousel-room {
+  position: relative;
+  width: 100%;
+  min-height: 360px;
+  border-radius: 20px;
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+  justify-content: flex-end;
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.18);
+}
+
+.carousel-room__bg {
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(135deg, var(--primary) 0%, color-mix(in srgb, var(--primary) 65%, #2d6a8e) 100%);
+  background-size: cover;
+  background-position: center;
+}
+
+.carousel-room__shade {
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(
+    to top,
+    rgba(0, 0, 0, 0.88) 0%,
+    rgba(0, 0, 0, 0.55) 45%,
+    rgba(0, 0, 0, 0.15) 100%
+  );
+  pointer-events: none;
+}
+
+.carousel-room__top {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  z-index: 2;
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  padding: 1rem 1.25rem;
+  gap: 1rem;
+}
+
+.carousel-room__type {
+  background: rgba(0, 0, 0, 0.5);
+  backdrop-filter: blur(8px);
+  color: #fff;
+  font-size: 0.65rem;
+  font-weight: 700;
+  padding: 5px 12px;
+  border-radius: 8px;
+  letter-spacing: 0.8px;
+  text-transform: uppercase;
+}
+
+.carousel-room__avail {
+  font-size: 0.65rem;
+  font-weight: 600;
+  padding: 5px 12px;
+  border-radius: 8px;
+  backdrop-filter: blur(8px);
+}
+
+.carousel-room__avail.is-available {
+  background: rgba(34, 197, 94, 0.3);
+  color: #86efac;
+}
+
+.carousel-room__body {
+  position: relative;
+  z-index: 2;
+  padding: 1.5rem 1.5rem 1.75rem;
+  color: #fff;
+}
+
+.carousel-room__location {
+  font-family: 'DM Mono', monospace;
+  font-size: 0.65rem;
+  text-transform: uppercase;
+  letter-spacing: 1.5px;
+  color: var(--accent-light, var(--accent));
+  margin-bottom: 0.35rem;
+}
+
+.carousel-room__name {
+  font-family: var(--font-heading, 'Cormorant Garamond', serif);
+  font-size: clamp(1.35rem, 2.5vw, 2rem);
+  font-weight: 700;
+  line-height: 1.1;
+  margin: 0 0 0.65rem;
+  color: #fff;
+}
+
+.carousel-room__meta {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.75rem;
+  font-size: 0.78rem;
+  color: rgba(255, 255, 255, 0.75);
+  margin-bottom: 0.75rem;
+}
+
+.carousel-room__footer {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+  flex-wrap: wrap;
+  padding-top: 1rem;
+  border-top: 1px solid rgba(255, 255, 255, 0.15);
+}
+
+.carousel-room__price {
+  font-family: 'DM Mono', monospace;
+  font-size: 1.15rem;
+  font-weight: 500;
+  color: var(--accent-light, var(--accent));
+  line-height: 1.2;
+}
+
+.carousel-room__price-label {
+  font-size: 0.68rem;
+  color: rgba(255, 255, 255, 0.5);
+  margin-top: 2px;
+}
+
+.carousel-room__book {
+  background: var(--accent);
+  color: #fff;
+  border-radius: 10px;
+  padding: 0.65rem 1.25rem;
+  font-size: 0.82rem;
+  font-weight: 600;
+  white-space: nowrap;
+}
+
+.carousel-room__book--preview {
+  opacity: 0.85;
+  pointer-events: none;
+}

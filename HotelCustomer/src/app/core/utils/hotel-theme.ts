@@ -2,7 +2,6 @@ import type { PublicStorefront, StorefrontTheme } from '../models/storefront-the
 import { resolveSectionFont, themeCssVariables } from '../data/storefront-theme-presets';
 
 export const HOME_ROOM_PREVIEW_COUNT = 3;
-export const HOME_FACILITY_PREVIEW_COUNT = 4;
 
 export function hotelThemeStyle(theme: StorefrontTheme): Record<string, string> {
   const base = themeCssVariables(theme);

@@ -92,6 +92,8 @@
 }
 
 .designer__preview {
+  position: relative;
+  z-index: 0;
   border-radius: 18px;
   overflow: hidden;
   border: 1px solid color-mix(in srgb, var(--color-heading) 10%, transparent);
@@ -133,12 +135,38 @@
   letter-spacing: 0.12em;
   text-transform: uppercase;
   color: #9aa89a;
+  white-space: nowrap;
+}
+
+.preview-chrome__pages {
+  display: flex;
+  gap: 0.25rem;
+  margin-left: 0.5rem;
+}
+
+.preview-chrome__page {
+  border: 1px solid #3a443a;
+  background: transparent;
+  color: #9aa89a;
+  border-radius: 999px;
+  padding: 0.2rem 0.55rem;
+  font-size: 0.68rem;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.preview-chrome__page--active {
+  background: #2f3b2f;
+  color: #e8ede8;
+  border-color: #4a564a;
 }
 
 .preview-frame {
+  position: relative;
+  isolation: isolate;
   max-height: calc(100vh - 8rem);
   overflow: auto;
-  background: white;
+  background: var(--bg, #f8f5f0);
 }
 
 .input[type='color'] {
@@ -155,4 +183,92 @@
   display: flex;
   flex-wrap: wrap;
   gap: 0.5rem;
+}
+
+.banner-photos__grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 0.65rem;
+  margin-top: 0.5rem;
+}
+
+@media (max-width: 640px) {
+  .banner-photos__grid {
+    grid-template-columns: 1fr 1fr;
+  }
+}
+
+.banner-photos__item {
+  position: relative;
+  margin: 0;
+  aspect-ratio: 16 / 10;
+  border-radius: 10px;
+  overflow: hidden;
+  border: 1px solid color-mix(in srgb, var(--text) 12%, transparent);
+}
+
+.banner-photos__item img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
+}
+
+.banner-photos__remove {
+  position: absolute;
+  top: 6px;
+  right: 6px;
+  width: 26px;
+  height: 26px;
+  border: none;
+  border-radius: 6px;
+  background: rgba(0, 0, 0, 0.65);
+  color: #fff;
+  cursor: pointer;
+  font-size: 0.75rem;
+}
+
+.banner-photos__add {
+  aspect-ratio: 16 / 10;
+  border: 1.5px dashed color-mix(in srgb, var(--text) 20%, transparent);
+  border-radius: 10px;
+  display: grid;
+  place-items: center;
+  cursor: pointer;
+  color: color-mix(in srgb, var(--text) 55%, transparent);
+  font-size: 0.82rem;
+  font-weight: 600;
+}
+
+.banner-photos__add input {
+  display: none;
+}
+
+.about-stats-editor {
+  margin-bottom: 1rem;
+}
+
+.about-stat-row {
+  align-items: flex-end;
+}
+
+.about-stat-row__remove {
+  flex-shrink: 0;
+  margin-bottom: 0.15rem;
+  font-size: 0.78rem;
+}
+
+.designer-subsection {
+  margin: 1.25rem 0 0.65rem;
+  padding-top: 1rem;
+  border-top: 1px solid color-mix(in srgb, var(--color-heading) 10%, transparent);
+  font-size: 0.82rem;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--color-muted);
+}
+
+.section-intro {
+  margin: 0 0 0.85rem;
 }

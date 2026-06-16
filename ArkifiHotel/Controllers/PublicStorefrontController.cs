@@ -41,6 +41,11 @@ public sealed class PublicStorefrontController : ControllerBase
             Slug = dto.Slug,
             LogoUrl = ToAbsoluteUrl(dto.LogoUrl),
             Theme = dto.Theme,
+            Social = dto.Social,
+            HeroImages = dto.HeroImages
+                .Select(u => ToAbsoluteUrl(u) ?? u)
+                .ToList(),
+            AboutImageUrl = ToAbsoluteUrl(dto.AboutImageUrl),
             Rooms = dto.Rooms
                 .Select(r => new PublicStorefrontRoomDto
                 {
