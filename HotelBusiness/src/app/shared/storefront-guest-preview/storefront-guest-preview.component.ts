@@ -12,6 +12,7 @@ import type {
   PublicStorefrontFacility,
   PublicStorefrontRoom,
 } from '../../core/models/storefront-theme.models';
+import { resolveSectionFont } from '../../core/data/storefront-theme-presets';
 import { collectGalleryImages, galleryImages } from '../../core/utils/gallery-images';
 import { hotelThemeStyle, formatNaira, facilityEmoji } from '../../core/utils/hotel-theme';
 import { buildPreviewSocialLinks } from '../../core/utils/storefront-preview';
@@ -64,6 +65,16 @@ export class StorefrontGuestPreviewComponent implements OnDestroy {
       .map((p) => p.trim())
       .filter(Boolean);
   });
+
+  readonly aboutLayout = computed(() => this.storefront().theme.about.layout);
+
+  readonly aboutTitleFont = computed(() =>
+    resolveSectionFont(this.storefront().theme.globalFont, this.storefront().theme.about.titleFont),
+  );
+
+  readonly aboutBodyFont = computed(() =>
+    resolveSectionFont(this.storefront().theme.globalFont, this.storefront().theme.about.bodyFont),
+  );
 
   readonly heroBg = computed(() => {
     const images = this.heroImages();

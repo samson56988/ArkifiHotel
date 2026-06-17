@@ -73,7 +73,7 @@
                 </div>
               }
               <div class="gallery-footer__cta">
-                @if (r.available) {
+                @if (canBookRoom()) {
                   <button type="button" class="gallery-book-btn" (click)="bookRoom()">
                     <span class="gallery-book-btn__icon" aria-hidden="true">
                       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75">

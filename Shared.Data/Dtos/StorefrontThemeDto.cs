@@ -51,9 +51,9 @@ public sealed class StorefrontAboutSectionDto
 {
     public bool Enabled { get; set; } = true;
 
-    public string Eyebrow { get; set; } = "Who We Are";
+    public string Eyebrow { get; set; } = "About us";
 
-    public string Title { get; set; } = "Who we are";
+    public string Title { get; set; } = "Our story";
 
     public string Description { get; set; } = string.Empty;
 

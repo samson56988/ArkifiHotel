@@ -3,12 +3,13 @@ import { RouterLink } from '@angular/router';
 import { HotelUiService } from '../../core/services/hotel-ui.service';
 import { StorefrontContextService } from '../../core/services/storefront-context.service';
 import { HotelFooterComponent } from '../../shared/hotel-storefront/hotel-footer.component';
+import { AboutSectionComponent } from '../../shared/hotel-storefront/about-section.component';
 import { RoomCarouselSlideComponent } from '../../shared/hotel-storefront/room-carousel-slide.component';
 
 @Component({
   selector: 'app-storefront-home',
   standalone: true,
-  imports: [RouterLink, RoomCarouselSlideComponent, HotelFooterComponent],
+  imports: [RouterLink, RoomCarouselSlideComponent, HotelFooterComponent, AboutSectionComponent],
   templateUrl: './storefront-home.component.html',
   styleUrl: './storefront-home.component.scss',
   changeDetection: ChangeDetectionStrategy.OnPush,

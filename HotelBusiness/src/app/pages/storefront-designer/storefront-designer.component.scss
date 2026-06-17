@@ -258,6 +258,43 @@
   font-size: 0.78rem;
 }
 
+.layout-picker {
+  display: grid;
+  gap: 0.55rem;
+}
+
+.layout-picker__option {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 0.15rem;
+  width: 100%;
+  padding: 0.75rem 0.85rem;
+  border: 1.5px solid color-mix(in srgb, var(--color-heading) 14%, transparent);
+  border-radius: 10px;
+  background: var(--color-surface, #fff);
+  cursor: pointer;
+  text-align: left;
+  transition: border-color 0.2s, background 0.2s;
+}
+
+.layout-picker__option--active {
+  border-color: var(--color-accent, #c9a84c);
+  background: color-mix(in srgb, var(--color-accent, #c9a84c) 8%, white);
+}
+
+.layout-picker__label {
+  font-size: 0.88rem;
+  font-weight: 600;
+  color: var(--color-heading);
+}
+
+.layout-picker__desc {
+  font-size: 0.75rem;
+  color: color-mix(in srgb, var(--color-heading) 55%, transparent);
+  line-height: 1.4;
+}
+
 .designer-subsection {
   margin: 1.25rem 0 0.65rem;
   padding-top: 1rem;

@@ -31,7 +31,7 @@
         <nav class="tabs" aria-label="Theme sections">
           <button type="button" class="tabs__btn" [class.tabs__btn--active]="activeTab() === 'global'" (click)="setTab('global')">Global</button>
           <button type="button" class="tabs__btn" [class.tabs__btn--active]="activeTab() === 'banner'" (click)="setTab('banner')">Banner</button>
-          <button type="button" class="tabs__btn" [class.tabs__btn--active]="activeTab() === 'about'" (click)="setTab('about')">Who we are</button>
+          <button type="button" class="tabs__btn" [class.tabs__btn--active]="activeTab() === 'about'" (click)="setTab('about')">About us</button>
           <button type="button" class="tabs__btn" [class.tabs__btn--active]="activeTab() === 'rooms'" (click)="setTab('rooms')">Rooms</button>
           <button type="button" class="tabs__btn" [class.tabs__btn--active]="activeTab() === 'facilities'" (click)="setTab('facilities')">Facilities</button>
           <button type="button" class="tabs__btn" [class.tabs__btn--active]="activeTab() === 'footer'" (click)="setTab('footer')">Footer</button>
@@ -173,24 +173,27 @@
 
           @if (activeTab() === 'about') {
             <ng-container formGroupName="about">
-              <label class="check"><input type="checkbox" formControlName="enabled" /> Show “Who we are” on home page</label>
+              <p class="section-intro">
+                The <strong>About us</strong> section appears on your home page and in the nav. Tell guests who you are, upload a photo, and pick a layout.
+              </p>
+              <label class="check"><input type="checkbox" formControlName="enabled" /> Show About us on home page &amp; nav</label>
               <div class="field">
                 <label for="aboutEyebrow">Section eyebrow</label>
-                <input id="aboutEyebrow" class="input" type="text" formControlName="eyebrow" placeholder="Who We Are" />
+                <input id="aboutEyebrow" class="input" type="text" formControlName="eyebrow" placeholder="About us" />
               </div>
               <div class="field">
                 <label for="aboutTitle">Section title</label>
-                <input id="aboutTitle" class="input" type="text" formControlName="title" />
+                <input id="aboutTitle" class="input" type="text" formControlName="title" placeholder="Our story" />
               </div>
               <div class="field">
-                <label for="aboutDesc">Description</label>
-                <textarea id="aboutDesc" class="input input--area" rows="5" formControlName="description"></textarea>
-                <p class="hint">Use a blank line between paragraphs for multiple blocks of copy.</p>
+                <label for="aboutDesc">About copy</label>
+                <textarea id="aboutDesc" class="input input--area" rows="6" formControlName="description" placeholder="Share your hotel's story, values, and what makes your stay special…"></textarea>
+                <p class="hint">Use a blank line between paragraphs. Guests see each block as separate text.</p>
               </div>
               <div class="field-row">
                 <div class="field">
                   <label for="aboutQuote">Pull quote (optional)</label>
-                  <textarea id="aboutQuote" class="input input--area" rows="2" formControlName="quote"></textarea>
+                  <textarea id="aboutQuote" class="input input--area" rows="2" formControlName="quote" placeholder="A memorable line from your founder or a guest…"></textarea>
                 </div>
                 <div class="field">
                   <label for="aboutQuoteBy">Quote attribution</label>
@@ -224,8 +227,8 @@
                 </div>
               }
               <div class="field banner-photos">
-                <label>Section photo</label>
-                <p class="hint">Dedicated image for “Who we are” — separate from hero banner photos.</p>
+                <label>About photo</label>
+                <p class="hint">Shown beside or above your story — separate from hero banner photos.</p>
                 <div class="banner-photos__grid">
                   @if (aboutImage(); as img) {
                     <figure class="banner-photos__item">
@@ -253,6 +256,22 @@
                   }
                 </div>
               </div>
+              <div class="field">
+                <label>Layout style</label>
+                <div class="layout-picker" role="radiogroup" aria-label="About section layout">
+                  @for (opt of aboutLayoutOptions; track opt.id) {
+                    <button
+                      type="button"
+                      class="layout-picker__option"
+                      [class.layout-picker__option--active]="form.controls.about.controls.layout.value === opt.id"
+                      (click)="setAboutLayout(opt.id)"
+                    >
+                      <span class="layout-picker__label">{{ opt.label }}</span>
+                      <span class="layout-picker__desc">{{ opt.description }}</span>
+                    </button>
+                  }
+                </div>
+              </div>
               <div class="field-row">
                 <div class="field">
                   <label for="aboutTitleFont">Title font</label>
@@ -270,14 +289,6 @@
                     }
                   </select>
                 </div>
-              </div>
-              <div class="field">
-                <label for="aboutLayout">Layout</label>
-                <select id="aboutLayout" class="input" formControlName="layout">
-                  <option value="side-by-side">Side by side</option>
-                  <option value="stacked">Stacked</option>
-                  <option value="quote">Quote highlight</option>
-                </select>
               </div>
             </ng-container>
           }

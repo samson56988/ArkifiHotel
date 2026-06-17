@@ -3,6 +3,7 @@ import { inject, Injectable } from '@angular/core';
 import { Observable, throwError } from 'rxjs';
 import { catchError, map } from 'rxjs/operators';
 import type { ApiResult } from '../models/api-result.model';
+import type { GuestRoomAvailabilityDto } from '../models/room-availability.models';
 import type { GuestBookingLookupDto } from './public-booking-api.service';
 import { API_BASE_URL } from '../tokens/api-base-url.token';
 import { normalizeApiResult, parseHttpApiResult } from '../utils/http-api-result';
@@ -35,6 +36,7 @@ export interface GuestPaymentVerifyResultDto {
 
 export type GuestBookingCheckoutResponse = ApiResult<GuestBookingCheckoutDto>;
 export type GuestPaymentVerifyResponse = ApiResult<GuestPaymentVerifyResultDto>;
+export type GuestRoomAvailabilityResponse = ApiResult<GuestRoomAvailabilityDto[]>;
 
 @Injectable({ providedIn: 'root' })
 export class PublicGuestBookingApiService {
@@ -60,6 +62,28 @@ export class PublicGuestBookingApiService {
         map((res) => normalizeApiResult<GuestPaymentVerifyResultDto>(res)),
         catchError((err: HttpErrorResponse) =>
           throwError(() => parseHttpApiResult<GuestPaymentVerifyResultDto>(err)),
+        ),
+      );
+  }
+
+  getRoomAvailability(
+    slug: string,
+    locationId: string,
+    checkInDate: string,
+    checkOutDate: string,
+  ): Observable<GuestRoomAvailabilityResponse> {
+    const enc = encodeURIComponent(slug);
+    const loc = encodeURIComponent(locationId);
+    const checkIn = encodeURIComponent(checkInDate);
+    const checkOut = encodeURIComponent(checkOutDate);
+    return this.http
+      .get<unknown>(
+        `${this.baseUrl}/api/public/stores/${enc}/rooms/availability?locationId=${loc}&checkInDate=${checkIn}&checkOutDate=${checkOut}`,
+      )
+      .pipe(
+        map((res) => normalizeApiResult<GuestRoomAvailabilityDto[]>(res)),
+        catchError((err: HttpErrorResponse) =>
+          throwError(() => parseHttpApiResult<GuestRoomAvailabilityDto[]>(err)),
         ),
       );
   }

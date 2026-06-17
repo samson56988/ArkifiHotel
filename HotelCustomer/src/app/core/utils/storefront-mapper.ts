@@ -29,7 +29,7 @@ export function mapPublicToShowcase(dto: PublicStorefront): HotelShowcase {
       contact,
       about: {
         ...dto.theme.about,
-        eyebrow: dto.theme.about.eyebrow || 'Who We Are',
+        eyebrow: dto.theme.about.eyebrow || 'About us',
         quote: dto.theme.about.quote ?? '',
         quoteBy: dto.theme.about.quoteBy ?? '',
         showStats: dto.theme.about.showStats ?? false,

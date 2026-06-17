@@ -3,6 +3,7 @@ import { ActivatedRoute, NavigationEnd, Router, RouterLink, RouterOutlet } from 
 import { filter, map, startWith, Subscription } from 'rxjs';
 import { toSignal } from '@angular/core/rxjs-interop';
 import { StorefrontContextService } from '../../core/services/storefront-context.service';
+import { GuestRoomAvailabilityService } from '../../core/services/guest-room-availability.service';
 import { hotelThemeStyle } from '../../core/utils/hotel-theme';
 import { BookingModalComponent } from '../../shared/hotel-storefront/booking-modal.component';
 import { HotelNavComponent } from '../../shared/hotel-storefront/hotel-nav.component';
@@ -20,6 +21,7 @@ export class StorefrontLayoutComponent implements OnInit, OnDestroy {
   private readonly route = inject(ActivatedRoute);
   private readonly router = inject(Router);
   readonly ctx = inject(StorefrontContextService);
+  private readonly availability = inject(GuestRoomAvailabilityService);
 
   private sub?: Subscription;
 
@@ -45,13 +47,19 @@ export class StorefrontLayoutComponent implements OnInit, OnDestroy {
       const slug = this.route.parent?.snapshot.paramMap.get('slug') ?? params.get('slug') ?? '';
       const locationId = params.get('locationId');
       if (slug) {
-        this.ctx.load(slug, locationId).subscribe();
+        this.ctx.load(slug, locationId).subscribe((sf) => {
+          if (sf?.activeLocationId) {
+            this.availability.ensureDefaultDates();
+            this.availability.refresh(sf.slug, sf.activeLocationId);
+          }
+        });
       }
     });
   }
 
   ngOnDestroy(): void {
     this.sub?.unsubscribe();
+    this.availability.reset();
     this.ctx.reset();
   }
 }

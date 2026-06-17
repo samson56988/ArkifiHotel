@@ -16,17 +16,20 @@ public sealed class PublicGuestBookingService : IPublicGuestBookingService
     private const string DefaultCurrency = "NGN";
 
     private readonly AdminDbContext _db;
+    private readonly IBusinessBookingService _bookings;
     private readonly IBusinessPaymentConfigurationService _paymentConfig;
     private readonly PaymentGatewayRouter _gatewayRouter;
     private readonly CustomerAppOptions _customerApp;
 
     public PublicGuestBookingService(
         AdminDbContext db,
+        IBusinessBookingService bookings,
         IBusinessPaymentConfigurationService paymentConfig,
         PaymentGatewayRouter gatewayRouter,
         IOptions<CustomerAppOptions> customerApp)
     {
         _db = db;
+        _bookings = bookings;
         _paymentConfig = paymentConfig;
         _gatewayRouter = gatewayRouter;
         _customerApp = customerApp.Value;
@@ -85,16 +88,66 @@ public sealed class PublicGuestBookingService : IPublicGuestBookingService
             return (null, PublicGuestBookingError.InvalidRequest, "Branch not found.");
         }
 
-        if (await IsFullyBookedAsync(request.RoomId, room.Quantity, checkIn, checkOut, cancellationToken).ConfigureAwait(false))
+        if (await HasConfirmedDuplicateAsync(business.Id, request.RoomId, guestEmail, checkIn, checkOut, cancellationToken)
+                .ConfigureAwait(false))
+        {
+            return (null, PublicGuestBookingError.InvalidRequest, "You already have a confirmed booking for this room and stay.");
+        }
+
+        var total = decimal.Round(room.BasePricePerNight * nights, 2, MidpointRounding.AwayFromZero);
+
+        var reusable = await TryGetReusablePendingCheckoutAsync(
+                business.Id,
+                request.RoomId,
+                guestEmail,
+                checkIn,
+                checkOut,
+                cancellationToken)
+            .ConfigureAwait(false);
+
+        if (reusable is not null)
+        {
+            return await ResumePendingCheckoutAsync(
+                    business,
+                    reusable.Value.Booking,
+                    reusable.Value.Payment,
+                    provider,
+                    credentials,
+                    request.LocationId,
+                    guestName,
+                    guestEmail,
+                    guestPhone!,
+                    total,
+                    cancellationToken)
+                .ConfigureAwait(false);
+        }
+
+        if (await IsFullyBookedAsync(
+                request.RoomId,
+                room.Quantity,
+                checkIn,
+                checkOut,
+                excludeBookingId: null,
+                cancellationToken)
+            .ConfigureAwait(false))
         {
             return (null, PublicGuestBookingError.RoomUnavailable, "This room is not available for the selected dates.");
         }
+
+        await CancelSupersededPendingBookingsAsync(
+                business.Id,
+                request.RoomId,
+                guestEmail,
+                checkIn,
+                checkOut,
+                excludeBookingId: null,
+                cancellationToken)
+            .ConfigureAwait(false);
 
         var confirmationCode = await GenerateUniqueConfirmationCodeAsync(business.Id, business.BusinessName, cancellationToken)
             .ConfigureAwait(false);
         var paymentReference = await GenerateUniquePaymentReferenceAsync(business.Id, business.BusinessName, cancellationToken)
             .ConfigureAwait(false);
-        var total = decimal.Round(room.BasePricePerNight * nights, 2, MidpointRounding.AwayFromZero);
         var now = DateTimeOffset.UtcNow;
         var bookingId = Guid.NewGuid();
 
@@ -134,8 +187,139 @@ public sealed class PublicGuestBookingService : IPublicGuestBookingService
                 CreatedAt = now,
             });
 
+        try
+        {
+            await _db.SaveChangesAsync(cancellationToken).ConfigureAwait(false);
+        }
+        catch (DbUpdateException)
+        {
+            var raced = await TryGetReusablePendingCheckoutAsync(
+                    business.Id,
+                    request.RoomId,
+                    guestEmail,
+                    checkIn,
+                    checkOut,
+                    cancellationToken)
+                .ConfigureAwait(false);
+
+            if (raced is not null)
+            {
+                return await ResumePendingCheckoutAsync(
+                        business,
+                        raced.Value.Booking,
+                        raced.Value.Payment,
+                        provider,
+                        credentials,
+                        request.LocationId,
+                        guestName,
+                        guestEmail,
+                        guestPhone!,
+                        total,
+                        cancellationToken)
+                    .ConfigureAwait(false);
+            }
+
+            throw;
+        }
+
+        return await InitializeAndReturnCheckoutAsync(
+                business,
+                bookingId,
+                paymentReference,
+                provider,
+                credentials,
+                request.LocationId,
+                guestName,
+                guestEmail,
+                guestPhone!,
+                total,
+                redirectUrl,
+                cancellationToken)
+            .ConfigureAwait(false);
+    }
+
+    private async Task<(GuestBookingCheckoutDto? Data, PublicGuestBookingError? Error, string? Message)> ResumePendingCheckoutAsync(
+        BusinessRegistration business,
+        Booking booking,
+        BookingPayment payment,
+        PaymentGatewayProvider provider,
+        PaymentGatewayCredentialsDto credentials,
+        Guid locationId,
+        string guestName,
+        string guestEmail,
+        string guestPhone,
+        decimal total,
+        CancellationToken cancellationToken)
+    {
+        if (await IsFullyBookedAsync(
+                booking.RoomId,
+                await GetRoomQuantityAsync(booking.RoomId, cancellationToken).ConfigureAwait(false),
+                booking.CheckInDate,
+                booking.CheckOutDate,
+                excludeBookingId: booking.Id,
+                cancellationToken)
+            .ConfigureAwait(false))
+        {
+            return (null, PublicGuestBookingError.RoomUnavailable, "This room is not available for the selected dates.");
+        }
+
+        await CancelSupersededPendingBookingsAsync(
+                business.Id,
+                booking.RoomId,
+                guestEmail,
+                booking.CheckInDate,
+                booking.CheckOutDate,
+                excludeBookingId: booking.Id,
+                cancellationToken)
+            .ConfigureAwait(false);
+
+        var now = DateTimeOffset.UtcNow;
+        booking.GuestName = guestName;
+        booking.GuestEmail = guestEmail;
+        booking.GuestPhone = guestPhone;
+        booking.TotalAmount = total;
+        booking.UpdatedAt = now;
+        payment.Amount = total;
+        payment.Gateway = provider;
+        payment.UpdatedAt = now;
+
         await _db.SaveChangesAsync(cancellationToken).ConfigureAwait(false);
 
+        var reference = payment.ExternalReference!;
+        var redirectUrl = BuildRedirectUrl(business.Slug!, locationId, reference);
+
+        return await InitializeAndReturnCheckoutAsync(
+                business,
+                booking.Id,
+                reference,
+                provider,
+                credentials,
+                locationId,
+                guestName,
+                guestEmail,
+                guestPhone,
+                total,
+                redirectUrl,
+                cancellationToken,
+                booking)
+            .ConfigureAwait(false);
+    }
+
+    private async Task<(GuestBookingCheckoutDto? Data, PublicGuestBookingError? Error, string? Message)> InitializeAndReturnCheckoutAsync(
+        BusinessRegistration business,
+        Guid bookingId,
+        string paymentReference,
+        PaymentGatewayProvider provider,
+        PaymentGatewayCredentialsDto credentials,
+        Guid locationId,
+        string guestName,
+        string guestEmail,
+        string guestPhone,
+        decimal total,
+        string redirectUrl,
+        CancellationToken cancellationToken,
+        Booking? trackedBooking = null)
+    {
         var initContext = new PaymentInitializeContext
         {
             Provider = provider,
@@ -147,7 +331,7 @@ public sealed class PublicGuestBookingService : IPublicGuestBookingService
             Currency = DefaultCurrency,
             CustomerEmail = guestEmail,
             CustomerName = guestName,
-            CustomerPhone = guestPhone!,
+            CustomerPhone = guestPhone,
             RedirectUrl = redirectUrl,
             Description = $"Booking at {business.BusinessName}",
         };
@@ -156,11 +340,15 @@ public sealed class PublicGuestBookingService : IPublicGuestBookingService
         var initResult = await handler.InitializeAsync(initContext, cancellationToken).ConfigureAwait(false);
         if (!initResult.Success || string.IsNullOrWhiteSpace(initResult.PaymentUrl))
         {
+            var booking = trackedBooking ?? await _db.Bookings
+                .FirstAsync(b => b.Id == bookingId, cancellationToken)
+                .ConfigureAwait(false);
+            var failedPayment = await _db.BookingPayments
+                .FirstAsync(p => p.BookingId == booking.Id, cancellationToken)
+                .ConfigureAwait(false);
+
             booking.Status = BookingStatus.Cancelled;
             booking.UpdatedAt = DateTimeOffset.UtcNow;
-            var failedPayment = await _db.BookingPayments
-                .FirstAsync(p => p.BookingId == bookingId, cancellationToken)
-                .ConfigureAwait(false);
             failedPayment.Status = BookingPaymentStatus.Failed;
             failedPayment.UpdatedAt = DateTimeOffset.UtcNow;
             failedPayment.Notes = initResult.Message;
@@ -181,6 +369,163 @@ public sealed class PublicGuestBookingService : IPublicGuestBookingService
             },
             null,
             null);
+    }
+
+    private async Task<(Booking Booking, BookingPayment Payment)?> TryGetReusablePendingCheckoutAsync(
+        Guid businessId,
+        Guid roomId,
+        string guestEmail,
+        DateOnly checkIn,
+        DateOnly checkOut,
+        CancellationToken cancellationToken)
+    {
+        var emailLower = guestEmail.ToLowerInvariant();
+
+        var match = await (
+                from b in _db.Bookings
+                join p in _db.BookingPayments on b.Id equals p.BookingId
+                where b.BusinessRegistrationId == businessId
+                      && b.RoomId == roomId
+                      && b.GuestEmail.ToLower() == emailLower
+                      && b.CheckInDate == checkIn
+                      && b.CheckOutDate == checkOut
+                      && b.Status == BookingStatus.Pending
+                      && p.Status == BookingPaymentStatus.Pending
+                      && p.Method == BookingPaymentMethod.Gateway
+                      && p.ExternalReference != null
+                orderby b.CreatedAt descending
+                select new { Booking = b, Payment = p })
+            .FirstOrDefaultAsync(cancellationToken)
+            .ConfigureAwait(false);
+
+        if (match is null)
+        {
+            return null;
+        }
+
+        return (match.Booking, match.Payment);
+    }
+
+    private async Task<bool> HasConfirmedDuplicateAsync(
+        Guid businessId,
+        Guid roomId,
+        string guestEmail,
+        DateOnly checkIn,
+        DateOnly checkOut,
+        CancellationToken cancellationToken)
+    {
+        var emailLower = guestEmail.ToLowerInvariant();
+
+        return await _db.Bookings
+            .AsNoTracking()
+            .AnyAsync(
+                b => b.BusinessRegistrationId == businessId
+                     && b.RoomId == roomId
+                     && b.GuestEmail.ToLower() == emailLower
+                     && b.CheckInDate == checkIn
+                     && b.CheckOutDate == checkOut
+                     && b.Status == BookingStatus.Confirmed,
+                cancellationToken)
+            .ConfigureAwait(false);
+    }
+
+    private async Task CancelSupersededPendingBookingsAsync(
+        Guid businessId,
+        Guid roomId,
+        string guestEmail,
+        DateOnly checkIn,
+        DateOnly checkOut,
+        Guid? excludeBookingId,
+        CancellationToken cancellationToken)
+    {
+        var emailLower = guestEmail.ToLowerInvariant();
+        var now = DateTimeOffset.UtcNow;
+
+        var duplicates = await _db.Bookings
+            .Where(b => b.BusinessRegistrationId == businessId
+                        && b.RoomId == roomId
+                        && b.GuestEmail.ToLower() == emailLower
+                        && b.CheckInDate == checkIn
+                        && b.CheckOutDate == checkOut
+                        && b.Status == BookingStatus.Pending
+                        && (!excludeBookingId.HasValue || b.Id != excludeBookingId.Value))
+            .ToListAsync(cancellationToken)
+            .ConfigureAwait(false);
+
+        if (duplicates.Count == 0)
+        {
+            return;
+        }
+
+        var duplicateIds = duplicates.Select(b => b.Id).ToList();
+        var payments = await _db.BookingPayments
+            .Where(p => duplicateIds.Contains(p.BookingId) && p.Status == BookingPaymentStatus.Pending)
+            .ToListAsync(cancellationToken)
+            .ConfigureAwait(false);
+
+        foreach (var booking in duplicates)
+        {
+            booking.Status = BookingStatus.Cancelled;
+            booking.UpdatedAt = now;
+        }
+
+        foreach (var payment in payments)
+        {
+            payment.Status = BookingPaymentStatus.Cancelled;
+            payment.UpdatedAt = now;
+            payment.Notes = "Superseded by a newer checkout attempt.";
+        }
+
+        await _db.SaveChangesAsync(cancellationToken).ConfigureAwait(false);
+    }
+
+    private async Task<int> GetRoomQuantityAsync(Guid roomId, CancellationToken cancellationToken)
+    {
+        return await _db.Rooms
+            .AsNoTracking()
+            .Where(r => r.Id == roomId)
+            .Select(r => r.Quantity)
+            .FirstAsync(cancellationToken)
+            .ConfigureAwait(false);
+    }
+
+    public async Task<(IReadOnlyList<RoomAvailabilityDto>? Data, PublicGuestBookingError? Error, string? Message)>
+        GetRoomAvailabilityAsync(
+            string slug,
+            Guid locationId,
+            DateOnly checkIn,
+            DateOnly checkOut,
+            CancellationToken cancellationToken = default)
+    {
+        var business = await ResolveBusinessAsync(slug, cancellationToken).ConfigureAwait(false);
+        if (business is null)
+        {
+            return (null, PublicGuestBookingError.NotFound, "Storefront not found.");
+        }
+
+        if (locationId == Guid.Empty)
+        {
+            return (null, PublicGuestBookingError.InvalidRequest, "Select a branch.");
+        }
+
+        if (checkOut <= checkIn)
+        {
+            return (null, PublicGuestBookingError.InvalidRequest, "Check-out must be after check-in.");
+        }
+
+        if (!await _db.BusinessLocations
+                .AsNoTracking()
+                .AnyAsync(l => l.Id == locationId && l.BusinessRegistrationId == business.Id, cancellationToken)
+                .ConfigureAwait(false))
+        {
+            return (null, PublicGuestBookingError.InvalidRequest, "Branch not found.");
+        }
+
+        var availability = await _bookings
+            .GetAvailabilityAsync(business.Id, checkIn, checkOut, roomId: null, locationId, cancellationToken)
+            .ConfigureAwait(false);
+
+        return (availability, null, null);
     }
 
     public async Task<GuestPaymentVerifyResultDto?> VerifyPaymentAsync(
@@ -358,11 +703,14 @@ public sealed class PublicGuestBookingService : IPublicGuestBookingService
         int roomQuantity,
         DateOnly checkIn,
         DateOnly checkOut,
+        Guid? excludeBookingId,
         CancellationToken cancellationToken)
     {
         var stays = await _db.Bookings
             .AsNoTracking()
-            .Where(b => b.RoomId == roomId && b.Status != BookingStatus.Cancelled)
+            .Where(b => b.RoomId == roomId
+                        && b.Status != BookingStatus.Cancelled
+                        && (!excludeBookingId.HasValue || b.Id != excludeBookingId.Value))
             .Select(b => new { b.CheckInDate, b.CheckOutDate })
             .ToListAsync(cancellationToken)
             .ConfigureAwait(false);
@@ -502,7 +850,7 @@ public sealed class PublicGuestBookingService : IPublicGuestBookingService
         }
 
         guestName = gn;
-        guestEmail = ge;
+        guestEmail = ge.ToLowerInvariant();
         return true;
     }
 }

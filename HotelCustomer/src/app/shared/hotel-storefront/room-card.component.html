@@ -22,8 +22,8 @@
       @if (variant() === 'featured') {
         <div class="room-featured-label">Featured</div>
       }
-      <div class="room-avail" [class.yes]="r.available" [class.no]="!r.available">
-        {{ r.available ? '✓ Available' : '✗ Booked' }}
+      <div class="room-avail" [class.yes]="canBook()" [class.no]="availability.hasResult() && !canBook()">
+        {{ availLabel() }}
       </div>
     </div>
   </div>
@@ -55,7 +55,7 @@
         </div>
       }
       @if (detailMode() || variant() === 'featured') {
-        @if (r.available) {
+        @if (canBook()) {
           <button type="button" class="btn-book-room" (click)="bookRoom($event)">Book Room</button>
         } @else {
           <button type="button" class="btn-book-room btn-book-room--disabled" disabled>Unavailable</button>

@@ -197,8 +197,8 @@ export function createDefaultTheme(businessName: string): StorefrontTheme {
     },
     about: {
       enabled: true,
-      eyebrow: 'Who We Are',
-      title: 'Who we are',
+      eyebrow: 'About us',
+      title: 'Our story',
       description:
         'We are a hospitality team dedicated to memorable stays. From check-in to checkout, every detail is crafted for comfort and ease.',
       titleFont: 'display',

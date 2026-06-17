@@ -84,6 +84,24 @@ export class StorefrontDesignerComponent implements OnInit {
   readonly maxAboutStats = MAX_ABOUT_STATS;
   readonly maxFacilityPerks = MAX_FACILITY_PERKS;
 
+  readonly aboutLayoutOptions = [
+    {
+      id: 'side-by-side' as StorefrontTheme['about']['layout'],
+      label: 'Side by side',
+      description: 'Story and photo in two columns',
+    },
+    {
+      id: 'stacked' as StorefrontTheme['about']['layout'],
+      label: 'Stacked',
+      description: 'Photo on top, copy centered below',
+    },
+    {
+      id: 'quote' as StorefrontTheme['about']['layout'],
+      label: 'Quote highlight',
+      description: 'Large quote leads the section',
+    },
+  ];
+
   readonly bannerImagesForBranch = computed(() => {
     const branchId = this.bannerBranchId();
     if (!branchId) {
@@ -110,8 +128,8 @@ export class StorefrontDesignerComponent implements OnInit {
     }),
     about: this.fb.nonNullable.group({
       enabled: [true],
-      eyebrow: ['Who We Are'],
-      title: ['Who we are'],
+      eyebrow: ['About us'],
+      title: ['Our story'],
       description: [''],
       titleFont: ['display' as StorefrontTheme['about']['titleFont']],
       bodyFont: ['body' as StorefrontTheme['about']['bodyFont']],
@@ -352,6 +370,11 @@ export class StorefrontDesignerComponent implements OnInit {
     }
   }
 
+  setAboutLayout(layout: StorefrontTheme['about']['layout']): void {
+    this.form.controls.about.controls.layout.setValue(layout);
+    this.refreshPreview();
+  }
+
   addPerk(): void {
     if (this.perksArray.length >= MAX_FACILITY_PERKS) {
       return;
@@ -481,7 +504,7 @@ export class StorefrontDesignerComponent implements OnInit {
 
     const { accepted, skipped } = filterAllowedImageFiles([picked]);
     if (skipped.length) {
-      this.toast.warning(`Skipped: ${skipped.join('; ')}.`, 'Who we are');
+      this.toast.warning(`Skipped: ${skipped.join('; ')}.`, 'About us');
     }
     if (accepted.length === 0) {
       return;
@@ -494,14 +517,14 @@ export class StorefrontDesignerComponent implements OnInit {
       .subscribe({
         next: (res) => {
           if (!res.success || !res.data) {
-            this.toast.showFailedApi(res, 'Who we are');
+            this.toast.showFailedApi(res, 'About us');
             return;
           }
           this.aboutImage.set(res.data);
           this.refreshPreview();
-          this.toast.success('About photo uploaded.', 'Who we are');
+          this.toast.success('About photo uploaded.', 'About us');
         },
-        error: () => this.toast.error('Could not upload about photo.', 'Who we are'),
+        error: () => this.toast.error('Could not upload about photo.', 'About us'),
       });
   }
 
@@ -513,14 +536,14 @@ export class StorefrontDesignerComponent implements OnInit {
       .subscribe({
         next: (res) => {
           if (!res.success) {
-            this.toast.showFailedApi(res, 'Who we are');
+            this.toast.showFailedApi(res, 'About us');
             return;
           }
           this.aboutImage.set(null);
           this.refreshPreview();
-          this.toast.success('About photo removed.', 'Who we are');
+          this.toast.success('About photo removed.', 'About us');
         },
-        error: () => this.toast.error('Could not remove about photo.', 'Who we are'),
+        error: () => this.toast.error('Could not remove about photo.', 'About us'),
       });
   }
 

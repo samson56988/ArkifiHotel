@@ -12,21 +12,6 @@
       </div>
 
       <form class="modal-form" (submit)="submit($event)">
-        <div class="form-group">
-          <label class="form-label">Select room</label>
-          <select
-            class="form-input"
-            [ngModel]="selectedRoomId"
-            (ngModelChange)="onRoomChange($event)"
-            name="room"
-          >
-            <option value="">Choose a room…</option>
-            @for (room of availableRooms(); track room.id) {
-              <option [value]="room.id">{{ room.name }} — {{ formatPrice(room.basePricePerNight) }}/night</option>
-            }
-          </select>
-        </div>
-
         <div class="form-row">
           <div class="form-group">
             <label class="form-label">Check-in</label>
@@ -34,7 +19,8 @@
               class="form-input"
               type="date"
               [min]="todayIso()"
-              [(ngModel)]="checkIn"
+              [ngModel]="checkIn()"
+              (ngModelChange)="onCheckInChange($event)"
               name="checkIn"
               required
             />
@@ -45,11 +31,28 @@
               class="form-input"
               type="date"
               [min]="todayIso()"
-              [(ngModel)]="checkOut"
+              [ngModel]="checkOut()"
+              (ngModelChange)="onCheckOutChange($event)"
               name="checkOut"
               required
             />
           </div>
+        </div>
+
+        <div class="form-group">
+          <label class="form-label">Select room</label>
+          <select
+            class="form-input"
+            [ngModel]="selectedRoomId()"
+            (ngModelChange)="onRoomChange($event)"
+            name="room"
+            [disabled]="availability.isLoadingAvailability()"
+          >
+            <option value="">Choose a room…</option>
+            @for (opt of allRoomOptions(); track opt.room.id) {
+              <option [value]="opt.room.id" [disabled]="!opt.selectable">{{ opt.label }}</option>
+            }
+          </select>
         </div>
 
         <div class="form-row">
@@ -89,6 +92,10 @@
           />
         </div>
 
+        @if (availabilityHint(); as hint) {
+          <p class="modal-hint">{{ hint }}</p>
+        }
+
         @if (formError()) {
           <p class="modal-error" role="alert">{{ formError() }}</p>
         }
@@ -98,9 +105,11 @@
           <span class="modal-total-price">{{ estimatedTotal() }}</span>
         </div>
 
-        <button type="submit" class="btn-submit" [disabled]="submitting()">
+        <button type="submit" class="btn-submit" [disabled]="!canSubmit()">
           @if (submitting()) {
             Redirecting to payment…
+          } @else if (availability.isLoadingAvailability()) {
+            Checking availability…
           } @else {
             Pay &amp; confirm booking →
           }

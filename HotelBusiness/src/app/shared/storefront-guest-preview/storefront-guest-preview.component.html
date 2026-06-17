@@ -12,7 +12,7 @@
             <li><span>Facilities</span></li>
           }
           @if (sf.theme.about.enabled) {
-            <li><span>About</span></li>
+            <li><span>About us</span></li>
           }
           <li><span class="hotel-nav__book">Book Now</span></li>
         </ul>
@@ -91,7 +91,7 @@
             <li><span class="is-active">Facilities</span></li>
           }
           @if (sf.theme.about.enabled) {
-            <li><span>About</span></li>
+            <li><span>About us</span></li>
           }
           <li><span class="hotel-nav__book">Book Now</span></li>
         </ul>
@@ -174,7 +174,7 @@
             <li><span>Facilities</span></li>
           }
           @if (sf.theme.about.enabled) {
-            <li><span>About</span></li>
+            <li><span>About us</span></li>
           }
           <li><span>Contact</span></li>
           <li><span class="hotel-nav__book">Book Now</span></li>
@@ -260,48 +260,65 @@
       }
 
       @if (sf.theme.about.enabled) {
-        <section class="section-wrap section-wrap--alt">
-          <div class="about-layout">
-            <div class="about-body">
-              <div class="sec-eyebrow">{{ sf.theme.about.eyebrow }}</div>
-              <h2 class="sec-title">{{ sf.theme.about.title }}</h2>
-              @for (para of aboutParagraphs(); track para) {
-                <p class="sec-sub about-story">{{ para }}</p>
-              } @empty {
-                <p class="sec-sub about-story">{{ sf.theme.about.description }}</p>
-              }
-              @if (sf.theme.about.quote) {
-                <blockquote class="about-quote">
-                  <p>{{ sf.theme.about.quote }}</p>
-                  @if (sf.theme.about.quoteBy) {
-                    <cite>{{ sf.theme.about.quoteBy }}</cite>
-                  }
-                </blockquote>
-              }
-              @if (sf.theme.about.showStats && sf.theme.about.stats.length > 0) {
-                <div class="about-stats">
-                  @for (stat of sf.theme.about.stats; track stat.label) {
-                    <div class="about-stat">
-                      <div class="about-stat-num">{{ stat.num }}</div>
-                      <div class="about-stat-label">{{ stat.label }}</div>
-                    </div>
-                  }
-                </div>
-              }
-            </div>
-            <div class="about-visual">
-              <div
-                class="about-img-main"
-                [class.about-img-main--photo]="!!sf.aboutImageUrl"
-                [style.background-image]="sf.aboutImageUrl ? 'url(' + sf.aboutImageUrl + ')' : null"
-              >
-                @if (!sf.aboutImageUrl) {
-                  @if (sf.logoUrl) {
-                    <img [src]="sf.logoUrl" [alt]="sf.businessName + ' logo'" />
-                  } @else {
-                    <span class="about-img-fallback">🏨</span>
-                  }
+        <section
+          class="about-section section-wrap section-wrap--alt"
+          [class.about-section--stacked]="aboutLayout() === 'stacked'"
+          [class.about-section--quote]="aboutLayout() === 'quote'"
+        >
+          <div class="about-section__inner">
+            @if (aboutLayout() === 'quote' && sf.theme.about.quote) {
+              <blockquote class="about-section__hero-quote">
+                <p [style.font-family]="aboutTitleFont()">{{ sf.theme.about.quote }}</p>
+                @if (sf.theme.about.quoteBy) {
+                  <cite [style.font-family]="aboutBodyFont()">{{ sf.theme.about.quoteBy }}</cite>
                 }
+              </blockquote>
+            }
+
+            <div class="about-layout">
+              <div class="about-body">
+                <div class="sec-eyebrow" [style.font-family]="aboutBodyFont()">{{ sf.theme.about.eyebrow }}</div>
+                <h2 class="sec-title" [style.font-family]="aboutTitleFont()">{{ sf.theme.about.title }}</h2>
+                @for (para of aboutParagraphs(); track para) {
+                  <p class="sec-sub about-story" [style.font-family]="aboutBodyFont()">{{ para }}</p>
+                } @empty {
+                  <p class="sec-sub about-story" [style.font-family]="aboutBodyFont()">{{ sf.theme.about.description }}</p>
+                }
+                @if (aboutLayout() !== 'quote' && sf.theme.about.quote) {
+                  <blockquote class="about-quote">
+                    <p [style.font-family]="aboutTitleFont()">{{ sf.theme.about.quote }}</p>
+                    @if (sf.theme.about.quoteBy) {
+                      <cite [style.font-family]="aboutBodyFont()">{{ sf.theme.about.quoteBy }}</cite>
+                    }
+                  </blockquote>
+                }
+                @if (sf.theme.about.showStats && sf.theme.about.stats.length > 0) {
+                  <div class="about-stats">
+                    @for (stat of sf.theme.about.stats; track stat.label) {
+                      <div class="about-stat">
+                        <div class="about-stat-num" [style.font-family]="aboutTitleFont()">{{ stat.num }}</div>
+                        <div class="about-stat-label" [style.font-family]="aboutBodyFont()">{{ stat.label }}</div>
+                      </div>
+                    }
+                  </div>
+                }
+              </div>
+              <div class="about-visual">
+                <figure class="about-figure">
+                  <div
+                    class="about-img-main"
+                    [class.about-img-main--photo]="!!sf.aboutImageUrl"
+                    [style.background-image]="sf.aboutImageUrl ? 'url(' + sf.aboutImageUrl + ')' : null"
+                  >
+                    @if (!sf.aboutImageUrl) {
+                      @if (sf.logoUrl) {
+                        <img [src]="sf.logoUrl" [alt]="sf.businessName + ' logo'" />
+                      } @else {
+                        <span class="about-img-fallback">🏨</span>
+                      }
+                    }
+                  </div>
+                </figure>
               </div>
             </div>
           </div>

@@ -349,7 +349,63 @@
   display: grid;
   grid-template-columns: 1fr 1fr;
   gap: 2.5rem;
-  align-items: center;
+  align-items: start;
+}
+
+.about-section__inner {
+  width: 100%;
+}
+
+.about-section__hero-quote {
+  margin: 0 0 1.75rem;
+  padding: 0;
+  border: none;
+  text-align: center;
+}
+
+.about-section__hero-quote p {
+  margin: 0;
+  font-size: 1.35rem;
+  font-style: italic;
+  line-height: 1.35;
+}
+
+.about-section__hero-quote cite {
+  display: block;
+  margin-top: 0.65rem;
+  font-size: 0.75rem;
+  font-style: normal;
+  color: color-mix(in srgb, var(--text) 55%, transparent);
+}
+
+.about-section--stacked .about-layout {
+  grid-template-columns: 1fr;
+  gap: 1.5rem;
+}
+
+.about-section--stacked .about-visual {
+  order: -1;
+}
+
+.about-section--stacked .about-img-main {
+  aspect-ratio: 16/10;
+}
+
+.about-section--stacked .about-body {
+  text-align: center;
+}
+
+.about-section--quote .about-layout {
+  grid-template-columns: 1fr;
+  gap: 1.5rem;
+}
+
+.about-section--quote .about-body {
+  text-align: center;
+}
+
+.about-section--quote .about-img-main {
+  aspect-ratio: 16/9;
 }
 
 @media (max-width: 860px) {
@@ -358,7 +414,13 @@
   }
 
   .about-visual {
-    order: -1;
+    max-width: none;
+    justify-self: stretch;
+  }
+
+  .about-img-main {
+    max-height: none;
+    aspect-ratio: 16 / 9;
   }
 }
 
@@ -419,9 +481,21 @@
   margin-top: 0.35rem;
 }
 
-.about-img-main {
+.about-figure {
+  margin: 0;
+}
+
+.about-visual {
   width: 100%;
-  aspect-ratio: 4/5;
+  max-width: 380px;
+  justify-self: end;
+}
+
+.about-img-main {
+  position: relative;
+  width: 100%;
+  aspect-ratio: 3 / 4;
+  max-height: 420px;
   border-radius: 20px;
   background: linear-gradient(155deg, var(--primary), color-mix(in srgb, var(--primary) 60%, #2d6a8e));
   display: flex;
@@ -444,6 +518,16 @@
 
 .about-img-fallback {
   font-size: 3rem;
+}
+
+.about-section--stacked .about-visual {
+  max-width: none;
+  justify-self: stretch;
+}
+
+.about-section--quote .about-visual {
+  max-width: none;
+  justify-self: stretch;
 }
 
 .social-layout {

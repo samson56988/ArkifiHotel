@@ -46,6 +46,10 @@ public class BookingPaymentConfiguration : IEntityTypeConfiguration<BookingPayme
         builder.HasIndex(e => e.BusinessRegistrationId);
         builder.HasIndex(e => e.BookingId);
         builder.HasIndex(e => new { e.BusinessRegistrationId, e.CreatedAt });
+        builder.HasIndex(e => new { e.BusinessRegistrationId, e.ExternalReference })
+            .IsUnique()
+            .HasDatabaseName("IX_BookingPayments_BusinessExternalReference")
+            .HasFilter("\"ExternalReference\" IS NOT NULL");
 
         builder.HasOne(e => e.BusinessRegistration)
             .WithMany()

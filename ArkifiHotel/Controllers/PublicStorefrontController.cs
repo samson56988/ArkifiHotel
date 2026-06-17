@@ -12,10 +12,12 @@ namespace ArkifiHotel.Controllers;
 public sealed class PublicStorefrontController : ControllerBase
 {
     private readonly IStorefrontThemeService _themes;
+    private readonly IPublicGuestBookingService _guestBookings;
 
-    public PublicStorefrontController(IStorefrontThemeService themes)
+    public PublicStorefrontController(IStorefrontThemeService themes, IPublicGuestBookingService guestBookings)
     {
         _themes = themes;
+        _guestBookings = guestBookings;
     }
 
     [HttpGet("{slug}")]
@@ -31,6 +33,31 @@ public sealed class PublicStorefrontController : ControllerBase
 
         var mapped = MapPublic(dto);
         return Ok(ApiResult<PublicStorefrontDto>.Ok(mapped));
+    }
+
+    [HttpGet("{slug}/rooms/availability")]
+    [ProducesResponseType(typeof(ApiResult<IReadOnlyList<RoomAvailabilityDto>>), StatusCodes.Status200OK)]
+    [ProducesResponseType(typeof(ApiResult<IReadOnlyList<RoomAvailabilityDto>>), StatusCodes.Status400BadRequest)]
+    [ProducesResponseType(typeof(ApiResult<IReadOnlyList<RoomAvailabilityDto>>), StatusCodes.Status404NotFound)]
+    public async Task<IActionResult> GetRoomAvailability(
+        string slug,
+        [FromQuery] Guid locationId,
+        [FromQuery] DateOnly checkInDate,
+        [FromQuery] DateOnly checkOutDate,
+        CancellationToken cancellationToken)
+    {
+        var (data, error, message) = await _guestBookings
+            .GetRoomAvailabilityAsync(slug, locationId, checkInDate, checkOutDate, cancellationToken)
+            .ConfigureAwait(false);
+
+        return error switch
+        {
+            null => Ok(ApiResult<IReadOnlyList<RoomAvailabilityDto>>.Ok(data ?? Array.Empty<RoomAvailabilityDto>())),
+            PublicGuestBookingError.NotFound => NotFound(
+                ApiResult<IReadOnlyList<RoomAvailabilityDto>>.Fail("NotFound", message ?? "Storefront not found.")),
+            _ => BadRequest(
+                ApiResult<IReadOnlyList<RoomAvailabilityDto>>.Fail("Validation", message ?? "Invalid stay dates.")),
+        };
     }
 
     private PublicStorefrontDto MapPublic(PublicStorefrontDto dto) =>

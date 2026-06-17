@@ -22,4 +22,11 @@ public interface IPublicGuestBookingService
         string slug,
         string paymentReference,
         CancellationToken cancellationToken = default);
+
+    Task<(IReadOnlyList<RoomAvailabilityDto>? Data, PublicGuestBookingError? Error, string? Message)> GetRoomAvailabilityAsync(
+        string slug,
+        Guid locationId,
+        DateOnly checkIn,
+        DateOnly checkOut,
+        CancellationToken cancellationToken = default);
 }

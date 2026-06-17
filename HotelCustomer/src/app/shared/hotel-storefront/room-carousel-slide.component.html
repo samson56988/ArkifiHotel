@@ -10,8 +10,8 @@
 
   <div class="carousel-room__top">
     <span class="carousel-room__type">{{ r.roomType }}</span>
-    <span class="carousel-room__avail" [class.is-available]="r.available" [class.is-booked]="!r.available">
-      {{ r.available ? '✓ Available' : '✗ Booked' }}
+    <span class="carousel-room__avail" [class.is-available]="canBook()" [class.is-booked]="availability.hasResult() && !canBook()">
+      {{ availLabel() }}
     </span>
   </div>
 
@@ -42,7 +42,7 @@
           <div class="carousel-room__price-label">per night</div>
         </div>
       }
-      @if (r.available) {
+      @if (canBook()) {
         <button type="button" class="carousel-room__book" (click)="bookRoom()">Book this room</button>
       } @else {
         <button type="button" class="carousel-room__book carousel-room__book--disabled" disabled>Unavailable</button>

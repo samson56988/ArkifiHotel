@@ -11,9 +11,11 @@
     <li>
       <a [routerLink]="ctx.path('facilities')" routerLinkActive="active">Facilities</a>
     </li>
-    <li>
-      <a [routerLink]="ctx.path()" fragment="about">About</a>
-    </li>
+    @if (sf.theme.about.enabled) {
+      <li>
+        <a [routerLink]="ctx.path()" fragment="about">About us</a>
+      </li>
+    }
     <li>
       <a [routerLink]="ctx.path()" fragment="contact">Contact</a>
     </li>

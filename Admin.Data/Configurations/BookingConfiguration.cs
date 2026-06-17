@@ -59,6 +59,11 @@ public class BookingConfiguration : IEntityTypeConfiguration<Booking>
 
         builder.HasIndex(e => new { e.BusinessRegistrationId, e.CheckInDate });
 
+        builder.HasIndex(e => new { e.BusinessRegistrationId, e.RoomId, e.GuestEmail, e.CheckInDate, e.CheckOutDate })
+            .IsUnique()
+            .HasDatabaseName("IX_Bookings_PendingGuestStayUnique")
+            .HasFilter("\"Status\" = 0");
+
         builder.HasOne(e => e.BusinessRegistration)
             .WithMany()
             .HasForeignKey(e => e.BusinessRegistrationId)

@@ -274,8 +274,8 @@ public sealed class StorefrontThemeService : IStorefrontThemeService
             theme.Contact.IntroText,
             "Questions about your stay? Send us a message and our team will respond within a few hours.");
 
-        theme.About.Eyebrow = TrimOrDefault(theme.About.Eyebrow, "Who We Are");
-        theme.About.Title = TrimOrDefault(theme.About.Title, "Who we are");
+        theme.About.Eyebrow = TrimOrDefault(theme.About.Eyebrow, "About us");
+        theme.About.Title = TrimOrDefault(theme.About.Title, "Our story");
         theme.About.Description = TrimOrDefault(theme.About.Description, string.Empty);
         theme.About.TitleFont = TrimOrDefault(theme.About.TitleFont, "display");
         theme.About.BodyFont = TrimOrDefault(theme.About.BodyFont, "body");

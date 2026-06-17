@@ -124,6 +124,16 @@
   line-height: 1.45;
 }
 
+.modal-hint {
+  margin: 0 0 0.85rem;
+  padding: 0.65rem 0.75rem;
+  border-radius: 8px;
+  background: color-mix(in srgb, var(--accent) 10%, transparent);
+  color: color-mix(in srgb, var(--text) 75%, transparent);
+  font-size: 0.82rem;
+  line-height: 1.45;
+}
+
 .btn-submit {
   background: var(--accent);
   color: #fff;

@@ -1,0 +1,69 @@
+@let sf = storefront();
+@let about = sf.theme.about;
+
+<section
+  class="about-section section-wrap section-wrap--alt"
+  id="about"
+  [class.about-section--stacked]="layout() === 'stacked'"
+  [class.about-section--quote]="layout() === 'quote'"
+>
+  <div class="about-section__inner">
+    @if (layout() === 'quote' && quoteText()) {
+      <blockquote class="about-section__hero-quote">
+        <p [style.font-family]="titleFont()">{{ quoteText() }}</p>
+        @if (quoteBy()) {
+          <cite [style.font-family]="bodyFont()">{{ quoteBy() }}</cite>
+        }
+      </blockquote>
+    }
+
+    <div class="about-layout">
+      <div class="about-body">
+        <div class="sec-eyebrow" [style.font-family]="bodyFont()">{{ about.eyebrow }}</div>
+        <h2 class="sec-title about-section__title" [style.font-family]="titleFont()">{{ about.title }}</h2>
+
+        @for (para of paragraphs(); track para) {
+          <p class="sec-sub about-story" [style.font-family]="bodyFont()">{{ para }}</p>
+        }
+
+        @if (layout() !== 'quote' && quoteText()) {
+          <blockquote class="about-quote">
+            <p [style.font-family]="titleFont()">{{ quoteText() }}</p>
+            @if (quoteBy()) {
+              <cite [style.font-family]="bodyFont()">{{ quoteBy() }}</cite>
+            }
+          </blockquote>
+        }
+
+        @if (showStats()) {
+          <div class="about-stats">
+            @for (stat of about.stats; track stat.label) {
+              <div class="about-stat">
+                <div class="about-stat-num" [style.font-family]="titleFont()">{{ stat.num }}</div>
+                <div class="about-stat-label" [style.font-family]="bodyFont()">{{ stat.label }}</div>
+              </div>
+            }
+          </div>
+        }
+      </div>
+
+      <div class="about-visual">
+        <figure class="about-figure">
+          <div
+            class="about-img-main"
+            [class.about-img-main--photo]="!!sf.aboutImageUrl"
+            [style.background-image]="sf.aboutImageUrl ? 'url(' + sf.aboutImageUrl + ')' : null"
+          >
+            @if (!sf.aboutImageUrl) {
+              @if (sf.logoUrl) {
+                <img [src]="sf.logoUrl" [alt]="sf.businessName + ' logo'" />
+              } @else {
+                <span class="about-img-fallback" aria-hidden="true">🏨</span>
+              }
+            }
+          </div>
+        </figure>
+      </div>
+    </div>
+  </div>
+</section>

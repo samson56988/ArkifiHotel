@@ -1,4 +1,5 @@
 import { ChangeDetectionStrategy, Component, computed, inject, input } from '@angular/core';
+import { GuestRoomAvailabilityService } from '../../core/services/guest-room-availability.service';
 import { HotelUiService } from '../../core/services/hotel-ui.service';
 import type { HotelShowcase } from '../../core/models/hotel-showcase.models';
 import { galleryImages } from '../../core/utils/gallery-images';
@@ -13,6 +14,7 @@ import { formatNaira } from '../../core/utils/hotel-theme';
 })
 export class ShowcaseGalleryModalComponent {
   readonly ui = inject(HotelUiService);
+  readonly availability = inject(GuestRoomAvailabilityService);
   readonly storefront = input.required<HotelShowcase>();
 
   readonly images = computed(() => {
@@ -35,6 +37,10 @@ export class ShowcaseGalleryModalComponent {
   readonly room = computed(() => this.ui.galleryRoom());
   readonly facility = computed(() => this.ui.galleryFacility());
   readonly showPrice = computed(() => this.storefront().theme.rooms.showPrice);
+  readonly canBookRoom = computed(() => {
+    const room = this.room();
+    return room ? this.availability.isRoomAvailable(room.id) : false;
+  });
 
   formatPrice(amount: number): string {
     return formatNaira(amount);
@@ -64,7 +70,7 @@ export class ShowcaseGalleryModalComponent {
 
   bookRoom(): void {
     const room = this.room();
-    if (!room?.available) {
+    if (!room || !this.canBookRoom()) {
       return;
     }
     this.close();

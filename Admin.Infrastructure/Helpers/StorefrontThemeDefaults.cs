@@ -30,8 +30,8 @@ public static class StorefrontThemeDefaults
             About = new StorefrontAboutSectionDto
             {
                 Enabled = true,
-                Eyebrow = "Who We Are",
-                Title = "Who we are",
+                Eyebrow = "About us",
+                Title = "Our story",
                 Description =
                     "We are a hospitality team dedicated to memorable stays. From check-in to checkout, every detail is crafted for comfort and ease.",
                 TitleFont = "display",

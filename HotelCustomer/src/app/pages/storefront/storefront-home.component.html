@@ -17,7 +17,7 @@
       <div class="hero__actions">
         <button type="button" class="btn-accent" (click)="openBooking()">Reserve a Room</button>
         @if (sf.theme.about.enabled) {
-          <a [routerLink]="ctx.path()" fragment="about" class="btn-outline-white">Our Story</a>
+          <a [routerLink]="ctx.path()" fragment="about" class="btn-outline-white">About us</a>
         }
       </div>
       <div class="hero-info-bar">
@@ -109,59 +109,7 @@
   }
 
   @if (sf.theme.about.enabled) {
-    <section class="section-wrap section-wrap--alt" id="about">
-      <div class="about-layout">
-        <div class="about-body">
-          <div class="sec-eyebrow">{{ sf.theme.about.eyebrow }}</div>
-          <h2 class="sec-title">{{ sf.theme.about.title }}</h2>
-          @for (para of sf.aboutStory; track para) {
-            <p class="sec-sub about-story">{{ para }}</p>
-          } @empty {
-            <p class="sec-sub about-story">{{ sf.theme.about.description }}</p>
-          }
-          @if (sf.theme.about.quote) {
-            <blockquote class="about-quote">
-              <p>{{ sf.theme.about.quote }}</p>
-              @if (sf.theme.about.quoteBy) {
-                <cite>{{ sf.theme.about.quoteBy }}</cite>
-              }
-            </blockquote>
-          } @else if (sf.aboutQuote) {
-            <blockquote class="about-quote">
-              <p>{{ sf.aboutQuote }}</p>
-              @if (sf.aboutQuoteBy) {
-                <cite>{{ sf.aboutQuoteBy }}</cite>
-              }
-            </blockquote>
-          }
-          @if (sf.theme.about.showStats && sf.theme.about.stats.length > 0) {
-            <div class="about-stats">
-              @for (stat of sf.theme.about.stats; track stat.label) {
-                <div class="about-stat">
-                  <div class="about-stat-num">{{ stat.num }}</div>
-                  <div class="about-stat-label">{{ stat.label }}</div>
-                </div>
-              }
-            </div>
-          }
-        </div>
-        <div class="about-visual">
-          <div
-            class="about-img-main"
-            [class.about-img-main--photo]="!!sf.aboutImageUrl"
-            [style.background-image]="sf.aboutImageUrl ? 'url(' + sf.aboutImageUrl + ')' : null"
-          >
-            @if (!sf.aboutImageUrl) {
-              @if (sf.logoUrl) {
-                <img [src]="sf.logoUrl" [alt]="sf.businessName + ' logo'" />
-              } @else {
-                <span class="about-img-fallback">🏨</span>
-              }
-            }
-          </div>
-        </div>
-      </div>
-    </section>
+    <app-about-section [storefront]="sf" />
   }
 
   @if (hasSocial()) {
