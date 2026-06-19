@@ -12,7 +12,7 @@
     <div class="page-hero__inner">
       <a [routerLink]="ctx.path()" class="back-link">← Back to home</a>
       <div class="sec-eyebrow sec-eyebrow--light">{{ sf.theme.rooms.eyebrow }}</div>
-      <h1 class="page-hero__title">{{ sf.theme.rooms.title }}</h1>
+      <h1 class="page-hero__title" [style.font-family]="pageTitleFont()">{{ sf.theme.rooms.title }}</h1>
       <p class="page-hero__sub">{{ sf.theme.rooms.subtitle }}</p>
     </div>
   </header>

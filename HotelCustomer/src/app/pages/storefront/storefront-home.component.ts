@@ -1,15 +1,15 @@
 import { ChangeDetectionStrategy, Component, computed, inject, OnDestroy, OnInit, signal } from '@angular/core';
 import { RouterLink } from '@angular/router';
+import { resolveSectionFont } from '../../core/data/storefront-theme-presets';
 import { HotelUiService } from '../../core/services/hotel-ui.service';
 import { StorefrontContextService } from '../../core/services/storefront-context.service';
 import { HotelFooterComponent } from '../../shared/hotel-storefront/hotel-footer.component';
-import { AboutSectionComponent } from '../../shared/hotel-storefront/about-section.component';
 import { RoomCarouselSlideComponent } from '../../shared/hotel-storefront/room-carousel-slide.component';
 
 @Component({
   selector: 'app-storefront-home',
   standalone: true,
-  imports: [RouterLink, RoomCarouselSlideComponent, HotelFooterComponent, AboutSectionComponent],
+  imports: [RouterLink, RoomCarouselSlideComponent, HotelFooterComponent],
   templateUrl: './storefront-home.component.html',
   styleUrl: './storefront-home.component.scss',
   changeDetection: ChangeDetectionStrategy.OnPush,
@@ -63,6 +63,38 @@ export class StorefrontHomeComponent implements OnInit, OnDestroy {
   readonly hasSocial = computed(() => this.socialLinks().length > 0);
 
   readonly starDisplay = computed(() => '★'.repeat(this.storefront().stars));
+
+  readonly aboutTeaser = computed(() => {
+    const sf = this.storefront();
+    const text = sf.aboutStory[0] ?? sf.theme.about.description?.trim() ?? '';
+    if (!text) {
+      return '';
+    }
+    if (text.length <= 200) {
+      return text;
+    }
+    return `${text.slice(0, 197).trim()}…`;
+  });
+
+  readonly bannerHeadlineFont = computed(() =>
+    resolveSectionFont(this.storefront().theme.globalFont, this.storefront().theme.banner.headlineFont),
+  );
+
+  readonly bannerSubheadlineFont = computed(() =>
+    resolveSectionFont(this.storefront().theme.globalFont, this.storefront().theme.banner.subheadlineFont),
+  );
+
+  readonly roomsTitleFont = computed(() =>
+    resolveSectionFont(this.storefront().theme.globalFont, this.storefront().theme.rooms.titleFont),
+  );
+
+  readonly aboutTitleFont = computed(() =>
+    resolveSectionFont(this.storefront().theme.globalFont, this.storefront().theme.about.titleFont),
+  );
+
+  readonly aboutBodyFont = computed(() =>
+    resolveSectionFont(this.storefront().theme.globalFont, this.storefront().theme.about.bodyFont),
+  );
 
   ngOnInit(): void {
     const images = this.storefront().heroImages;

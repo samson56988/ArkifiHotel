@@ -174,9 +174,9 @@
           @if (activeTab() === 'about') {
             <ng-container formGroupName="about">
               <p class="section-intro">
-                The <strong>About us</strong> section appears on your home page and in the nav. Tell guests who you are, upload a photo, and pick a layout.
+                Your <strong>About us</strong> page lives at <strong>/about</strong> on your guest site. Customize the story, photo, layout, and stats — then use the preview or open your live storefront to check it.
               </p>
-              <label class="check"><input type="checkbox" formControlName="enabled" /> Show About us on home page &amp; nav</label>
+              <label class="check"><input type="checkbox" formControlName="enabled" /> Show About us in nav &amp; on <strong>/about</strong> page</label>
               <div class="field">
                 <label for="aboutEyebrow">Section eyebrow</label>
                 <input id="aboutEyebrow" class="input" type="text" formControlName="eyebrow" placeholder="About us" />
@@ -366,18 +366,37 @@
           @if (activeTab() === 'facilities') {
             <ng-container formGroupName="facilities">
               <label class="check"><input type="checkbox" formControlName="enabled" /> Show facilities in nav &amp; on <strong>/facilities</strong> page</label>
+
+              <h3 class="designer-subsection">Page hero</h3>
+              <p class="hint">Large banner at the top of your facilities page.</p>
               <div class="field">
-                <label for="facEyebrow">Page eyebrow</label>
+                <label for="facEyebrow">Hero eyebrow</label>
                 <input id="facEyebrow" class="input" type="text" formControlName="eyebrow" placeholder="On Property" />
               </div>
               <div class="field">
-                <label for="facTitle">Page title</label>
+                <label for="facTitle">Hero title</label>
                 <input id="facTitle" class="input" type="text" formControlName="title" />
               </div>
               <div class="field">
-                <label for="facSub">Page subtitle</label>
+                <label for="facSub">Hero subtitle</label>
                 <input id="facSub" class="input" type="text" formControlName="subtitle" />
               </div>
+
+              <h3 class="designer-subsection">Facilities grid</h3>
+              <p class="hint">Heading above the list of facility cards — use different copy from the hero to avoid repetition.</p>
+              <div class="field">
+                <label for="facGridEyebrow">Grid eyebrow</label>
+                <input id="facGridEyebrow" class="input" type="text" formControlName="gridEyebrow" placeholder="Browse amenities" />
+              </div>
+              <div class="field">
+                <label for="facGridTitle">Grid title</label>
+                <input id="facGridTitle" class="input" type="text" formControlName="gridTitle" placeholder="What's on offer" />
+              </div>
+              <div class="field">
+                <label for="facGridSub">Grid subtitle</label>
+                <input id="facGridSub" class="input" type="text" formControlName="gridSubtitle" placeholder="Tap any facility to view photos and details." />
+              </div>
+
               <div class="field-row">
                 <div class="field">
                   <label for="facTitleFont">Title font</label>

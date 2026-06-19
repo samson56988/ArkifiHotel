@@ -1,6 +1,7 @@
 using System.Text;
 using Admin.Infrastructure;
 using Admin.Infrastructure.Options;
+using Admin.Infrastructure.Seeding;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.IdentityModel.Tokens;
 using Shared.Services;
@@ -80,5 +81,11 @@ app.UseAuthentication();
 app.UseAuthorization();
 app.MapControllers();
 app.MapGet("/", () => Results.Ok(new { name = "ArkifiHub API", version = "1.0" }));
+
+using (var scope = app.Services.CreateScope())
+{
+    var seeder = scope.ServiceProvider.GetRequiredService<RestaurantMenuSeedService>();
+    await seeder.SeedMissingMenusAsync(webRoot);
+}
 
 app.Run();

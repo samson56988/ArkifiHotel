@@ -832,6 +832,324 @@ namespace Admin.Data.Migrations
                     b.ToTable("PropertyFacilityImages", (string)null);
                 });
 
+            modelBuilder.Entity("Admin.Data.Entities.RestaurantMenuCategory", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uuid");
+
+                    b.Property<Guid>("BusinessRegistrationId")
+                        .HasColumnType("uuid");
+
+                    b.Property<DateTimeOffset>("CreatedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<bool>("IsArchived")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("boolean")
+                        .HasDefaultValue(false);
+
+                    b.Property<string>("Name")
+                        .IsRequired()
+                        .HasMaxLength(200)
+                        .HasColumnType("character varying(200)");
+
+                    b.Property<int>("Section")
+                        .HasColumnType("integer");
+
+                    b.Property<int>("SortOrder")
+                        .HasColumnType("integer");
+
+                    b.Property<DateTimeOffset?>("UpdatedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("BusinessRegistrationId");
+
+                    b.HasIndex("BusinessRegistrationId", "Section", "Name");
+
+                    b.ToTable("RestaurantMenuCategories", (string)null);
+                });
+
+            modelBuilder.Entity("Admin.Data.Entities.RestaurantMenuItem", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uuid");
+
+                    b.Property<Guid>("CategoryId")
+                        .HasColumnType("uuid");
+
+                    b.Property<DateTimeOffset>("CreatedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<string>("Description")
+                        .HasMaxLength(2000)
+                        .HasColumnType("character varying(2000)");
+
+                    b.Property<string>("ImageOriginalFileName")
+                        .HasMaxLength(260)
+                        .HasColumnType("character varying(260)");
+
+                    b.Property<string>("ImageRelativePath")
+                        .HasMaxLength(500)
+                        .HasColumnType("character varying(500)");
+
+                    b.Property<bool>("IsArchived")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("boolean")
+                        .HasDefaultValue(false);
+
+                    b.Property<bool>("IsAvailable")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("boolean")
+                        .HasDefaultValue(true);
+
+                    b.Property<string>("Name")
+                        .IsRequired()
+                        .HasMaxLength(200)
+                        .HasColumnType("character varying(200)");
+
+                    b.Property<decimal>("Price")
+                        .HasPrecision(12, 2)
+                        .HasColumnType("numeric(12,2)");
+
+                    b.Property<int>("SortOrder")
+                        .HasColumnType("integer");
+
+                    b.Property<string>("TagsJson")
+                        .IsRequired()
+                        .HasMaxLength(1000)
+                        .HasColumnType("character varying(1000)");
+
+                    b.Property<DateTimeOffset?>("UpdatedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("CategoryId");
+
+                    b.ToTable("RestaurantMenuItems", (string)null);
+                });
+
+            modelBuilder.Entity("Admin.Data.Entities.RestaurantMenuSettings", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uuid");
+
+                    b.Property<Guid>("BusinessRegistrationId")
+                        .HasColumnType("uuid");
+
+                    b.Property<DateTimeOffset>("CreatedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<string>("DrinksSectionTitle")
+                        .IsRequired()
+                        .HasMaxLength(120)
+                        .HasColumnType("character varying(120)");
+
+                    b.Property<bool>("Enabled")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("boolean")
+                        .HasDefaultValue(false);
+
+                    b.Property<string>("HeroEyebrow")
+                        .IsRequired()
+                        .HasMaxLength(120)
+                        .HasColumnType("character varying(120)");
+
+                    b.Property<string>("HeroImageOriginalFileName")
+                        .HasMaxLength(260)
+                        .HasColumnType("character varying(260)");
+
+                    b.Property<string>("HeroImageRelativePath")
+                        .HasMaxLength(500)
+                        .HasColumnType("character varying(500)");
+
+                    b.Property<string>("HeroSubtitle")
+                        .IsRequired()
+                        .HasMaxLength(1000)
+                        .HasColumnType("character varying(1000)");
+
+                    b.Property<string>("HeroTitle")
+                        .IsRequired()
+                        .HasMaxLength(200)
+                        .HasColumnType("character varying(200)");
+
+                    b.Property<string>("MealsSectionTitle")
+                        .IsRequired()
+                        .HasMaxLength(120)
+                        .HasColumnType("character varying(120)");
+
+                    b.Property<string>("NavLabel")
+                        .IsRequired()
+                        .HasMaxLength(120)
+                        .HasColumnType("character varying(120)");
+
+                    b.Property<DateTimeOffset?>("UpdatedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("BusinessRegistrationId")
+                        .IsUnique();
+
+                    b.ToTable("RestaurantMenuSettings", (string)null);
+                });
+
+            modelBuilder.Entity("Admin.Data.Entities.RestaurantOrder", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uuid");
+
+                    b.Property<Guid>("BusinessRegistrationId")
+                        .HasColumnType("uuid");
+
+                    b.Property<DateTimeOffset>("CreatedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<string>("Currency")
+                        .IsRequired()
+                        .HasMaxLength(8)
+                        .HasColumnType("character varying(8)");
+
+                    b.Property<string>("GuestPhone")
+                        .IsRequired()
+                        .HasMaxLength(40)
+                        .HasColumnType("character varying(40)");
+
+                    b.Property<int>("GuestType")
+                        .HasColumnType("integer");
+
+                    b.Property<Guid?>("LocationId")
+                        .HasColumnType("uuid");
+
+                    b.Property<string>("OrderNumber")
+                        .IsRequired()
+                        .HasMaxLength(32)
+                        .HasColumnType("character varying(32)");
+
+                    b.Property<string>("RoomNumber")
+                        .HasMaxLength(40)
+                        .HasColumnType("character varying(40)");
+
+                    b.Property<int>("Status")
+                        .HasColumnType("integer");
+
+                    b.Property<decimal>("TotalAmount")
+                        .HasPrecision(12, 2)
+                        .HasColumnType("numeric(12,2)");
+
+                    b.Property<DateTimeOffset?>("UpdatedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("BusinessRegistrationId");
+
+                    b.HasIndex("CreatedAt");
+
+                    b.HasIndex("LocationId");
+
+                    b.HasIndex("BusinessRegistrationId", "OrderNumber")
+                        .IsUnique();
+
+                    b.ToTable("RestaurantOrders", (string)null);
+                });
+
+            modelBuilder.Entity("Admin.Data.Entities.RestaurantOrderLine", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uuid");
+
+                    b.Property<string>("ItemName")
+                        .IsRequired()
+                        .HasMaxLength(200)
+                        .HasColumnType("character varying(200)");
+
+                    b.Property<decimal>("LineTotal")
+                        .HasPrecision(12, 2)
+                        .HasColumnType("numeric(12,2)");
+
+                    b.Property<Guid>("MenuItemId")
+                        .HasColumnType("uuid");
+
+                    b.Property<int>("Quantity")
+                        .HasColumnType("integer");
+
+                    b.Property<Guid>("RestaurantOrderId")
+                        .HasColumnType("uuid");
+
+                    b.Property<decimal>("UnitPrice")
+                        .HasPrecision(12, 2)
+                        .HasColumnType("numeric(12,2)");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("RestaurantOrderId");
+
+                    b.ToTable("RestaurantOrderLines", (string)null);
+                });
+
+            modelBuilder.Entity("Admin.Data.Entities.RestaurantOrderPayment", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uuid");
+
+                    b.Property<decimal>("Amount")
+                        .HasPrecision(12, 2)
+                        .HasColumnType("numeric(12,2)");
+
+                    b.Property<Guid>("BusinessRegistrationId")
+                        .HasColumnType("uuid");
+
+                    b.Property<DateTimeOffset>("CreatedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<string>("Currency")
+                        .IsRequired()
+                        .HasMaxLength(8)
+                        .HasColumnType("character varying(8)");
+
+                    b.Property<string>("ExternalReference")
+                        .HasMaxLength(120)
+                        .HasColumnType("character varying(120)");
+
+                    b.Property<int>("Gateway")
+                        .HasColumnType("integer");
+
+                    b.Property<int>("Method")
+                        .HasColumnType("integer");
+
+                    b.Property<string>("Notes")
+                        .HasMaxLength(500)
+                        .HasColumnType("character varying(500)");
+
+                    b.Property<Guid>("RestaurantOrderId")
+                        .HasColumnType("uuid");
+
+                    b.Property<int>("Status")
+                        .HasColumnType("integer");
+
+                    b.Property<DateTimeOffset?>("UpdatedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("BusinessRegistrationId");
+
+                    b.HasIndex("ExternalReference");
+
+                    b.HasIndex("RestaurantOrderId");
+
+                    b.ToTable("RestaurantOrderPayments", (string)null);
+                });
+
             modelBuilder.Entity("Admin.Data.Entities.Room", b =>
                 {
                     b.Property<Guid>("Id")
@@ -1159,6 +1477,87 @@ namespace Admin.Data.Migrations
                     b.Navigation("PropertyFacility");
                 });
 
+            modelBuilder.Entity("Admin.Data.Entities.RestaurantMenuCategory", b =>
+                {
+                    b.HasOne("Admin.Data.Entities.BusinessRegistration", "BusinessRegistration")
+                        .WithMany()
+                        .HasForeignKey("BusinessRegistrationId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("BusinessRegistration");
+                });
+
+            modelBuilder.Entity("Admin.Data.Entities.RestaurantMenuItem", b =>
+                {
+                    b.HasOne("Admin.Data.Entities.RestaurantMenuCategory", "Category")
+                        .WithMany("Items")
+                        .HasForeignKey("CategoryId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("Category");
+                });
+
+            modelBuilder.Entity("Admin.Data.Entities.RestaurantMenuSettings", b =>
+                {
+                    b.HasOne("Admin.Data.Entities.BusinessRegistration", "BusinessRegistration")
+                        .WithMany()
+                        .HasForeignKey("BusinessRegistrationId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("BusinessRegistration");
+                });
+
+            modelBuilder.Entity("Admin.Data.Entities.RestaurantOrder", b =>
+                {
+                    b.HasOne("Admin.Data.Entities.BusinessRegistration", "BusinessRegistration")
+                        .WithMany()
+                        .HasForeignKey("BusinessRegistrationId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.HasOne("Admin.Data.Entities.BusinessLocation", "Location")
+                        .WithMany()
+                        .HasForeignKey("LocationId")
+                        .OnDelete(DeleteBehavior.SetNull);
+
+                    b.Navigation("BusinessRegistration");
+
+                    b.Navigation("Location");
+                });
+
+            modelBuilder.Entity("Admin.Data.Entities.RestaurantOrderLine", b =>
+                {
+                    b.HasOne("Admin.Data.Entities.RestaurantOrder", "RestaurantOrder")
+                        .WithMany("Lines")
+                        .HasForeignKey("RestaurantOrderId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("RestaurantOrder");
+                });
+
+            modelBuilder.Entity("Admin.Data.Entities.RestaurantOrderPayment", b =>
+                {
+                    b.HasOne("Admin.Data.Entities.BusinessRegistration", "BusinessRegistration")
+                        .WithMany()
+                        .HasForeignKey("BusinessRegistrationId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.HasOne("Admin.Data.Entities.RestaurantOrder", "RestaurantOrder")
+                        .WithMany("Payments")
+                        .HasForeignKey("RestaurantOrderId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("BusinessRegistration");
+
+                    b.Navigation("RestaurantOrder");
+                });
+
             modelBuilder.Entity("Admin.Data.Entities.Room", b =>
                 {
                     b.HasOne("Admin.Data.Entities.BusinessRegistration", "BusinessRegistration")
@@ -1251,6 +1650,18 @@ namespace Admin.Data.Migrations
             modelBuilder.Entity("Admin.Data.Entities.PropertyFacility", b =>
                 {
                     b.Navigation("Images");
+                });
+
+            modelBuilder.Entity("Admin.Data.Entities.RestaurantMenuCategory", b =>
+                {
+                    b.Navigation("Items");
+                });
+
+            modelBuilder.Entity("Admin.Data.Entities.RestaurantOrder", b =>
+                {
+                    b.Navigation("Lines");
+
+                    b.Navigation("Payments");
                 });
 
             modelBuilder.Entity("Admin.Data.Entities.Room", b =>

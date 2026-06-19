@@ -39,6 +39,25 @@ export const routes: Routes = [
               ),
           },
           {
+            path: 'about',
+            loadComponent: () =>
+              import('./pages/storefront/storefront-about.component').then((m) => m.StorefrontAboutComponent),
+          },
+          {
+            path: 'restaurant',
+            loadComponent: () =>
+              import('./pages/storefront/storefront-restaurant.component').then(
+                (m) => m.StorefrontRestaurantComponent,
+              ),
+          },
+          {
+            path: 'restaurant/payment/verify',
+            loadComponent: () =>
+              import('./pages/storefront/restaurant-order-payment-verify.component').then(
+                (m) => m.RestaurantOrderPaymentVerifyComponent,
+              ),
+          },
+          {
             path: 'booking/payment/verify',
             loadComponent: () =>
               import('./pages/storefront/booking-payment-verify.component').then(

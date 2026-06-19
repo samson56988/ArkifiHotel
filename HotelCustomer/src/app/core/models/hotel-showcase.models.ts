@@ -1,4 +1,5 @@
 import type { PublicStorefront, PublicStorefrontFacility, PublicStorefrontRoom } from './storefront-theme.models';
+import type { ShowcaseRestaurant } from './restaurant.models';
 
 export interface ShowcaseRoom extends PublicStorefrontRoom {
   roomType: string;
@@ -33,7 +34,7 @@ export interface ShowcaseLocation {
   address: string | null;
 }
 
-export interface HotelShowcase extends Omit<PublicStorefront, 'rooms' | 'facilities'> {
+export interface HotelShowcase extends Omit<PublicStorefront, 'rooms' | 'facilities' | 'restaurant'> {
   location: string;
   category: string;
   stars: number;
@@ -52,4 +53,6 @@ export interface HotelShowcase extends Omit<PublicStorefront, 'rooms' | 'facilit
   branchName: string | null;
   rooms: ShowcaseRoom[];
   facilities: ShowcaseFacility[];
+  /** Optional in-house restaurant & menu (mock until API ships). */
+  restaurant: ShowcaseRestaurant | null;
 }

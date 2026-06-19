@@ -1,0 +1,28 @@
+@if (ctx.storefront(); as sf) {
+  @if (sf.theme.about.enabled) {
+    <header
+      class="page-hero"
+      [class.page-hero--photo]="!!heroImage()"
+      [style.background-image]="heroImage() ? 'url(' + heroImage() + ')' : null"
+    >
+      <div class="page-hero__inner">
+        <a [routerLink]="ctx.path()" class="back-link">← Back to home</a>
+        <div class="sec-eyebrow sec-eyebrow--light">{{ sf.theme.about.eyebrow }}</div>
+        <h1 class="page-hero__title" [style.font-family]="pageTitleFont()">{{ sf.theme.about.title }}</h1>
+        @if (sf.branchName) {
+          <p class="page-hero__sub">{{ sf.branchName }}</p>
+        }
+      </div>
+    </header>
+
+    <app-about-section [storefront]="sf" [fullPage]="true" />
+
+    <app-hotel-footer [storefront]="sf" />
+  } @else {
+    <section class="about-unavailable section-wrap">
+      <a [routerLink]="ctx.path()" class="back-link back-link--dark">← Back to home</a>
+      <h1 class="sec-title">About us</h1>
+      <p class="sec-sub">This hotel has not published an About us page yet.</p>
+    </section>
+  }
+}

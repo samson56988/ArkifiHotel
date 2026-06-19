@@ -11,9 +11,14 @@
     <li>
       <a [routerLink]="ctx.path('facilities')" routerLinkActive="active">Facilities</a>
     </li>
+    @if (sf.restaurant?.enabled) {
+      <li>
+        <a [routerLink]="ctx.path('restaurant')" routerLinkActive="active">{{ sf.restaurant!.navLabel }}</a>
+      </li>
+    }
     @if (sf.theme.about.enabled) {
       <li>
-        <a [routerLink]="ctx.path()" fragment="about">About us</a>
+        <a [routerLink]="ctx.path('about')" routerLinkActive="active">About us</a>
       </li>
     }
     <li>

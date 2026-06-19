@@ -1,0 +1,127 @@
+<app-business-workspace>
+  <header class="page-head">
+    <div>
+      <p class="eyebrow">Storefront</p>
+      <h1>Restaurant orders</h1>
+      <p class="lead">Guest food and drink orders — dining in or delivered to their room.</p>
+    </div>
+    <div class="page-head__actions">
+      <a routerLink="/restaurant-menu" class="btn btn--ghost">Manage menu</a>
+    </div>
+  </header>
+
+  <section class="filters panel">
+    <h2>Filters</h2>
+    <div class="filters__grid">
+      <div class="field">
+        <label for="statusFilter">Status</label>
+        <select id="statusFilter" class="input" [ngModel]="statusFilter()" (ngModelChange)="statusFilter.set($event)">
+          <option value="">All statuses</option>
+          @for (s of statusOptions; track s) {
+            <option [value]="s">{{ s }}</option>
+          }
+        </select>
+      </div>
+    </div>
+    <div class="filters__actions">
+      <button type="button" class="btn btn--primary" (click)="applyStatusFilter()" [disabled]="loading()">Apply</button>
+      <button type="button" class="btn btn--ghost" (click)="resetFilters()" [disabled]="loading()">Reset</button>
+    </div>
+  </section>
+
+  @if (loading()) {
+    <p class="muted">Loading orders…</p>
+  } @else if (loadFailed()) {
+    <p class="muted">We could not load your orders.</p>
+    <button type="button" class="btn btn--ghost" (click)="load()">Try again</button>
+  } @else if (initialLoadDone() && orders().length === 0) {
+    <p class="muted">No restaurant orders yet. They will appear here when guests place and pay for menu items.</p>
+  } @else if (initialLoadDone()) {
+    <div class="list-meta">
+      <p class="muted">{{ pageRangeLabel() }} · newest first</p>
+    </div>
+
+    <div class="table-wrap">
+      <table>
+        <thead>
+          <tr>
+            <th>Order</th>
+            <th>Guest</th>
+            <th>Phone</th>
+            <th>Items</th>
+            <th>Total</th>
+            <th>Status</th>
+            <th>Date</th>
+            <th></th>
+          </tr>
+        </thead>
+        <tbody>
+          @for (o of orders(); track o.id) {
+            <tr>
+              <td><strong>{{ o.orderNumber }}</strong></td>
+              <td>
+                {{ guestTypeLabel(o.guestType) }}
+                @if (o.roomNumber) {
+                  <span class="room-tag">Room {{ o.roomNumber }}</span>
+                }
+              </td>
+              <td>{{ o.guestPhone }}</td>
+              <td>{{ o.itemCount }}</td>
+              <td>{{ formatPrice(o.totalAmount, o.currency) }}</td>
+              <td><span class="status-pill status-pill--{{ o.status.toLowerCase() }}">{{ o.status }}</span></td>
+              <td>{{ o.createdAt | date: 'medium' }}</td>
+              <td><button type="button" class="link" (click)="openDetail(o.id)">View</button></td>
+            </tr>
+          }
+        </tbody>
+      </table>
+    </div>
+
+    @if (totalPages() > 1) {
+      <div class="pager">
+        <button type="button" class="btn btn--ghost btn--sm" (click)="goToPage(page() - 1)" [disabled]="page() <= 1">Previous</button>
+        <span class="muted">Page {{ page() }} of {{ totalPages() }}</span>
+        <button type="button" class="btn btn--ghost btn--sm" (click)="goToPage(page() + 1)" [disabled]="page() >= totalPages()">Next</button>
+      </div>
+    }
+  }
+
+  @if (selectedOrderId(); as orderId) {
+    <div class="detail-backdrop" (click)="closeDetail()" role="presentation"></div>
+    <aside class="detail-panel" aria-labelledby="order-detail-title">
+      <header class="detail-panel__head">
+        <h2 id="order-detail-title">Order details</h2>
+        <button type="button" class="btn btn--ghost btn--sm" (click)="closeDetail()">Close</button>
+      </header>
+
+      @if (detailLoading()) {
+        <p class="muted">Loading…</p>
+      } @else if (detail(); as d) {
+        <dl class="detail-grid">
+          <div><dt>Order #</dt><dd>{{ d.orderNumber }}</dd></div>
+          <div><dt>Status</dt><dd>{{ d.status }}</dd></div>
+          <div><dt>Guest type</dt><dd>{{ guestTypeLabel(d.guestType) }}</dd></div>
+          @if (d.roomNumber) {
+            <div><dt>Room</dt><dd>{{ d.roomNumber }}</dd></div>
+          }
+          <div><dt>Phone</dt><dd>{{ d.guestPhone }}</dd></div>
+          @if (d.locationName) {
+            <div><dt>Branch</dt><dd>{{ d.locationName }}</dd></div>
+          }
+          <div><dt>Placed</dt><dd>{{ d.createdAt | date: 'medium' }}</dd></div>
+        </dl>
+
+        <h3>Items</h3>
+        <ul class="lines-list">
+          @for (line of d.lines; track line.itemName) {
+            <li>
+              <span>{{ line.quantity }}× {{ line.itemName }}</span>
+              <span>{{ formatPrice(line.lineTotal, d.currency) }}</span>
+            </li>
+          }
+        </ul>
+        <p class="detail-total"><strong>Total:</strong> {{ formatPrice(d.totalAmount, d.currency) }}</p>
+      }
+    </aside>
+  }
+</app-business-workspace>

@@ -104,7 +104,43 @@ public sealed class PublicStorefrontController : ControllerBase
                     LocationName = f.LocationName,
                 })
                 .ToList(),
+            Restaurant = dto.Restaurant is null
+                ? null
+                : new PublicStorefrontRestaurantDto
+                {
+                    Enabled = dto.Restaurant.Enabled,
+                    NavLabel = dto.Restaurant.NavLabel,
+                    HeroEyebrow = dto.Restaurant.HeroEyebrow,
+                    HeroTitle = dto.Restaurant.HeroTitle,
+                    HeroSubtitle = dto.Restaurant.HeroSubtitle,
+                    MealsSectionTitle = dto.Restaurant.MealsSectionTitle,
+                    DrinksSectionTitle = dto.Restaurant.DrinksSectionTitle,
+                    HeroImageUrl = ToAbsoluteUrl(dto.Restaurant.HeroImageUrl),
+                    FoodCategories = MapMenuCategories(dto.Restaurant.FoodCategories),
+                    DrinkCategories = MapMenuCategories(dto.Restaurant.DrinkCategories),
+                },
         };
+
+    private IReadOnlyList<PublicStorefrontMenuCategoryDto> MapMenuCategories(
+        IReadOnlyList<PublicStorefrontMenuCategoryDto> categories) =>
+        categories
+            .Select(c => new PublicStorefrontMenuCategoryDto
+            {
+                Id = c.Id,
+                Name = c.Name,
+                Items = c.Items
+                    .Select(i => new PublicStorefrontMenuItemDto
+                    {
+                        Id = i.Id,
+                        Name = i.Name,
+                        Description = i.Description,
+                        Price = i.Price,
+                        Tags = i.Tags,
+                        ImageUrl = ToAbsoluteUrl(i.ImageUrl),
+                    })
+                    .ToList(),
+            })
+            .ToList();
 
     private string? ToAbsoluteUrl(string? urlOrPath)
     {

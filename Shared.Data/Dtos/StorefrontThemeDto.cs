@@ -122,6 +122,15 @@ public sealed class StorefrontFacilitiesSectionDto
 
     public string Subtitle { get; set; } = "Everything you need for a memorable stay.";
 
+    /// <summary>Eyebrow above the facilities grid (below the page hero).</summary>
+    public string GridEyebrow { get; set; } = "Browse amenities";
+
+    /// <summary>Heading above the facilities grid.</summary>
+    public string GridTitle { get; set; } = "What's on offer";
+
+    /// <summary>Subtitle above the facilities grid.</summary>
+    public string GridSubtitle { get; set; } = "Tap any facility to view photos and details.";
+
     public string TitleFont { get; set; } = "display";
 
     public string DisplayStyle { get; set; } = "grid";
@@ -248,4 +257,6 @@ public sealed class PublicStorefrontDto
 
     /// <summary>Dedicated “Who we are” section photo (not used in hero banner).</summary>
     public string? AboutImageUrl { get; set; }
+
+    public PublicStorefrontRestaurantDto? Restaurant { get; set; }
 }

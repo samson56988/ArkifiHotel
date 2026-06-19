@@ -1,0 +1,15 @@
+@import './booking-payment-verify.component.scss';
+
+.verify-lines {
+  list-style: none;
+  margin: 0 0 1rem;
+  padding: 0;
+  text-align: left;
+  font-size: 0.86rem;
+  color: var(--text-mid);
+}
+
+.verify-lines li {
+  padding: 0.35rem 0;
+  border-bottom: 1px solid var(--border);
+}

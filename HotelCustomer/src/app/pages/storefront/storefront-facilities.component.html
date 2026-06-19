@@ -12,16 +12,18 @@
     <div class="page-hero__inner">
       <a [routerLink]="ctx.path()" class="back-link">← Back to home</a>
       <div class="sec-eyebrow sec-eyebrow--light">{{ sf.theme.facilities.eyebrow }}</div>
-      <h1 class="page-hero__title">{{ sf.theme.facilities.title }}</h1>
+      <h1 class="page-hero__title" [style.font-family]="pageTitleFont()">{{ sf.theme.facilities.title }}</h1>
       <p class="page-hero__sub">{{ sf.theme.facilities.subtitle }}</p>
     </div>
   </header>
 
   <section class="section-wrap">
     <div class="section-header">
-      <div class="sec-eyebrow">On property</div>
-      <h2 class="sec-title">Facilities &amp; amenities</h2>
-      <p class="sec-sub">Tap any facility to view photos and details.</p>
+      <div class="sec-eyebrow">{{ sf.theme.facilities.gridEyebrow }}</div>
+      <h2 class="sec-title" [style.font-family]="pageTitleFont()">{{ sf.theme.facilities.gridTitle }}</h2>
+      @if (sf.theme.facilities.gridSubtitle) {
+        <p class="sec-sub">{{ sf.theme.facilities.gridSubtitle }}</p>
+      }
     </div>
 
     @if (allFacilities().length > 0) {

@@ -117,9 +117,11 @@
 
       <section class="section-wrap">
         <div class="section-header">
-          <div class="sec-eyebrow">On property</div>
-          <h2 class="sec-title">Facilities &amp; amenities</h2>
-          <p class="sec-sub">Tap any facility to view photos.</p>
+          <div class="sec-eyebrow">{{ sf.theme.facilities.gridEyebrow }}</div>
+          <h2 class="sec-title">{{ sf.theme.facilities.gridTitle }}</h2>
+          @if (sf.theme.facilities.gridSubtitle) {
+            <p class="sec-sub">{{ sf.theme.facilities.gridSubtitle }}</p>
+          }
         </div>
         @if (sf.facilities.length > 0) {
           <div class="preview-facility-grid">

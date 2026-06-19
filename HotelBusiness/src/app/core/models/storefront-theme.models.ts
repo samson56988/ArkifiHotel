@@ -90,6 +90,9 @@ export interface StorefrontFacilitiesSection {
   eyebrow: string;
   title: string;
   subtitle: string;
+  gridEyebrow: string;
+  gridTitle: string;
+  gridSubtitle: string;
   titleFont: SectionFontRole;
   displayStyle: FacilityDisplayStyleId;
   showPageStats: boolean;
@@ -234,6 +237,9 @@ export function createDefaultTheme(businessName: string): StorefrontTheme {
       eyebrow: 'On Property',
       title: 'Facilities & amenities',
       subtitle: 'Relax, recharge, and enjoy our property.',
+      gridEyebrow: 'Browse amenities',
+      gridTitle: "What's on offer",
+      gridSubtitle: 'Tap any facility to view photos and details.',
       titleFont: 'display',
       displayStyle: 'grid',
       showPageStats: true,

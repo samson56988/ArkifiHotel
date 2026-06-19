@@ -11,6 +11,7 @@ import type { HotelShowcase } from '../../core/models/hotel-showcase.models';
 })
 export class AboutSectionComponent {
   readonly storefront = input.required<HotelShowcase>();
+  readonly fullPage = input(false);
 
   readonly layout = computed(() => this.storefront().theme.about.layout);
 

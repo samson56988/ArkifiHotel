@@ -1,5 +1,6 @@
 using Admin.Data;
 using Admin.Infrastructure.Options;
+using Admin.Infrastructure.Seeding;
 using Admin.Infrastructure.Payments;
 using Admin.Infrastructure.Services;
 using Admin.Services.Abstractions;
@@ -59,6 +60,11 @@ public static class DependencyInjection
         services.AddScoped<IBusinessLocationService, BusinessLocationService>();
         services.AddScoped<IBusinessRoomService, BusinessRoomService>();
         services.AddScoped<IBusinessPropertyFacilityService, BusinessPropertyFacilityService>();
+        services.AddScoped<IBusinessRestaurantMenuService, BusinessRestaurantMenuService>();
+        services.AddScoped<IPublicRestaurantOrderService, PublicRestaurantOrderService>();
+        services.AddScoped<IBusinessRestaurantOrderService, BusinessRestaurantOrderService>();
+        services.AddScoped<RestaurantMenuSeedService>();
+        services.AddHttpClient(nameof(RestaurantMenuSeedService));
         services.AddScoped<IBusinessBookingService, BusinessBookingService>();
         services.AddScoped<IPublicBookingLookupService, PublicBookingLookupService>();
         services.AddScoped<IPublicGuestBookingService, PublicGuestBookingService>();

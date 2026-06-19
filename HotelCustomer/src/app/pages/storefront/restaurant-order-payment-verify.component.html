@@ -1,0 +1,73 @@
+<div class="verify-page" [style]="themeStyle()">
+  <div class="verify-card">
+    @if (loading()) {
+      <div class="verify-state verify-state--loading">
+        <div class="verify-spinner" aria-hidden="true"></div>
+        <h1>Verifying payment…</h1>
+        <p>Please wait while we confirm your order with the payment provider.</p>
+      </div>
+    } @else if (result(); as r) {
+      @if (r.paymentSuccessful && r.order) {
+        <div class="verify-state verify-state--success">
+          <span class="verify-icon" aria-hidden="true">✓</span>
+          <h1>Order confirmed</h1>
+          <p class="verify-lead">{{ r.message ?? 'Your payment was successful.' }}</p>
+
+          <dl class="verify-details">
+            <div>
+              <dt>Order number</dt>
+              <dd class="verify-code">{{ r.order.orderNumber }}</dd>
+            </div>
+            <div>
+              <dt>Property</dt>
+              <dd>{{ r.order.propertyName }}</dd>
+            </div>
+            <div>
+              <dt>Guest type</dt>
+              <dd>{{ guestTypeLabel(r.order.guestType) }}</dd>
+            </div>
+            @if (r.order.roomNumber) {
+              <div>
+                <dt>Room</dt>
+                <dd>{{ r.order.roomNumber }}</dd>
+              </div>
+            }
+            <div>
+              <dt>Phone</dt>
+              <dd>{{ r.order.guestPhone }}</dd>
+            </div>
+            <div>
+              <dt>Total paid</dt>
+              <dd>{{ formatPrice(r.order.totalAmount, r.order.currency) }}</dd>
+            </div>
+          </dl>
+
+          @if (r.order.lines.length) {
+            <ul class="verify-lines">
+              @for (line of r.order.lines; track line.itemName) {
+                <li>{{ line.quantity }}× {{ line.itemName }} — {{ formatPrice(line.lineTotal, r.order!.currency) }}</li>
+              }
+            </ul>
+          }
+
+          <p class="verify-note">Your order has been sent to the kitchen. Keep your order number for reference.</p>
+          <a [routerLink]="ctx.path('restaurant')" class="verify-btn">Back to menu</a>
+        </div>
+      } @else {
+        <div class="verify-state verify-state--failed">
+          <span class="verify-icon verify-icon--fail" aria-hidden="true">✕</span>
+          <h1>Payment not completed</h1>
+          <p class="verify-lead">{{ r.message ?? 'We could not confirm your payment.' }}</p>
+          <a [routerLink]="ctx.path('restaurant')" class="verify-btn verify-btn--outline">Return to menu</a>
+        </div>
+      }
+    } @else {
+      <div class="verify-state verify-state--failed">
+        <span class="verify-icon verify-icon--fail" aria-hidden="true">!</span>
+        <h1>Verification issue</h1>
+        <p class="verify-lead">{{ errorMessage() ?? 'Something went wrong.' }}</p>
+        <a [routerLink]="ctx.path('restaurant')" class="verify-btn verify-btn--outline">Return to menu</a>
+      </div>
+    }
+  </div>
+</div>

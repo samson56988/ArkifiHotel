@@ -84,6 +84,18 @@ export const routes: Routes = [
       import('./pages/facilities/facility-form.component').then((m) => m.FacilityFormComponent),
   },
   {
+    path: 'restaurant-menu',
+    loadComponent: () =>
+      import('./pages/restaurant-menu/restaurant-menu.component').then((m) => m.RestaurantMenuComponent),
+  },
+  {
+    path: 'restaurant-orders',
+    loadComponent: () =>
+      import('./pages/restaurant-orders/restaurant-orders-list.component').then(
+        (m) => m.RestaurantOrdersListComponent,
+      ),
+  },
+  {
     path: 'bookings/new',
     loadComponent: () =>
       import('./pages/bookings/booking-form.component').then((m) => m.BookingFormComponent),

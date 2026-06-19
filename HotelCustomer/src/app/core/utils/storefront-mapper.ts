@@ -1,4 +1,6 @@
 import type { PublicStorefront, PublicStorefrontFacility, PublicStorefrontRoom } from '../models/storefront-theme.models';
+import type { PublicStorefrontRestaurant } from '../models/public-restaurant.models';
+import type { ShowcaseRestaurant } from '../models/restaurant.models';
 import type { HotelShowcase, ShowcaseFacility, ShowcaseRoom, ShowcaseLocation, ShowcaseSocialLink } from '../models/hotel-showcase.models';
 import { facilityEmoji } from './hotel-theme';
 
@@ -14,6 +16,9 @@ export function mapPublicToShowcase(dto: PublicStorefront): HotelShowcase {
     introText:
       'Questions about your stay? Send us a message and our team will respond within a few hours.',
   };
+  const defaultAboutDescription =
+    'We are a hospitality team dedicated to memorable stays. From check-in to checkout, every detail is crafted for comfort and ease.';
+  const aboutDescription = dto.theme.about.description?.trim() || defaultAboutDescription;
 
   return {
     businessId: dto.businessId,
@@ -29,7 +34,10 @@ export function mapPublicToShowcase(dto: PublicStorefront): HotelShowcase {
       contact,
       about: {
         ...dto.theme.about,
+        enabled: dto.theme.about.enabled ?? true,
         eyebrow: dto.theme.about.eyebrow || 'About us',
+        title: dto.theme.about.title || 'Our story',
+        description: aboutDescription,
         quote: dto.theme.about.quote ?? '',
         quoteBy: dto.theme.about.quoteBy ?? '',
         showStats: dto.theme.about.showStats ?? false,
@@ -53,6 +61,10 @@ export function mapPublicToShowcase(dto: PublicStorefront): HotelShowcase {
       facilities: {
         ...dto.theme.facilities,
         eyebrow: dto.theme.facilities.eyebrow || 'On Property',
+        gridEyebrow: dto.theme.facilities.gridEyebrow || 'Browse amenities',
+        gridTitle: dto.theme.facilities.gridTitle || "What's on offer",
+        gridSubtitle:
+          dto.theme.facilities.gridSubtitle || 'Tap any facility to view photos and details.',
         showPageStats: dto.theme.facilities.showPageStats ?? true,
         supportStatValue: dto.theme.facilities.supportStatValue || '24/7',
         supportStatLabel: dto.theme.facilities.supportStatLabel || 'Guest support',
@@ -75,7 +87,7 @@ export function mapPublicToShowcase(dto: PublicStorefront): HotelShowcase {
     aboutImageUrl: dto.aboutImageUrl,
     aboutQuote: dto.theme.about.quote ?? '',
     aboutQuoteBy: dto.theme.about.quoteBy ?? '',
-    aboutStory: splitAboutParagraphs(dto.theme.about.description),
+    aboutStory: splitAboutParagraphs(aboutDescription),
     aboutStats: dto.theme.about.stats ?? [],
     social: dto.social,
     socialLinks: buildSocialLinks(dto),
@@ -85,6 +97,48 @@ export function mapPublicToShowcase(dto: PublicStorefront): HotelShowcase {
     branchName: activeBranchName(dto),
     rooms: dto.rooms.map(mapRoom),
     facilities: dto.facilities.map(mapFacility),
+    restaurant: mapRestaurant(dto.restaurant),
+  };
+}
+
+function mapRestaurant(dto: PublicStorefrontRestaurant | null | undefined): ShowcaseRestaurant | null {
+  if (!dto?.enabled) {
+    return null;
+  }
+
+  return {
+    enabled: true,
+    navLabel: dto.navLabel || 'Restaurant & menu',
+    heroEyebrow: dto.heroEyebrow,
+    heroTitle: dto.heroTitle,
+    heroSubtitle: dto.heroSubtitle,
+    heroImageUrl: dto.heroImageUrl,
+    mealsSectionTitle: dto.mealsSectionTitle || 'Meals',
+    drinksSectionTitle: dto.drinksSectionTitle || 'Drinks',
+    foodCategories: (dto.foodCategories ?? []).map((c) => ({
+      id: c.id,
+      name: c.name,
+      items: (c.items ?? []).map((i) => ({
+        id: i.id,
+        name: i.name,
+        description: i.description,
+        price: i.price,
+        tags: i.tags ?? [],
+        imageUrl: i.imageUrl,
+      })),
+    })),
+    drinkCategories: (dto.drinkCategories ?? []).map((c) => ({
+      id: c.id,
+      name: c.name,
+      items: (c.items ?? []).map((i) => ({
+        id: i.id,
+        name: i.name,
+        description: i.description,
+        price: i.price,
+        tags: i.tags ?? [],
+        imageUrl: i.imageUrl,
+      })),
+    })),
   };
 }
 

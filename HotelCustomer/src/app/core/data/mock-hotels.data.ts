@@ -1,5 +1,6 @@
 import { createDefaultTheme } from '../models/storefront-theme.models';
 import type { HotelShowcase } from '../models/hotel-showcase.models';
+import { LEKKI_RESTAURANT_MENU } from './mock-restaurant-menu.data';
 
 const IMG = {
   hero1: 'https://images.unsplash.com/photo-1571896349842-33c89424de2d?w=1600&q=80',
@@ -350,6 +351,7 @@ export const MOCK_HOTELS: Record<string, HotelShowcase> = {
         locationName: null,
       },
     ],
+    restaurant: LEKKI_RESTAURANT_MENU,
   },
 
   'heritage-abuja': {
@@ -540,6 +542,7 @@ export const MOCK_HOTELS: Record<string, HotelShowcase> = {
         locationName: null,
       },
     ],
+    restaurant: null,
   },
 };
 
@@ -563,6 +566,7 @@ export function getMockHotel(slug: string, locationRouteId?: string | null): Hot
       facilities: [],
       heroImages: [],
       galleryImages: [],
+      restaurant: null,
     };
   }
 

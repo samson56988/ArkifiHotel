@@ -1,4 +1,5 @@
 import type { ApiResult } from './api-result.model';
+import type { PublicStorefrontRestaurant } from './public-restaurant.models';
 
 export type GlobalFontId =
   | 'modern-sans'
@@ -89,6 +90,9 @@ export interface StorefrontFacilitiesSection {
   eyebrow: string;
   title: string;
   subtitle: string;
+  gridEyebrow: string;
+  gridTitle: string;
+  gridSubtitle: string;
   titleFont: SectionFontRole;
   displayStyle: FacilityDisplayStyleId;
   showPageStats: boolean;
@@ -192,6 +196,7 @@ export interface PublicStorefront {
   social: BusinessSocialProfileDto;
   heroImages: string[];
   aboutImageUrl: string | null;
+  restaurant?: PublicStorefrontRestaurant | null;
 }
 
 export type StorefrontThemeApiResponse = ApiResult<StorefrontTheme>;
@@ -250,6 +255,9 @@ export function createDefaultTheme(businessName: string): StorefrontTheme {
       eyebrow: 'On Property',
       title: 'Facilities & amenities',
       subtitle: 'Relax, recharge, and enjoy our property.',
+      gridEyebrow: 'Browse amenities',
+      gridTitle: "What's on offer",
+      gridSubtitle: 'Tap any facility to view photos and details.',
       titleFont: 'display',
       displayStyle: 'grid',
       showPageStats: true,

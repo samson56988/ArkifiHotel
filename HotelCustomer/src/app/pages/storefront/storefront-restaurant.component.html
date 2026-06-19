@@ -1,0 +1,199 @@
+@if (ctx.storefront(); as sf) {
+  @if (restaurant(); as menu) {
+    @if (menu.enabled) {
+      <header
+        class="page-hero"
+        [class.page-hero--photo]="!!menu.heroImageUrl"
+        [style.background-image]="menu.heroImageUrl ? 'url(' + menu.heroImageUrl + ')' : null"
+      >
+        <div class="page-hero__inner">
+          <a [routerLink]="ctx.path()" class="back-link">← Back to home</a>
+          <div class="sec-eyebrow sec-eyebrow--light">{{ menu.heroEyebrow }}</div>
+          <h1 class="page-hero__title">{{ menu.heroTitle }}</h1>
+          @if (menu.heroSubtitle) {
+            <p class="page-hero__sub">{{ menu.heroSubtitle }}</p>
+          }
+        </div>
+      </header>
+
+      <section class="menu-section section-wrap">
+        <div class="menu-tabs" role="tablist" aria-label="Menu type">
+          <button
+            type="button"
+            class="menu-tabs__btn"
+            [class.menu-tabs__btn--active]="activeTab() === 'food'"
+            role="tab"
+            [attr.aria-selected]="activeTab() === 'food'"
+            (click)="setTab('food')"
+          >
+            {{ menu.mealsSectionTitle }}
+          </button>
+          <button
+            type="button"
+            class="menu-tabs__btn"
+            [class.menu-tabs__btn--active]="activeTab() === 'drinks'"
+            role="tab"
+            [attr.aria-selected]="activeTab() === 'drinks'"
+            (click)="setTab('drinks')"
+          >
+            {{ menu.drinksSectionTitle }}
+          </button>
+        </div>
+
+        @if (categories().length > 0) {
+          <div class="menu-categories" role="tablist" [attr.aria-label]="activeTab() === 'food' ? 'Meal categories' : 'Drink categories'">
+            @for (cat of categories(); track cat.id) {
+              <button
+                type="button"
+                class="menu-categories__pill"
+                [class.menu-categories__pill--active]="activeCategory()?.id === cat.id"
+                role="tab"
+                [attr.aria-selected]="activeCategory()?.id === cat.id"
+                (click)="selectCategory(cat.id)"
+              >
+                {{ cat.name }}
+              </button>
+            }
+          </div>
+
+          @if (activeCategory(); as cat) {
+            <div class="menu-category-header">
+              <h2 class="sec-title">{{ cat.name }}</h2>
+              <p class="sec-sub menu-category-header__count">{{ visibleItems().length }} item{{ visibleItems().length === 1 ? '' : 's' }}</p>
+            </div>
+          }
+
+          <div class="menu-grid">
+            @for (item of visibleItems(); track item.id) {
+              <article class="menu-card">
+                @if (item.imageUrl) {
+                  <div class="menu-card__media" [style.background-image]="'url(' + item.imageUrl + ')'"></div>
+                } @else {
+                  <div class="menu-card__media menu-card__media--placeholder" aria-hidden="true">
+                    {{ activeTab() === 'food' ? '🍽️' : '🍸' }}
+                  </div>
+                }
+                <div class="menu-card__body">
+                  <div class="menu-card__head">
+                    <h3 class="menu-card__name">{{ item.name }}</h3>
+                    <span class="menu-card__price">{{ formatNaira(item.price) }}</span>
+                  </div>
+                  <p class="menu-card__desc">{{ item.description }}</p>
+                  @if (item.tags?.length) {
+                    <ul class="menu-card__tags">
+                      @for (tag of item.tags; track tag) {
+                        <li>{{ tag }}</li>
+                      }
+                    </ul>
+                  }
+                  <div class="menu-card__order">
+                    @if (quantityFor(item.id) > 0) {
+                      <div class="qty-control">
+                        <button type="button" class="qty-btn" (click)="decrementItem(item.id)" aria-label="Remove one">−</button>
+                        <span class="qty-value">{{ quantityFor(item.id) }}</span>
+                        <button type="button" class="qty-btn" (click)="addToCart(item)" aria-label="Add one">+</button>
+                      </div>
+                    } @else {
+                      <button type="button" class="add-btn" (click)="addToCart(item)">Add to order</button>
+                    }
+                  </div>
+                </div>
+              </article>
+            }
+          </div>
+        } @else {
+          <div class="empty-state">
+            <div class="empty-state__icon">🍽️</div>
+            <p>Menu items will appear here once added.</p>
+          </div>
+        }
+      </section>
+
+      @if (cartCount() > 0) {
+        <div class="cart-bar">
+          <div class="cart-bar__inner">
+            <div>
+              <strong>{{ cartCount() }} item{{ cartCount() === 1 ? '' : 's' }}</strong>
+              <span class="cart-bar__total">{{ formatNaira(cartTotal()) }}</span>
+            </div>
+            <button type="button" class="cart-bar__btn" (click)="openCheckout()">Review &amp; pay</button>
+          </div>
+        </div>
+      }
+
+      @if (checkoutOpen()) {
+        <div class="checkout-modal-overlay" (click)="closeCheckout()" role="presentation">
+          <div
+            class="checkout-modal"
+            role="dialog"
+            aria-modal="true"
+            aria-labelledby="checkout-title"
+            (click)="$event.stopPropagation()"
+          >
+            <button type="button" class="checkout-modal__close" (click)="closeCheckout()" [disabled]="submitting()" aria-label="Close">
+              ✕
+            </button>
+
+            <header class="checkout-modal__head">
+              <h2 id="checkout-title">Your order</h2>
+              <p class="checkout-modal__sub">{{ cartCount() }} item{{ cartCount() === 1 ? '' : 's' }} · {{ formatNaira(cartTotal()) }}</p>
+            </header>
+
+            <ul class="checkout-lines">
+              @for (line of cartLines(); track line.itemId) {
+                <li>
+                  <span>{{ line.quantity }}× {{ line.name }}</span>
+                  <span>{{ formatNaira(line.price * line.quantity) }}</span>
+                </li>
+              }
+            </ul>
+            <p class="checkout-total"><strong>Total:</strong> {{ formatNaira(cartTotal()) }}</p>
+
+            <form class="checkout-form" (ngSubmit)="submitOrder()">
+              <fieldset class="checkout-fieldset">
+                <legend>Where are you dining?</legend>
+                <label class="radio">
+                  <input type="radio" name="guestType" [ngModel]="guestType()" (ngModelChange)="guestType.set($event)" value="inRestaurant" />
+                  In restaurant
+                </label>
+                <label class="radio">
+                  <input type="radio" name="guestType" [ngModel]="guestType()" (ngModelChange)="guestType.set($event)" value="roomGuest" />
+                  Room guest (deliver to room)
+                </label>
+              </fieldset>
+
+              @if (guestType() === 'roomGuest') {
+                <label class="field">
+                  <span>Room number</span>
+                  <input class="field__input" type="text" [ngModel]="roomNumber()" (ngModelChange)="roomNumber.set($event)" name="roomNumber" placeholder="e.g. 204" required />
+                </label>
+              }
+
+              <label class="field">
+                <span>Phone number</span>
+                <input class="field__input" type="tel" [ngModel]="guestPhone()" (ngModelChange)="guestPhone.set($event)" name="guestPhone" placeholder="+2348012345678 or 08012345678" required />
+                <small>We use your phone for order updates. No email is required — Paystack may show a reference address at checkout.</small>
+              </label>
+
+              @if (checkoutError()) {
+                <p class="checkout-error" role="alert">{{ checkoutError() }}</p>
+              }
+
+              <button type="submit" class="checkout-pay" [disabled]="submitting()">
+                {{ submitting() ? 'Starting payment…' : 'Pay ' + formatNaira(cartTotal()) }}
+              </button>
+            </form>
+          </div>
+        </div>
+      }
+
+      <app-hotel-footer [storefront]="sf" />
+    } @else {
+      <section class="menu-unavailable section-wrap">
+        <a [routerLink]="ctx.path()" class="back-link back-link--dark">← Back to home</a>
+        <h1 class="sec-title">Restaurant &amp; menu</h1>
+        <p class="sec-sub">This hotel has not published a menu yet.</p>
+      </section>
+    }
+  }
+}

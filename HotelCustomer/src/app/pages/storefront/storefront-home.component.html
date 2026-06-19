@@ -12,12 +12,12 @@
           <span>{{ sf.theme.banner.badgeText }}</span>
         </div>
       }
-      <h1 class="hero__name">{{ sf.theme.banner.headline || sf.businessName }}</h1>
-      <p class="hero__tagline">{{ sf.theme.banner.subheadline }}</p>
+      <h1 class="hero__name" [style.font-family]="bannerHeadlineFont()">{{ sf.theme.banner.headline || sf.businessName }}</h1>
+      <p class="hero__tagline" [style.font-family]="bannerSubheadlineFont()">{{ sf.theme.banner.subheadline }}</p>
       <div class="hero__actions">
         <button type="button" class="btn-accent" (click)="openBooking()">Reserve a Room</button>
         @if (sf.theme.about.enabled) {
-          <a [routerLink]="ctx.path()" fragment="about" class="btn-outline-white">About us</a>
+          <a [routerLink]="ctx.path('about')" class="btn-outline-white">About us</a>
         }
       </div>
       <div class="hero-info-bar">
@@ -42,7 +42,7 @@
     <section class="section-wrap" id="rooms-preview">
       <div class="section-header">
         <div class="sec-eyebrow">{{ sf.theme.rooms.eyebrow }}</div>
-        <h2 class="sec-title">{{ sf.theme.rooms.title }}</h2>
+        <h2 class="sec-title" [style.font-family]="roomsTitleFont()">{{ sf.theme.rooms.title }}</h2>
         <p class="sec-sub">{{ sf.theme.rooms.subtitle }}</p>
       </div>
 
@@ -109,7 +109,16 @@
   }
 
   @if (sf.theme.about.enabled) {
-    <app-about-section [storefront]="sf" />
+    <section class="about-teaser section-wrap section-wrap--alt">
+      <div class="about-teaser__inner">
+        <div class="sec-eyebrow" [style.font-family]="aboutBodyFont()">{{ sf.theme.about.eyebrow }}</div>
+        <h2 class="sec-title" [style.font-family]="aboutTitleFont()">{{ sf.theme.about.title }}</h2>
+        @if (aboutTeaser()) {
+          <p class="sec-sub about-teaser__copy" [style.font-family]="aboutBodyFont()">{{ aboutTeaser() }}</p>
+        }
+        <a [routerLink]="ctx.path('about')" class="btn-accent about-teaser__cta">Read our story →</a>
+      </div>
+    </section>
   }
 
   @if (hasSocial()) {

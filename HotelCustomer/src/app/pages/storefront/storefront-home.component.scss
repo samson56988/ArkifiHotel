@@ -428,3 +428,17 @@
     padding: 0 0.5rem;
   }
 }
+
+.about-teaser__inner {
+  max-width: 640px;
+  margin: 0 auto;
+  text-align: center;
+}
+
+.about-teaser__copy {
+  margin-bottom: 1.5rem;
+}
+
+.about-teaser__cta {
+  display: inline-flex;
+}

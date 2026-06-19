@@ -1,0 +1,226 @@
+<app-business-workspace>
+  <header class="page-head">
+    <div>
+      <p class="eyebrow">Storefront</p>
+      <h1>Restaurant &amp; menu</h1>
+      <p class="lead">Manage your guest-facing menu — meals, drinks, categories, photos, and nav visibility.</p>
+    </div>
+  </header>
+
+  @if (loading()) {
+    <p class="muted">Loading menu…</p>
+  } @else {
+    <section class="panel settings-panel">
+      <h2>Page settings</h2>
+      <form [formGroup]="settingsForm" (ngSubmit)="saveSettings()" class="settings-form">
+        <label class="check">
+          <input type="checkbox" formControlName="enabled" />
+          Show <strong>Restaurant &amp; menu</strong> in guest nav
+        </label>
+        <div class="field-row">
+          <div class="field">
+            <label for="navLabel">Nav link label</label>
+            <input id="navLabel" class="input" type="text" formControlName="navLabel" />
+          </div>
+          <div class="field">
+            <label for="heroEyebrow">Hero eyebrow</label>
+            <input id="heroEyebrow" class="input" type="text" formControlName="heroEyebrow" />
+          </div>
+        </div>
+        <div class="field">
+          <label for="heroTitle">Hero title</label>
+          <input id="heroTitle" class="input" type="text" formControlName="heroTitle" />
+        </div>
+        <div class="field">
+          <label for="heroSubtitle">Hero subtitle</label>
+          <textarea id="heroSubtitle" class="input input--area" rows="2" formControlName="heroSubtitle"></textarea>
+        </div>
+        <div class="field-row">
+          <div class="field">
+            <label for="mealsTitle">Meals tab label</label>
+            <input id="mealsTitle" class="input" type="text" formControlName="mealsSectionTitle" />
+          </div>
+          <div class="field">
+            <label for="drinksTitle">Drinks tab label</label>
+            <input id="drinksTitle" class="input" type="text" formControlName="drinksSectionTitle" />
+          </div>
+        </div>
+        <div class="field hero-photo">
+          <label>Hero photo</label>
+          <p class="hint">JPEG, PNG, or JPG only, up to 8MB. Shown at the top of your guest menu page.</p>
+          @if (heroImageUrl) {
+            <figure class="hero-photo__figure">
+              <img [src]="imageUrl(heroImageUrl)" alt="Menu hero" />
+              <figcaption>
+                <label class="file-label btn btn--ghost btn--sm">
+                  <input type="file" [accept]="imageAccept" (change)="onHeroImageSelected($event)" />
+                  Replace photo
+                </label>
+                <button type="button" class="btn btn--danger btn--sm" (click)="removeHeroImage()">Remove</button>
+              </figcaption>
+            </figure>
+          } @else {
+            <label class="file-label btn btn--ghost">
+              <input type="file" [accept]="imageAccept" (change)="onHeroImageSelected($event)" />
+              Upload hero photo
+            </label>
+          }
+        </div>
+        <div class="form-actions">
+          <button type="submit" class="btn btn--primary" [disabled]="savingSettings()">
+            {{ savingSettings() ? 'Saving…' : 'Save settings' }}
+          </button>
+        </div>
+      </form>
+    </section>
+
+    <section class="panel menu-panel">
+      <div class="menu-panel__tabs">
+        <button type="button" class="tab" [class.tab--active]="activeSection() === 'food'" (click)="setSection('food')">
+          Meals
+        </button>
+        <button type="button" class="tab" [class.tab--active]="activeSection() === 'drink'" (click)="setSection('drink')">
+          Drinks
+        </button>
+      </div>
+
+      <div class="menu-layout">
+        <div class="categories-col">
+          <h3>Categories</h3>
+          <form [formGroup]="categoryForm" (ngSubmit)="addCategory()" class="inline-form">
+            <div class="field">
+              <label for="catName">New category</label>
+              <input id="catName" class="input" type="text" formControlName="name" placeholder="e.g. Appetizers" />
+            </div>
+            <div class="field">
+              <label for="catSort">Order</label>
+              <input id="catSort" class="input input--narrow" type="number" formControlName="sortOrder" placeholder="#" />
+            </div>
+            <button type="submit" class="btn btn--primary btn--sm">Add</button>
+          </form>
+          @if (categories().length === 0) {
+            <p class="empty-hint">No categories yet. Add one above to start building your menu.</p>
+          } @else {
+            <ul class="category-list">
+              @for (cat of categories(); track cat.id) {
+                <li>
+                  <button
+                    type="button"
+                    class="category-btn"
+                    [class.category-btn--active]="selectedCategoryId() === cat.id"
+                    (click)="selectCategory(cat.id)"
+                  >
+                    <span>{{ cat.name }}</span>
+                    <span class="category-btn__meta">{{ cat.itemCount }} items</span>
+                  </button>
+                </li>
+              }
+            </ul>
+          }
+        </div>
+
+        <div class="items-col">
+          @if (selectedCategoryId(); as catId) {
+            <h3>Items</h3>
+            @if (itemsLoading()) {
+              <p class="muted">Loading items…</p>
+            } @else {
+              <form [formGroup]="itemForm" (ngSubmit)="saveItem()" class="item-form panel-inner">
+                <h4>{{ editingItemId() ? 'Edit item' : 'Add item' }}</h4>
+                <div class="field">
+                  <label for="itemName">Name</label>
+                  <input id="itemName" class="input" type="text" formControlName="name" />
+                </div>
+                <div class="field">
+                  <label for="itemDesc">Description</label>
+                  <textarea id="itemDesc" class="input input--area" rows="2" formControlName="description"></textarea>
+                </div>
+                <div class="field-row">
+                  <div class="field">
+                    <label for="itemPrice">Price (₦)</label>
+                    <input id="itemPrice" class="input" type="number" min="0" formControlName="price" />
+                  </div>
+                  <div class="field">
+                    <label for="itemSort">Sort order</label>
+                    <input id="itemSort" class="input" type="number" formControlName="sortOrder" />
+                  </div>
+                </div>
+                <div class="field">
+                  <label for="itemTags">Tags (comma-separated)</label>
+                  <input id="itemTags" class="input" type="text" formControlName="tags" placeholder="Spicy, Vegetarian" />
+                </div>
+                <div class="item-form__actions">
+                  <button type="submit" class="btn btn--primary btn--sm">
+                    {{ editingItemId() ? 'Update item' : 'Add item' }}
+                  </button>
+                  @if (editingItemId()) {
+                    <button type="button" class="btn btn--ghost btn--sm" (click)="cancelEditItem()">Cancel</button>
+                  }
+                </div>
+              </form>
+
+              @if (items().length === 0) {
+                <p class="empty-hint">No items in this category yet. Use the form above to add your first dish or drink.</p>
+              } @else {
+                <ul class="item-list">
+                  @for (item of items(); track item.id) {
+                    <li class="item-row" [class.item-row--archived]="item.isArchived">
+                      @if (item.imageUrl) {
+                        <img class="item-row__thumb" [src]="imageUrl(item.imageUrl)" [alt]="item.name" />
+                      } @else {
+                        <div class="item-row__thumb item-row__thumb--empty" aria-hidden="true">🍽</div>
+                      }
+                      <div class="item-row__body">
+                        <div class="item-row__head">
+                          <strong>{{ item.name }}</strong>
+                          <span>{{ formatPrice(item.price) }}</span>
+                        </div>
+                        @if (item.description) {
+                          <p>{{ item.description }}</p>
+                        }
+                        @if (item.tags.length) {
+                          <div class="item-row__tags">
+                            @for (tag of item.tags; track tag) {
+                              <span>{{ tag }}</span>
+                            }
+                          </div>
+                        }
+                        @if (item.isArchived) {
+                          <span class="badge-archived">Hidden from guests</span>
+                        } @else if (!item.isAvailable) {
+                          <span class="badge-archived">Unavailable to order</span>
+                        }
+                      </div>
+                      <div class="item-row__actions">
+                        <button type="button" class="btn btn--ghost btn--sm" (click)="startEditItem(item)">Edit</button>
+                        <label class="file-label btn btn--ghost btn--sm">
+                          <input type="file" [accept]="imageAccept" hidden (change)="onItemImageSelected(item, $event)" />
+                          {{ item.imageUrl ? 'Change photo' : 'Add photo' }}
+                        </label>
+                        <button
+                          type="button"
+                          class="btn btn--sm"
+                          [class.btn--ghost]="item.isAvailable"
+                          [class.btn--danger]="!item.isAvailable"
+                          [disabled]="item.isArchived"
+                          (click)="toggleItemAvailability(item)"
+                        >
+                          {{ item.isAvailable ? 'Mark unavailable' : 'Mark available' }}
+                        </button>
+                        <button type="button" class="btn btn--ghost btn--sm" (click)="toggleItemArchive(item)">
+                          {{ item.isArchived ? 'Restore' : 'Hide' }}
+                        </button>
+                      </div>
+                    </li>
+                  }
+                </ul>
+              }
+            }
+          } @else {
+            <p class="empty-hint">Select a category on the left to manage its menu items.</p>
+          }
+        </div>
+      </div>
+    </section>
+  }
+</app-business-workspace>

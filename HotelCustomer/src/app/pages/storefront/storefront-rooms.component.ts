@@ -1,5 +1,6 @@
 import { ChangeDetectionStrategy, Component, computed, inject, OnDestroy, OnInit, signal } from '@angular/core';
 import { RouterLink } from '@angular/router';
+import { resolveSectionFont } from '../../core/data/storefront-theme-presets';
 import { HotelUiService } from '../../core/services/hotel-ui.service';
 import { StorefrontContextService } from '../../core/services/storefront-context.service';
 import { collectGalleryImages } from '../../core/utils/gallery-images';
@@ -33,6 +34,10 @@ export class StorefrontRoomsComponent implements OnInit, OnDestroy {
   });
 
   readonly allRooms = computed(() => this.storefront().rooms);
+
+  readonly pageTitleFont = computed(() =>
+    resolveSectionFont(this.storefront().theme.globalFont, this.storefront().theme.rooms.titleFont),
+  );
 
   ngOnInit(): void {
     const slides = this.heroSlides();

@@ -9,10 +9,12 @@ namespace Admin.Infrastructure.Services;
 public sealed class StorefrontThemeService : IStorefrontThemeService
 {
     private readonly AdminDbContext _db;
+    private readonly IBusinessRestaurantMenuService _restaurantMenu;
 
-    public StorefrontThemeService(AdminDbContext db)
+    public StorefrontThemeService(AdminDbContext db, IBusinessRestaurantMenuService restaurantMenu)
     {
         _db = db;
+        _restaurantMenu = restaurantMenu;
     }
 
     public async Task<StorefrontThemeDto?> GetAsync(Guid businessId, CancellationToken cancellationToken = default)
@@ -236,6 +238,10 @@ public sealed class StorefrontThemeService : IStorefrontThemeService
             .FirstOrDefaultAsync(cancellationToken)
             .ConfigureAwait(false);
 
+        var restaurant = await _restaurantMenu
+            .GetPublicMenuAsync(business.Id, cancellationToken)
+            .ConfigureAwait(false);
+
         return new PublicStorefrontDto
         {
             BusinessId = business.Id,
@@ -251,6 +257,7 @@ public sealed class StorefrontThemeService : IStorefrontThemeService
             Social = social,
             HeroImages = bannerImages,
             AboutImageUrl = aboutImagePath,
+            Restaurant = restaurant,
         };
     }
 
@@ -276,7 +283,9 @@ public sealed class StorefrontThemeService : IStorefrontThemeService
 
         theme.About.Eyebrow = TrimOrDefault(theme.About.Eyebrow, "About us");
         theme.About.Title = TrimOrDefault(theme.About.Title, "Our story");
-        theme.About.Description = TrimOrDefault(theme.About.Description, string.Empty);
+        theme.About.Description = TrimOrDefault(
+            theme.About.Description,
+            "We are a hospitality team dedicated to memorable stays. From check-in to checkout, every detail is crafted for comfort and ease.");
         theme.About.TitleFont = TrimOrDefault(theme.About.TitleFont, "display");
         theme.About.BodyFont = TrimOrDefault(theme.About.BodyFont, "body");
         theme.About.Layout = TrimOrDefault(theme.About.Layout, "side-by-side");
@@ -309,6 +318,11 @@ public sealed class StorefrontThemeService : IStorefrontThemeService
         theme.Facilities.Eyebrow = TrimOrDefault(theme.Facilities.Eyebrow, "On Property");
         theme.Facilities.Title = TrimOrDefault(theme.Facilities.Title, "Facilities");
         theme.Facilities.Subtitle = TrimOrDefault(theme.Facilities.Subtitle, string.Empty);
+        theme.Facilities.GridEyebrow = TrimOrDefault(theme.Facilities.GridEyebrow, "Browse amenities");
+        theme.Facilities.GridTitle = TrimOrDefault(theme.Facilities.GridTitle, "What's on offer");
+        theme.Facilities.GridSubtitle = TrimOrDefault(
+            theme.Facilities.GridSubtitle,
+            "Tap any facility to view photos and details.");
         theme.Facilities.TitleFont = TrimOrDefault(theme.Facilities.TitleFont, "display");
         theme.Facilities.DisplayStyle = TrimOrDefault(theme.Facilities.DisplayStyle, "grid");
         theme.Facilities.SupportStatValue = TrimOrDefault(theme.Facilities.SupportStatValue, "24/7");

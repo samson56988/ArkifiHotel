@@ -30,6 +30,12 @@ public class AdminDbContext : DbContext
     public DbSet<BusinessSocialProfile> BusinessSocialProfiles => Set<BusinessSocialProfile>();
     public DbSet<StorefrontBannerImage> StorefrontBannerImages => Set<StorefrontBannerImage>();
     public DbSet<StorefrontAboutImage> StorefrontAboutImages => Set<StorefrontAboutImage>();
+    public DbSet<RestaurantMenuSettings> RestaurantMenuSettings => Set<RestaurantMenuSettings>();
+    public DbSet<RestaurantMenuCategory> RestaurantMenuCategories => Set<RestaurantMenuCategory>();
+    public DbSet<RestaurantMenuItem> RestaurantMenuItems => Set<RestaurantMenuItem>();
+    public DbSet<RestaurantOrder> RestaurantOrders => Set<RestaurantOrder>();
+    public DbSet<RestaurantOrderLine> RestaurantOrderLines => Set<RestaurantOrderLine>();
+    public DbSet<RestaurantOrderPayment> RestaurantOrderPayments => Set<RestaurantOrderPayment>();
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
@@ -52,6 +58,12 @@ public class AdminDbContext : DbContext
         modelBuilder.ApplyConfiguration(new BusinessSocialProfileConfiguration());
         modelBuilder.ApplyConfiguration(new StorefrontBannerImageConfiguration());
         modelBuilder.ApplyConfiguration(new StorefrontAboutImageConfiguration());
+        modelBuilder.ApplyConfiguration(new RestaurantMenuSettingsConfiguration());
+        modelBuilder.ApplyConfiguration(new RestaurantMenuCategoryConfiguration());
+        modelBuilder.ApplyConfiguration(new RestaurantMenuItemConfiguration());
+        modelBuilder.ApplyConfiguration(new RestaurantOrderConfiguration());
+        modelBuilder.ApplyConfiguration(new RestaurantOrderLineConfiguration());
+        modelBuilder.ApplyConfiguration(new RestaurantOrderPaymentConfiguration());
         DefaultAmenitySeed.Apply(modelBuilder);
     }
 }

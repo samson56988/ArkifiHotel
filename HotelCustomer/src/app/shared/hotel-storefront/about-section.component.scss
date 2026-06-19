@@ -218,3 +218,13 @@
     grid-template-columns: repeat(2, 1fr);
   }
 }
+
+.about-section--full-page {
+  padding-top: 3rem;
+  padding-bottom: calc(60px + 2rem);
+}
+
+.about-section--full-page.about-section--stacked .about-body,
+.about-section--full-page.about-section--quote .about-body {
+  text-align: left;
+}

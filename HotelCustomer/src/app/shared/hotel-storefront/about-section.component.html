@@ -3,9 +3,10 @@
 
 <section
   class="about-section section-wrap section-wrap--alt"
-  id="about"
+  [class.about-section--full-page]="fullPage()"
   [class.about-section--stacked]="layout() === 'stacked'"
   [class.about-section--quote]="layout() === 'quote'"
+  [attr.id]="fullPage() ? null : 'about'"
 >
   <div class="about-section__inner">
     @if (layout() === 'quote' && quoteText()) {
@@ -19,8 +20,10 @@
 
     <div class="about-layout">
       <div class="about-body">
-        <div class="sec-eyebrow" [style.font-family]="bodyFont()">{{ about.eyebrow }}</div>
-        <h2 class="sec-title about-section__title" [style.font-family]="titleFont()">{{ about.title }}</h2>
+        @if (!fullPage()) {
+          <div class="sec-eyebrow" [style.font-family]="bodyFont()">{{ about.eyebrow }}</div>
+          <h2 class="sec-title about-section__title" [style.font-family]="titleFont()">{{ about.title }}</h2>
+        }
 
         @for (para of paragraphs(); track para) {
           <p class="sec-sub about-story" [style.font-family]="bodyFont()">{{ para }}</p>

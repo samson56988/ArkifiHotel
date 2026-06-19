@@ -1,0 +1,67 @@
+@import '../../shared/hotel-storefront/hotel-shared';
+
+.page-hero {
+  position: relative;
+  min-height: 46vh;
+  display: flex;
+  align-items: flex-end;
+  padding: 100px 5vw 56px;
+  background: linear-gradient(135deg, var(--primary) 0%, color-mix(in srgb, var(--primary) 65%, #2d6a8e) 100%);
+  overflow: hidden;
+}
+
+.page-hero--photo {
+  background-size: cover;
+  background-position: center;
+}
+
+.page-hero--photo::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(180deg, rgba(0, 0, 0, 0.35) 0%, rgba(0, 0, 0, 0.72) 100%);
+}
+
+.page-hero__inner {
+  position: relative;
+  z-index: 1;
+  max-width: 720px;
+}
+
+.page-hero__title {
+  font-family: var(--font-heading, 'Cormorant Garamond', serif);
+  font-size: clamp(2rem, 5vw, 3rem);
+  font-weight: 700;
+  color: #fff;
+  margin: 0 0 0.5rem;
+  line-height: 1.1;
+}
+
+.page-hero__sub {
+  margin: 0;
+  color: rgba(255, 255, 255, 0.78);
+  font-size: 0.95rem;
+}
+
+.back-link {
+  display: inline-block;
+  margin-bottom: 1.25rem;
+  color: rgba(255, 255, 255, 0.75);
+  text-decoration: none;
+  font-size: 0.85rem;
+}
+
+.back-link:hover {
+  color: #fff;
+}
+
+.back-link--dark {
+  color: color-mix(in srgb, var(--text) 55%, transparent);
+}
+
+.about-unavailable {
+  max-width: 640px;
+  margin: 0 auto;
+  padding-top: 120px;
+  padding-bottom: 80px;
+}
