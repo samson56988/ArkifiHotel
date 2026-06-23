@@ -51,6 +51,13 @@ export const routes: Routes = [
               ),
           },
           {
+            path: 'event-halls',
+            loadComponent: () =>
+              import('./pages/storefront/storefront-event-halls.component').then(
+                (m) => m.StorefrontEventHallsComponent,
+              ),
+          },
+          {
             path: 'restaurant/payment/verify',
             loadComponent: () =>
               import('./pages/storefront/restaurant-order-payment-verify.component').then(

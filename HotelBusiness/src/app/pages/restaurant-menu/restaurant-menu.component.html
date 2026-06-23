@@ -7,9 +7,35 @@
     </div>
   </header>
 
+  @if (locations().length === 0 && !loading()) {
+    <section class="panel empty-locations">
+      <p class="muted">Add a property location before managing the restaurant menu.</p>
+      <a routerLink="/locations" class="btn btn--primary">Go to locations</a>
+    </section>
+  } @else if (locations().length > 1) {
+    <div class="branch-bar">
+      <label class="branch-bar__label" for="menu-location">Branch</label>
+      <select
+        id="menu-location"
+        class="input branch-bar__select"
+        [value]="locationId() ?? ''"
+        (change)="onLocationChange($any($event.target).value)"
+      >
+        @for (loc of locations(); track loc.id) {
+          <option [value]="loc.id">{{ loc.name }}</option>
+        }
+      </select>
+      <p class="branch-bar__hint">Categories and meals you add here are only shown for this branch.</p>
+    </div>
+  } @else if (locations().length === 1) {
+    <p class="branch-bar branch-bar--solo">
+      Menu for <strong>{{ locations()[0].name }}</strong> — meals and drinks are scoped to this branch.
+    </p>
+  }
+
   @if (loading()) {
     <p class="muted">Loading menu…</p>
-  } @else {
+  } @else if (locations().length > 0) {
     <section class="panel settings-panel">
       <h2>Page settings</h2>
       <form [formGroup]="settingsForm" (ngSubmit)="saveSettings()" class="settings-form">

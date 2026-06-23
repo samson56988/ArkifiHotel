@@ -23,11 +23,19 @@ public sealed class BusinessRestaurantMenuService : IBusinessRestaurantMenuServi
 
     public async Task<RestaurantMenuSettingsDto?> GetSettingsAsync(
         Guid businessId,
+        Guid locationId,
         CancellationToken cancellationToken = default)
     {
+        if (!await LocationAllowedForBusinessAsync(businessId, locationId, cancellationToken).ConfigureAwait(false))
+        {
+            return null;
+        }
+
         var row = await _db.RestaurantMenuSettings
             .AsNoTracking()
-            .FirstOrDefaultAsync(s => s.BusinessRegistrationId == businessId, cancellationToken)
+            .FirstOrDefaultAsync(
+                s => s.BusinessRegistrationId == businessId && s.LocationId == locationId,
+                cancellationToken)
             .ConfigureAwait(false);
 
         return row is null ? null : MapSettings(row);
@@ -35,30 +43,17 @@ public sealed class BusinessRestaurantMenuService : IBusinessRestaurantMenuServi
 
     public async Task<RestaurantMenuSettingsDto?> UpdateSettingsAsync(
         Guid businessId,
+        Guid locationId,
         UpdateRestaurantMenuSettingsRequest request,
         CancellationToken cancellationToken = default)
     {
-        if (!await BusinessExistsAsync(businessId, cancellationToken).ConfigureAwait(false))
+        var row = await EnsureSettingsAsync(businessId, locationId, cancellationToken).ConfigureAwait(false);
+        if (row is null)
         {
             return null;
         }
 
         var now = DateTimeOffset.UtcNow;
-        var row = await _db.RestaurantMenuSettings
-            .FirstOrDefaultAsync(s => s.BusinessRegistrationId == businessId, cancellationToken)
-            .ConfigureAwait(false);
-
-        if (row is null)
-        {
-            row = new RestaurantMenuSettings
-            {
-                Id = Guid.NewGuid(),
-                BusinessRegistrationId = businessId,
-                CreatedAt = now,
-            };
-            _db.RestaurantMenuSettings.Add(row);
-        }
-
         row.Enabled = request.Enabled;
         row.NavLabel = TrimRequired(request.NavLabel, "Restaurant & menu", 120);
         row.HeroEyebrow = TrimRequired(request.HeroEyebrow, "Dining", 120);
@@ -74,11 +69,12 @@ public sealed class BusinessRestaurantMenuService : IBusinessRestaurantMenuServi
 
     public async Task<RestaurantMenuSettingsDto?> UpsertHeroImageAsync(
         Guid businessId,
+        Guid locationId,
         string relativePath,
         string originalFileName,
         CancellationToken cancellationToken = default)
     {
-        var row = await EnsureSettingsAsync(businessId, cancellationToken).ConfigureAwait(false);
+        var row = await EnsureSettingsAsync(businessId, locationId, cancellationToken).ConfigureAwait(false);
         if (row is null)
         {
             return null;
@@ -91,10 +87,20 @@ public sealed class BusinessRestaurantMenuService : IBusinessRestaurantMenuServi
         return MapSettings(row);
     }
 
-    public async Task<bool> RemoveHeroImageAsync(Guid businessId, CancellationToken cancellationToken = default)
+    public async Task<bool> RemoveHeroImageAsync(
+        Guid businessId,
+        Guid locationId,
+        CancellationToken cancellationToken = default)
     {
+        if (!await LocationAllowedForBusinessAsync(businessId, locationId, cancellationToken).ConfigureAwait(false))
+        {
+            return false;
+        }
+
         var row = await _db.RestaurantMenuSettings
-            .FirstOrDefaultAsync(s => s.BusinessRegistrationId == businessId, cancellationToken)
+            .FirstOrDefaultAsync(
+                s => s.BusinessRegistrationId == businessId && s.LocationId == locationId,
+                cancellationToken)
             .ConfigureAwait(false);
 
         if (row is null || string.IsNullOrWhiteSpace(row.HeroImageRelativePath))
@@ -111,14 +117,20 @@ public sealed class BusinessRestaurantMenuService : IBusinessRestaurantMenuServi
 
     public async Task<IReadOnlyList<RestaurantMenuCategoryDto>> ListCategoriesAsync(
         Guid businessId,
+        Guid locationId,
         string? section,
         bool includeArchived = false,
         CancellationToken cancellationToken = default)
     {
+        if (!await LocationAllowedForBusinessAsync(businessId, locationId, cancellationToken).ConfigureAwait(false))
+        {
+            return Array.Empty<RestaurantMenuCategoryDto>();
+        }
+
         var query = _db.RestaurantMenuCategories
             .AsNoTracking()
             .Include(c => c.Items)
-            .Where(c => c.BusinessRegistrationId == businessId);
+            .Where(c => c.BusinessRegistrationId == businessId && c.LocationId == locationId);
 
         if (!includeArchived)
         {
@@ -144,6 +156,7 @@ public sealed class BusinessRestaurantMenuService : IBusinessRestaurantMenuServi
 
     public async Task<RestaurantMenuCategoryDto?> CreateCategoryAsync(
         Guid businessId,
+        Guid locationId,
         CreateRestaurantMenuCategoryRequest request,
         CancellationToken cancellationToken = default)
     {
@@ -153,7 +166,7 @@ public sealed class BusinessRestaurantMenuService : IBusinessRestaurantMenuServi
             return null;
         }
 
-        if (!await BusinessExistsAsync(businessId, cancellationToken).ConfigureAwait(false))
+        if (!await LocationAllowedForBusinessAsync(businessId, locationId, cancellationToken).ConfigureAwait(false))
         {
             return null;
         }
@@ -162,6 +175,7 @@ public sealed class BusinessRestaurantMenuService : IBusinessRestaurantMenuServi
         {
             Id = Guid.NewGuid(),
             BusinessRegistrationId = businessId,
+            LocationId = locationId,
             Name = name,
             Section = section,
             SortOrder = request.SortOrder,
@@ -175,6 +189,7 @@ public sealed class BusinessRestaurantMenuService : IBusinessRestaurantMenuServi
 
     public async Task<RestaurantMenuCategoryDto?> UpdateCategoryAsync(
         Guid businessId,
+        Guid locationId,
         Guid categoryId,
         UpdateRestaurantMenuCategoryRequest request,
         CancellationToken cancellationToken = default)
@@ -184,11 +199,7 @@ public sealed class BusinessRestaurantMenuService : IBusinessRestaurantMenuServi
             return null;
         }
 
-        var entity = await _db.RestaurantMenuCategories
-            .Include(c => c.Items)
-            .FirstOrDefaultAsync(c => c.Id == categoryId && c.BusinessRegistrationId == businessId, cancellationToken)
-            .ConfigureAwait(false);
-
+        var entity = await FindCategoryAsync(businessId, locationId, categoryId, cancellationToken).ConfigureAwait(false);
         if (entity is null)
         {
             return null;
@@ -199,16 +210,18 @@ public sealed class BusinessRestaurantMenuService : IBusinessRestaurantMenuServi
         entity.UpdatedAt = DateTimeOffset.UtcNow;
         await _db.SaveChangesAsync(cancellationToken).ConfigureAwait(false);
 
+        await _db.Entry(entity).Collection(c => c.Items).LoadAsync(cancellationToken).ConfigureAwait(false);
         var count = entity.Items.Count(i => !i.IsArchived);
         return MapCategory(entity, count);
     }
 
     public async Task<bool> ArchiveCategoryAsync(
         Guid businessId,
+        Guid locationId,
         Guid categoryId,
         CancellationToken cancellationToken = default)
     {
-        var entity = await FindCategoryAsync(businessId, categoryId, cancellationToken).ConfigureAwait(false);
+        var entity = await FindCategoryAsync(businessId, locationId, categoryId, cancellationToken).ConfigureAwait(false);
         if (entity is null)
         {
             return false;
@@ -222,10 +235,11 @@ public sealed class BusinessRestaurantMenuService : IBusinessRestaurantMenuServi
 
     public async Task<bool> RestoreCategoryAsync(
         Guid businessId,
+        Guid locationId,
         Guid categoryId,
         CancellationToken cancellationToken = default)
     {
-        var entity = await FindCategoryAsync(businessId, categoryId, cancellationToken).ConfigureAwait(false);
+        var entity = await FindCategoryAsync(businessId, locationId, categoryId, cancellationToken).ConfigureAwait(false);
         if (entity is null)
         {
             return false;
@@ -239,11 +253,12 @@ public sealed class BusinessRestaurantMenuService : IBusinessRestaurantMenuServi
 
     public async Task<IReadOnlyList<RestaurantMenuItemDto>> ListItemsAsync(
         Guid businessId,
+        Guid locationId,
         Guid categoryId,
         bool includeArchived = false,
         CancellationToken cancellationToken = default)
     {
-        if (!await CategoryOwnedAsync(businessId, categoryId, cancellationToken).ConfigureAwait(false))
+        if (!await CategoryOwnedAsync(businessId, locationId, categoryId, cancellationToken).ConfigureAwait(false))
         {
             return Array.Empty<RestaurantMenuItemDto>();
         }
@@ -268,6 +283,7 @@ public sealed class BusinessRestaurantMenuService : IBusinessRestaurantMenuServi
 
     public async Task<RestaurantMenuItemDto?> CreateItemAsync(
         Guid businessId,
+        Guid locationId,
         Guid categoryId,
         CreateRestaurantMenuItemRequest request,
         CancellationToken cancellationToken = default)
@@ -277,7 +293,7 @@ public sealed class BusinessRestaurantMenuService : IBusinessRestaurantMenuServi
             return null;
         }
 
-        if (!await CategoryOwnedAsync(businessId, categoryId, cancellationToken).ConfigureAwait(false))
+        if (!await CategoryOwnedAsync(businessId, locationId, categoryId, cancellationToken).ConfigureAwait(false))
         {
             return null;
         }
@@ -301,6 +317,7 @@ public sealed class BusinessRestaurantMenuService : IBusinessRestaurantMenuServi
 
     public async Task<RestaurantMenuItemDto?> UpdateItemAsync(
         Guid businessId,
+        Guid locationId,
         Guid itemId,
         UpdateRestaurantMenuItemRequest request,
         CancellationToken cancellationToken = default)
@@ -310,7 +327,7 @@ public sealed class BusinessRestaurantMenuService : IBusinessRestaurantMenuServi
             return null;
         }
 
-        var entity = await FindItemAsync(businessId, itemId, cancellationToken).ConfigureAwait(false);
+        var entity = await FindItemAsync(businessId, locationId, itemId, cancellationToken).ConfigureAwait(false);
         if (entity is null)
         {
             return null;
@@ -328,10 +345,11 @@ public sealed class BusinessRestaurantMenuService : IBusinessRestaurantMenuServi
 
     public async Task<bool> ArchiveItemAsync(
         Guid businessId,
+        Guid locationId,
         Guid itemId,
         CancellationToken cancellationToken = default)
     {
-        var entity = await FindItemAsync(businessId, itemId, cancellationToken).ConfigureAwait(false);
+        var entity = await FindItemAsync(businessId, locationId, itemId, cancellationToken).ConfigureAwait(false);
         if (entity is null)
         {
             return false;
@@ -345,10 +363,11 @@ public sealed class BusinessRestaurantMenuService : IBusinessRestaurantMenuServi
 
     public async Task<bool> RestoreItemAsync(
         Guid businessId,
+        Guid locationId,
         Guid itemId,
         CancellationToken cancellationToken = default)
     {
-        var entity = await FindItemAsync(businessId, itemId, cancellationToken).ConfigureAwait(false);
+        var entity = await FindItemAsync(businessId, locationId, itemId, cancellationToken).ConfigureAwait(false);
         if (entity is null)
         {
             return false;
@@ -362,12 +381,13 @@ public sealed class BusinessRestaurantMenuService : IBusinessRestaurantMenuServi
 
     public async Task<RestaurantMenuItemDto?> UpsertItemImageAsync(
         Guid businessId,
+        Guid locationId,
         Guid itemId,
         string relativePath,
         string originalFileName,
         CancellationToken cancellationToken = default)
     {
-        var entity = await FindItemAsync(businessId, itemId, cancellationToken).ConfigureAwait(false);
+        var entity = await FindItemAsync(businessId, locationId, itemId, cancellationToken).ConfigureAwait(false);
         if (entity is null)
         {
             return null;
@@ -382,10 +402,11 @@ public sealed class BusinessRestaurantMenuService : IBusinessRestaurantMenuServi
 
     public async Task<bool> RemoveItemImageAsync(
         Guid businessId,
+        Guid locationId,
         Guid itemId,
         CancellationToken cancellationToken = default)
     {
-        var entity = await FindItemAsync(businessId, itemId, cancellationToken).ConfigureAwait(false);
+        var entity = await FindItemAsync(businessId, locationId, itemId, cancellationToken).ConfigureAwait(false);
         if (entity is null || string.IsNullOrWhiteSpace(entity.ImageRelativePath))
         {
             return false;
@@ -400,11 +421,12 @@ public sealed class BusinessRestaurantMenuService : IBusinessRestaurantMenuServi
 
     public async Task<RestaurantMenuItemDto?> SetItemAvailabilityAsync(
         Guid businessId,
+        Guid locationId,
         Guid itemId,
         bool isAvailable,
         CancellationToken cancellationToken = default)
     {
-        var entity = await FindItemAsync(businessId, itemId, cancellationToken).ConfigureAwait(false);
+        var entity = await FindItemAsync(businessId, locationId, itemId, cancellationToken).ConfigureAwait(false);
         if (entity is null || entity.IsArchived)
         {
             return null;
@@ -418,11 +440,14 @@ public sealed class BusinessRestaurantMenuService : IBusinessRestaurantMenuServi
 
     public async Task<PublicStorefrontRestaurantDto?> GetPublicMenuAsync(
         Guid businessId,
+        Guid locationId,
         CancellationToken cancellationToken = default)
     {
         var settings = await _db.RestaurantMenuSettings
             .AsNoTracking()
-            .FirstOrDefaultAsync(s => s.BusinessRegistrationId == businessId, cancellationToken)
+            .FirstOrDefaultAsync(
+                s => s.BusinessRegistrationId == businessId && s.LocationId == locationId,
+                cancellationToken)
             .ConfigureAwait(false);
 
         if (settings is null || !settings.Enabled)
@@ -433,7 +458,7 @@ public sealed class BusinessRestaurantMenuService : IBusinessRestaurantMenuServi
         var categoryRows = await _db.RestaurantMenuCategories
             .AsNoTracking()
             .Include(c => c.Items)
-            .Where(c => c.BusinessRegistrationId == businessId && !c.IsArchived)
+            .Where(c => c.BusinessRegistrationId == businessId && c.LocationId == locationId && !c.IsArchived)
             .OrderBy(c => c.SortOrder)
             .ThenBy(c => c.Name)
             .ToListAsync(cancellationToken)
@@ -464,15 +489,18 @@ public sealed class BusinessRestaurantMenuService : IBusinessRestaurantMenuServi
 
     private async Task<RestaurantMenuSettings?> EnsureSettingsAsync(
         Guid businessId,
+        Guid locationId,
         CancellationToken cancellationToken)
     {
-        if (!await BusinessExistsAsync(businessId, cancellationToken).ConfigureAwait(false))
+        if (!await LocationAllowedForBusinessAsync(businessId, locationId, cancellationToken).ConfigureAwait(false))
         {
             return null;
         }
 
         var row = await _db.RestaurantMenuSettings
-            .FirstOrDefaultAsync(s => s.BusinessRegistrationId == businessId, cancellationToken)
+            .FirstOrDefaultAsync(
+                s => s.BusinessRegistrationId == businessId && s.LocationId == locationId,
+                cancellationToken)
             .ConfigureAwait(false);
 
         if (row is not null)
@@ -484,6 +512,7 @@ public sealed class BusinessRestaurantMenuService : IBusinessRestaurantMenuServi
         {
             Id = Guid.NewGuid(),
             BusinessRegistrationId = businessId,
+            LocationId = locationId,
             CreatedAt = DateTimeOffset.UtcNow,
         };
         _db.RestaurantMenuSettings.Add(row);
@@ -493,33 +522,58 @@ public sealed class BusinessRestaurantMenuService : IBusinessRestaurantMenuServi
 
     private async Task<RestaurantMenuCategory?> FindCategoryAsync(
         Guid businessId,
+        Guid locationId,
         Guid categoryId,
         CancellationToken cancellationToken) =>
         await _db.RestaurantMenuCategories
-            .FirstOrDefaultAsync(c => c.Id == categoryId && c.BusinessRegistrationId == businessId, cancellationToken)
+            .FirstOrDefaultAsync(
+                c => c.Id == categoryId && c.BusinessRegistrationId == businessId && c.LocationId == locationId,
+                cancellationToken)
             .ConfigureAwait(false);
 
     private async Task<RestaurantMenuItem?> FindItemAsync(
         Guid businessId,
+        Guid locationId,
         Guid itemId,
         CancellationToken cancellationToken) =>
         await _db.RestaurantMenuItems
             .Include(i => i.Category)
             .FirstOrDefaultAsync(
-                i => i.Id == itemId && i.Category.BusinessRegistrationId == businessId,
+                i => i.Id == itemId
+                    && i.Category.BusinessRegistrationId == businessId
+                    && i.Category.LocationId == locationId,
                 cancellationToken)
             .ConfigureAwait(false);
 
     private async Task<bool> CategoryOwnedAsync(
         Guid businessId,
+        Guid locationId,
         Guid categoryId,
         CancellationToken cancellationToken) =>
         await _db.RestaurantMenuCategories
-            .AnyAsync(c => c.Id == categoryId && c.BusinessRegistrationId == businessId, cancellationToken)
+            .AnyAsync(
+                c => c.Id == categoryId && c.BusinessRegistrationId == businessId && c.LocationId == locationId,
+                cancellationToken)
             .ConfigureAwait(false);
 
     private async Task<bool> BusinessExistsAsync(Guid businessId, CancellationToken cancellationToken) =>
         await _db.BusinessRegistrations.AnyAsync(b => b.Id == businessId, cancellationToken).ConfigureAwait(false);
+
+    private async Task<bool> LocationAllowedForBusinessAsync(
+        Guid businessId,
+        Guid locationId,
+        CancellationToken cancellationToken)
+    {
+        if (locationId == Guid.Empty)
+        {
+            return false;
+        }
+
+        return await _db.BusinessLocations
+            .AsNoTracking()
+            .AnyAsync(l => l.Id == locationId && l.BusinessRegistrationId == businessId, cancellationToken)
+            .ConfigureAwait(false);
+    }
 
     private static RestaurantMenuSettingsDto MapSettings(RestaurantMenuSettings row) =>
         new()
@@ -532,6 +586,7 @@ public sealed class BusinessRestaurantMenuService : IBusinessRestaurantMenuServi
             MealsSectionTitle = row.MealsSectionTitle,
             DrinksSectionTitle = row.DrinksSectionTitle,
             HeroImageUrl = ToPublicUrl(row.HeroImageRelativePath),
+            LocationId = row.LocationId,
         };
 
     private static RestaurantMenuCategoryDto MapCategory(RestaurantMenuCategory row, int itemCount) =>

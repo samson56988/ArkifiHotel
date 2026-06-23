@@ -58,6 +58,22 @@ public class BusinessRegistrationConfiguration : IEntityTypeConfiguration<Busine
         builder.Property(e => e.StorefrontThemeJson)
             .HasColumnType("jsonb");
 
+        builder.Property(e => e.BusinessType)
+            .IsRequired()
+            .HasConversion<int>()
+            .HasDefaultValue(BusinessType.Hotel);
+
+        builder.Property(e => e.SubscriptionPlanId)
+            .IsRequired();
+
+        builder.HasOne(e => e.SubscriptionPlan)
+            .WithMany()
+            .HasForeignKey(e => e.SubscriptionPlanId)
+            .OnDelete(DeleteBehavior.Restrict);
+
+        builder.HasIndex(e => e.SubscriptionPlanId);
+        builder.HasIndex(e => e.SubscriptionExpiresAt);
+
         builder.HasIndex(e => e.ContactEmail);
         builder.HasIndex(e => e.CreatedAt);
         builder.HasIndex(e => e.Status);

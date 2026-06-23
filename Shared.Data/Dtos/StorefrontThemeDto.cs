@@ -259,4 +259,6 @@ public sealed class PublicStorefrontDto
     public string? AboutImageUrl { get; set; }
 
     public PublicStorefrontRestaurantDto? Restaurant { get; set; }
+
+    public IReadOnlyList<PublicStorefrontEventHallDto> EventHalls { get; set; } = Array.Empty<PublicStorefrontEventHallDto>();
 }

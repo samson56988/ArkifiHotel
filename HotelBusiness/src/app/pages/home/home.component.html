@@ -6,6 +6,7 @@
       </a>
       <nav class="nav" aria-label="Primary">
         <a class="nav__link" href="#features">Features</a>
+        <a class="nav__link" href="#pricing">Pricing</a>
         <a class="nav__link" href="#payments">Payments</a>
         <a class="nav__link" href="#how">How it works</a>
       </nav>
@@ -157,6 +158,34 @@
             </p>
           </article>
         </div>
+      </div>
+    </section>
+
+    <section id="pricing" class="section pricing">
+      <div class="container">
+        <div class="section__head">
+          <h2 class="section__title">Simple pricing for hotels and shortlets</h2>
+          <p class="section__sub">
+            Start with a 30-day free trial. Upgrade to Pro when you are ready — pay monthly or save with yearly billing.
+          </p>
+        </div>
+        @if (plansLoading()) {
+          <p class="pricing__loading">Loading plans…</p>
+        } @else {
+          <div class="pricing__grid">
+            @for (plan of displayPlans(); track plan.id) {
+              <article class="pricing-card" [class.pricing-card--featured]="plan.tier === 'Pro' && plan.billingInterval === 'Monthly'">
+                <h3>{{ planTitle(plan) }}</h3>
+                <p class="pricing-card__price">{{ formatPlanPrice(plan) }}</p>
+                @if (plan.yearlyDiscountPercent) {
+                  <p class="pricing-card__save">Save {{ plan.yearlyDiscountPercent }}% vs monthly</p>
+                }
+                <p class="pricing-card__desc">{{ plan.description }}</p>
+                <a class="btn btn--primary btn--block" routerLink="/register">Get started</a>
+              </article>
+            }
+          </div>
+        }
       </div>
     </section>
 

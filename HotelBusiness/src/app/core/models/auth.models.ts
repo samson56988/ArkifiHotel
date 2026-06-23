@@ -9,6 +9,8 @@ export interface RegisterBusinessRequest {
   acceptTerms: boolean;
   phoneNumber: string;
   slug: string;
+  businessType: 'Hotel' | 'Shortlet';
+  planCode: string;
 }
 
 export interface BusinessRegistrationDto {

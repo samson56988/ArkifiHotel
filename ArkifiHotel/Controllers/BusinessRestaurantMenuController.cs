@@ -35,7 +35,7 @@ public sealed class BusinessRestaurantMenuController : ControllerBase
 
     [HttpGet("settings")]
     [ProducesResponseType(typeof(ApiResult<RestaurantMenuSettingsDto>), StatusCodes.Status200OK)]
-    public async Task<IActionResult> GetSettings(CancellationToken cancellationToken)
+    public async Task<IActionResult> GetSettings([FromQuery] Guid locationId, CancellationToken cancellationToken)
     {
         var businessId = User.GetBusinessId();
         if (businessId is null)
@@ -43,14 +43,20 @@ public sealed class BusinessRestaurantMenuController : ControllerBase
             return Unauthorized(ApiResult<RestaurantMenuSettingsDto>.Fail("Unauthorized", "Missing business identity."));
         }
 
-        var dto = await _menu.GetSettingsAsync(businessId.Value, cancellationToken).ConfigureAwait(false);
-        return Ok(ApiResult<RestaurantMenuSettingsDto>.Ok(dto ?? new RestaurantMenuSettingsDto()));
+        if (locationId == Guid.Empty)
+        {
+            return BadRequest(ApiResult<RestaurantMenuSettingsDto>.Fail("Validation", "locationId is required."));
+        }
+
+        var dto = await _menu.GetSettingsAsync(businessId.Value, locationId, cancellationToken).ConfigureAwait(false);
+        return Ok(ApiResult<RestaurantMenuSettingsDto>.Ok(dto ?? new RestaurantMenuSettingsDto { LocationId = locationId }));
     }
 
     [HttpPut("settings")]
     [ProducesResponseType(typeof(ApiResult<RestaurantMenuSettingsDto>), StatusCodes.Status200OK)]
     [ProducesResponseType(typeof(ApiResult<RestaurantMenuSettingsDto>), StatusCodes.Status400BadRequest)]
     public async Task<IActionResult> UpdateSettings(
+        [FromQuery] Guid locationId,
         [FromBody] UpdateRestaurantMenuSettingsRequest request,
         CancellationToken cancellationToken)
     {
@@ -60,7 +66,12 @@ public sealed class BusinessRestaurantMenuController : ControllerBase
             return Unauthorized(ApiResult<RestaurantMenuSettingsDto>.Fail("Unauthorized", "Missing business identity."));
         }
 
-        var dto = await _menu.UpdateSettingsAsync(businessId.Value, request, cancellationToken).ConfigureAwait(false);
+        if (locationId == Guid.Empty)
+        {
+            return BadRequest(ApiResult<RestaurantMenuSettingsDto>.Fail("Validation", "locationId is required."));
+        }
+
+        var dto = await _menu.UpdateSettingsAsync(businessId.Value, locationId, request, cancellationToken).ConfigureAwait(false);
         if (dto is null)
         {
             return BadRequest(ApiResult<RestaurantMenuSettingsDto>.Fail("Validation", "Could not save settings."));
@@ -71,12 +82,20 @@ public sealed class BusinessRestaurantMenuController : ControllerBase
 
     [HttpPost("settings/hero-image")]
     [ProducesResponseType(typeof(ApiResult<RestaurantMenuSettingsDto>), StatusCodes.Status200OK)]
-    public async Task<IActionResult> UploadHeroImage(IFormFile? file, CancellationToken cancellationToken)
+    public async Task<IActionResult> UploadHeroImage(
+        [FromQuery] Guid locationId,
+        IFormFile? file,
+        CancellationToken cancellationToken)
     {
         var businessId = User.GetBusinessId();
         if (businessId is null)
         {
             return Unauthorized(ApiResult<RestaurantMenuSettingsDto>.Fail("Unauthorized", "Missing business identity."));
+        }
+
+        if (locationId == Guid.Empty)
+        {
+            return BadRequest(ApiResult<RestaurantMenuSettingsDto>.Fail("Validation", "locationId is required."));
         }
 
         if (file is null || file.Length == 0)
@@ -96,7 +115,7 @@ public sealed class BusinessRestaurantMenuController : ControllerBase
         }
 
         var dto = await _menu
-            .UpsertHeroImageAsync(businessId.Value, relativePath, file.FileName, cancellationToken)
+            .UpsertHeroImageAsync(businessId.Value, locationId, relativePath, file.FileName, cancellationToken)
             .ConfigureAwait(false);
 
         if (dto is null)
@@ -109,7 +128,7 @@ public sealed class BusinessRestaurantMenuController : ControllerBase
 
     [HttpDelete("settings/hero-image")]
     [ProducesResponseType(typeof(ApiResult), StatusCodes.Status200OK)]
-    public async Task<IActionResult> DeleteHeroImage(CancellationToken cancellationToken)
+    public async Task<IActionResult> DeleteHeroImage([FromQuery] Guid locationId, CancellationToken cancellationToken)
     {
         var businessId = User.GetBusinessId();
         if (businessId is null)
@@ -117,13 +136,19 @@ public sealed class BusinessRestaurantMenuController : ControllerBase
             return Unauthorized(ApiResult.Fail("Unauthorized", "Missing business identity."));
         }
 
-        await _menu.RemoveHeroImageAsync(businessId.Value, cancellationToken).ConfigureAwait(false);
+        if (locationId == Guid.Empty)
+        {
+            return BadRequest(ApiResult.Fail("Validation", "locationId is required."));
+        }
+
+        await _menu.RemoveHeroImageAsync(businessId.Value, locationId, cancellationToken).ConfigureAwait(false);
         return Ok(ApiResult.Ok("Hero image removed."));
     }
 
     [HttpGet("categories")]
     [ProducesResponseType(typeof(ApiResult<IReadOnlyList<RestaurantMenuCategoryDto>>), StatusCodes.Status200OK)]
     public async Task<IActionResult> ListCategories(
+        [FromQuery] Guid locationId,
         [FromQuery] string? section,
         [FromQuery] bool includeArchived = false,
         CancellationToken cancellationToken = default)
@@ -135,8 +160,14 @@ public sealed class BusinessRestaurantMenuController : ControllerBase
                 ApiResult<IReadOnlyList<RestaurantMenuCategoryDto>>.Fail("Unauthorized", "Missing business identity."));
         }
 
+        if (locationId == Guid.Empty)
+        {
+            return BadRequest(
+                ApiResult<IReadOnlyList<RestaurantMenuCategoryDto>>.Fail("Validation", "locationId is required."));
+        }
+
         var list = await _menu
-            .ListCategoriesAsync(businessId.Value, section, includeArchived, cancellationToken)
+            .ListCategoriesAsync(businessId.Value, locationId, section, includeArchived, cancellationToken)
             .ConfigureAwait(false);
         return Ok(ApiResult<IReadOnlyList<RestaurantMenuCategoryDto>>.Ok(list));
     }
@@ -144,6 +175,7 @@ public sealed class BusinessRestaurantMenuController : ControllerBase
     [HttpPost("categories")]
     [ProducesResponseType(typeof(ApiResult<RestaurantMenuCategoryDto>), StatusCodes.Status200OK)]
     public async Task<IActionResult> CreateCategory(
+        [FromQuery] Guid locationId,
         [FromBody] CreateRestaurantMenuCategoryRequest request,
         CancellationToken cancellationToken)
     {
@@ -153,7 +185,12 @@ public sealed class BusinessRestaurantMenuController : ControllerBase
             return Unauthorized(ApiResult<RestaurantMenuCategoryDto>.Fail("Unauthorized", "Missing business identity."));
         }
 
-        var dto = await _menu.CreateCategoryAsync(businessId.Value, request, cancellationToken).ConfigureAwait(false);
+        if (locationId == Guid.Empty)
+        {
+            return BadRequest(ApiResult<RestaurantMenuCategoryDto>.Fail("Validation", "locationId is required."));
+        }
+
+        var dto = await _menu.CreateCategoryAsync(businessId.Value, locationId, request, cancellationToken).ConfigureAwait(false);
         if (dto is null)
         {
             return BadRequest(ApiResult<RestaurantMenuCategoryDto>.Fail("Validation", "Could not create category."));
@@ -165,6 +202,7 @@ public sealed class BusinessRestaurantMenuController : ControllerBase
     [HttpPut("categories/{categoryId:guid}")]
     [ProducesResponseType(typeof(ApiResult<RestaurantMenuCategoryDto>), StatusCodes.Status200OK)]
     public async Task<IActionResult> UpdateCategory(
+        [FromQuery] Guid locationId,
         Guid categoryId,
         [FromBody] UpdateRestaurantMenuCategoryRequest request,
         CancellationToken cancellationToken)
@@ -175,8 +213,13 @@ public sealed class BusinessRestaurantMenuController : ControllerBase
             return Unauthorized(ApiResult<RestaurantMenuCategoryDto>.Fail("Unauthorized", "Missing business identity."));
         }
 
+        if (locationId == Guid.Empty)
+        {
+            return BadRequest(ApiResult<RestaurantMenuCategoryDto>.Fail("Validation", "locationId is required."));
+        }
+
         var dto = await _menu
-            .UpdateCategoryAsync(businessId.Value, categoryId, request, cancellationToken)
+            .UpdateCategoryAsync(businessId.Value, locationId, categoryId, request, cancellationToken)
             .ConfigureAwait(false);
 
         if (dto is null)
@@ -188,7 +231,10 @@ public sealed class BusinessRestaurantMenuController : ControllerBase
     }
 
     [HttpPost("categories/{categoryId:guid}/archive")]
-    public async Task<IActionResult> ArchiveCategory(Guid categoryId, CancellationToken cancellationToken)
+    public async Task<IActionResult> ArchiveCategory(
+        [FromQuery] Guid locationId,
+        Guid categoryId,
+        CancellationToken cancellationToken)
     {
         var businessId = User.GetBusinessId();
         if (businessId is null)
@@ -196,14 +242,22 @@ public sealed class BusinessRestaurantMenuController : ControllerBase
             return Unauthorized(ApiResult.Fail("Unauthorized", "Missing business identity."));
         }
 
-        var ok = await _menu.ArchiveCategoryAsync(businessId.Value, categoryId, cancellationToken).ConfigureAwait(false);
+        if (locationId == Guid.Empty)
+        {
+            return BadRequest(ApiResult.Fail("Validation", "locationId is required."));
+        }
+
+        var ok = await _menu.ArchiveCategoryAsync(businessId.Value, locationId, categoryId, cancellationToken).ConfigureAwait(false);
         return ok
             ? Ok(ApiResult.Ok("Category archived."))
             : NotFound(ApiResult.Fail("NotFound", "Category not found."));
     }
 
     [HttpPost("categories/{categoryId:guid}/restore")]
-    public async Task<IActionResult> RestoreCategory(Guid categoryId, CancellationToken cancellationToken)
+    public async Task<IActionResult> RestoreCategory(
+        [FromQuery] Guid locationId,
+        Guid categoryId,
+        CancellationToken cancellationToken)
     {
         var businessId = User.GetBusinessId();
         if (businessId is null)
@@ -211,7 +265,12 @@ public sealed class BusinessRestaurantMenuController : ControllerBase
             return Unauthorized(ApiResult.Fail("Unauthorized", "Missing business identity."));
         }
 
-        var ok = await _menu.RestoreCategoryAsync(businessId.Value, categoryId, cancellationToken).ConfigureAwait(false);
+        if (locationId == Guid.Empty)
+        {
+            return BadRequest(ApiResult.Fail("Validation", "locationId is required."));
+        }
+
+        var ok = await _menu.RestoreCategoryAsync(businessId.Value, locationId, categoryId, cancellationToken).ConfigureAwait(false);
         return ok
             ? Ok(ApiResult.Ok("Category restored."))
             : NotFound(ApiResult.Fail("NotFound", "Category not found."));
@@ -220,6 +279,7 @@ public sealed class BusinessRestaurantMenuController : ControllerBase
     [HttpGet("categories/{categoryId:guid}/items")]
     [ProducesResponseType(typeof(ApiResult<IReadOnlyList<RestaurantMenuItemDto>>), StatusCodes.Status200OK)]
     public async Task<IActionResult> ListItems(
+        [FromQuery] Guid locationId,
         Guid categoryId,
         [FromQuery] bool includeArchived = false,
         CancellationToken cancellationToken = default)
@@ -231,8 +291,14 @@ public sealed class BusinessRestaurantMenuController : ControllerBase
                 ApiResult<IReadOnlyList<RestaurantMenuItemDto>>.Fail("Unauthorized", "Missing business identity."));
         }
 
+        if (locationId == Guid.Empty)
+        {
+            return BadRequest(
+                ApiResult<IReadOnlyList<RestaurantMenuItemDto>>.Fail("Validation", "locationId is required."));
+        }
+
         var list = await _menu
-            .ListItemsAsync(businessId.Value, categoryId, includeArchived, cancellationToken)
+            .ListItemsAsync(businessId.Value, locationId, categoryId, includeArchived, cancellationToken)
             .ConfigureAwait(false);
         return Ok(ApiResult<IReadOnlyList<RestaurantMenuItemDto>>.Ok(MapItemUrls(list)));
     }
@@ -240,6 +306,7 @@ public sealed class BusinessRestaurantMenuController : ControllerBase
     [HttpPost("categories/{categoryId:guid}/items")]
     [ProducesResponseType(typeof(ApiResult<RestaurantMenuItemDto>), StatusCodes.Status200OK)]
     public async Task<IActionResult> CreateItem(
+        [FromQuery] Guid locationId,
         Guid categoryId,
         [FromBody] CreateRestaurantMenuItemRequest request,
         CancellationToken cancellationToken)
@@ -250,8 +317,13 @@ public sealed class BusinessRestaurantMenuController : ControllerBase
             return Unauthorized(ApiResult<RestaurantMenuItemDto>.Fail("Unauthorized", "Missing business identity."));
         }
 
+        if (locationId == Guid.Empty)
+        {
+            return BadRequest(ApiResult<RestaurantMenuItemDto>.Fail("Validation", "locationId is required."));
+        }
+
         var dto = await _menu
-            .CreateItemAsync(businessId.Value, categoryId, request, cancellationToken)
+            .CreateItemAsync(businessId.Value, locationId, categoryId, request, cancellationToken)
             .ConfigureAwait(false);
 
         if (dto is null)
@@ -265,6 +337,7 @@ public sealed class BusinessRestaurantMenuController : ControllerBase
     [HttpPut("items/{itemId:guid}")]
     [ProducesResponseType(typeof(ApiResult<RestaurantMenuItemDto>), StatusCodes.Status200OK)]
     public async Task<IActionResult> UpdateItem(
+        [FromQuery] Guid locationId,
         Guid itemId,
         [FromBody] UpdateRestaurantMenuItemRequest request,
         CancellationToken cancellationToken)
@@ -275,7 +348,12 @@ public sealed class BusinessRestaurantMenuController : ControllerBase
             return Unauthorized(ApiResult<RestaurantMenuItemDto>.Fail("Unauthorized", "Missing business identity."));
         }
 
-        var dto = await _menu.UpdateItemAsync(businessId.Value, itemId, request, cancellationToken).ConfigureAwait(false);
+        if (locationId == Guid.Empty)
+        {
+            return BadRequest(ApiResult<RestaurantMenuItemDto>.Fail("Validation", "locationId is required."));
+        }
+
+        var dto = await _menu.UpdateItemAsync(businessId.Value, locationId, itemId, request, cancellationToken).ConfigureAwait(false);
         if (dto is null)
         {
             return NotFound(ApiResult<RestaurantMenuItemDto>.Fail("NotFound", "Item not found."));
@@ -285,7 +363,10 @@ public sealed class BusinessRestaurantMenuController : ControllerBase
     }
 
     [HttpPost("items/{itemId:guid}/archive")]
-    public async Task<IActionResult> ArchiveItem(Guid itemId, CancellationToken cancellationToken)
+    public async Task<IActionResult> ArchiveItem(
+        [FromQuery] Guid locationId,
+        Guid itemId,
+        CancellationToken cancellationToken)
     {
         var businessId = User.GetBusinessId();
         if (businessId is null)
@@ -293,14 +374,22 @@ public sealed class BusinessRestaurantMenuController : ControllerBase
             return Unauthorized(ApiResult.Fail("Unauthorized", "Missing business identity."));
         }
 
-        var ok = await _menu.ArchiveItemAsync(businessId.Value, itemId, cancellationToken).ConfigureAwait(false);
+        if (locationId == Guid.Empty)
+        {
+            return BadRequest(ApiResult.Fail("Validation", "locationId is required."));
+        }
+
+        var ok = await _menu.ArchiveItemAsync(businessId.Value, locationId, itemId, cancellationToken).ConfigureAwait(false);
         return ok
             ? Ok(ApiResult.Ok("Item archived."))
             : NotFound(ApiResult.Fail("NotFound", "Item not found."));
     }
 
     [HttpPost("items/{itemId:guid}/restore")]
-    public async Task<IActionResult> RestoreItem(Guid itemId, CancellationToken cancellationToken)
+    public async Task<IActionResult> RestoreItem(
+        [FromQuery] Guid locationId,
+        Guid itemId,
+        CancellationToken cancellationToken)
     {
         var businessId = User.GetBusinessId();
         if (businessId is null)
@@ -308,7 +397,12 @@ public sealed class BusinessRestaurantMenuController : ControllerBase
             return Unauthorized(ApiResult.Fail("Unauthorized", "Missing business identity."));
         }
 
-        var ok = await _menu.RestoreItemAsync(businessId.Value, itemId, cancellationToken).ConfigureAwait(false);
+        if (locationId == Guid.Empty)
+        {
+            return BadRequest(ApiResult.Fail("Validation", "locationId is required."));
+        }
+
+        var ok = await _menu.RestoreItemAsync(businessId.Value, locationId, itemId, cancellationToken).ConfigureAwait(false);
         return ok
             ? Ok(ApiResult.Ok("Item restored."))
             : NotFound(ApiResult.Fail("NotFound", "Item not found."));
@@ -317,6 +411,7 @@ public sealed class BusinessRestaurantMenuController : ControllerBase
     [HttpPost("items/{itemId:guid}/image")]
     [ProducesResponseType(typeof(ApiResult<RestaurantMenuItemDto>), StatusCodes.Status200OK)]
     public async Task<IActionResult> UploadItemImage(
+        [FromQuery] Guid locationId,
         Guid itemId,
         IFormFile? file,
         CancellationToken cancellationToken)
@@ -325,6 +420,11 @@ public sealed class BusinessRestaurantMenuController : ControllerBase
         if (businessId is null)
         {
             return Unauthorized(ApiResult<RestaurantMenuItemDto>.Fail("Unauthorized", "Missing business identity."));
+        }
+
+        if (locationId == Guid.Empty)
+        {
+            return BadRequest(ApiResult<RestaurantMenuItemDto>.Fail("Validation", "locationId is required."));
         }
 
         if (file is null || file.Length == 0)
@@ -349,7 +449,7 @@ public sealed class BusinessRestaurantMenuController : ControllerBase
         }
 
         var dto = await _menu
-            .UpsertItemImageAsync(businessId.Value, itemId, relativePath, file.FileName, cancellationToken)
+            .UpsertItemImageAsync(businessId.Value, locationId, itemId, relativePath, file.FileName, cancellationToken)
             .ConfigureAwait(false);
 
         if (dto is null)
@@ -364,6 +464,7 @@ public sealed class BusinessRestaurantMenuController : ControllerBase
     [ProducesResponseType(typeof(ApiResult<RestaurantMenuItemDto>), StatusCodes.Status200OK)]
     [ProducesResponseType(typeof(ApiResult<RestaurantMenuItemDto>), StatusCodes.Status404NotFound)]
     public async Task<IActionResult> SetItemAvailability(
+        [FromQuery] Guid locationId,
         Guid itemId,
         [FromBody] SetRestaurantMenuItemAvailabilityRequest request,
         CancellationToken cancellationToken)
@@ -374,8 +475,13 @@ public sealed class BusinessRestaurantMenuController : ControllerBase
             return Unauthorized(ApiResult<RestaurantMenuItemDto>.Fail("Unauthorized", "Missing business identity."));
         }
 
+        if (locationId == Guid.Empty)
+        {
+            return BadRequest(ApiResult<RestaurantMenuItemDto>.Fail("Validation", "locationId is required."));
+        }
+
         var dto = await _menu
-            .SetItemAvailabilityAsync(businessId.Value, itemId, request.IsAvailable, cancellationToken)
+            .SetItemAvailabilityAsync(businessId.Value, locationId, itemId, request.IsAvailable, cancellationToken)
             .ConfigureAwait(false);
 
         if (dto is null)
@@ -387,7 +493,10 @@ public sealed class BusinessRestaurantMenuController : ControllerBase
     }
 
     [HttpDelete("items/{itemId:guid}/image")]
-    public async Task<IActionResult> DeleteItemImage(Guid itemId, CancellationToken cancellationToken)
+    public async Task<IActionResult> DeleteItemImage(
+        [FromQuery] Guid locationId,
+        Guid itemId,
+        CancellationToken cancellationToken)
     {
         var businessId = User.GetBusinessId();
         if (businessId is null)
@@ -395,7 +504,12 @@ public sealed class BusinessRestaurantMenuController : ControllerBase
             return Unauthorized(ApiResult.Fail("Unauthorized", "Missing business identity."));
         }
 
-        await _menu.RemoveItemImageAsync(businessId.Value, itemId, cancellationToken).ConfigureAwait(false);
+        if (locationId == Guid.Empty)
+        {
+            return BadRequest(ApiResult.Fail("Validation", "locationId is required."));
+        }
+
+        await _menu.RemoveItemImageAsync(businessId.Value, locationId, itemId, cancellationToken).ConfigureAwait(false);
         return Ok(ApiResult.Ok("Item image removed."));
     }
 

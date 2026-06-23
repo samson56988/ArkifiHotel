@@ -1,4 +1,5 @@
 import type { PublicStorefront, PublicStorefrontFacility, PublicStorefrontRoom } from './storefront-theme.models';
+import type { ShowcaseEventHall, ShowcaseEventHallsPage } from './event-hall.models';
 import type { ShowcaseRestaurant } from './restaurant.models';
 
 export interface ShowcaseRoom extends PublicStorefrontRoom {
@@ -34,7 +35,7 @@ export interface ShowcaseLocation {
   address: string | null;
 }
 
-export interface HotelShowcase extends Omit<PublicStorefront, 'rooms' | 'facilities' | 'restaurant'> {
+export interface HotelShowcase extends Omit<PublicStorefront, 'rooms' | 'facilities' | 'restaurant' | 'eventHalls'> {
   location: string;
   category: string;
   stars: number;
@@ -55,4 +56,7 @@ export interface HotelShowcase extends Omit<PublicStorefront, 'rooms' | 'facilit
   facilities: ShowcaseFacility[];
   /** Optional in-house restaurant & menu (mock until API ships). */
   restaurant: ShowcaseRestaurant | null;
+  /** Rentable event halls — request-only, no online payment. */
+  eventHalls: ShowcaseEventHall[];
+  eventHallsPage: ShowcaseEventHallsPage | null;
 }

@@ -1,5 +1,6 @@
 import type { PublicStorefront, PublicStorefrontFacility, PublicStorefrontRoom } from '../models/storefront-theme.models';
 import type { PublicStorefrontRestaurant } from '../models/public-restaurant.models';
+import type { PublicStorefrontEventHall } from '../models/event-hall.models';
 import type { ShowcaseRestaurant } from '../models/restaurant.models';
 import type { HotelShowcase, ShowcaseFacility, ShowcaseRoom, ShowcaseLocation, ShowcaseSocialLink } from '../models/hotel-showcase.models';
 import { facilityEmoji } from './hotel-theme';
@@ -98,6 +99,37 @@ export function mapPublicToShowcase(dto: PublicStorefront): HotelShowcase {
     rooms: dto.rooms.map(mapRoom),
     facilities: dto.facilities.map(mapFacility),
     restaurant: mapRestaurant(dto.restaurant),
+    eventHalls: mapEventHalls(dto.eventHalls),
+    eventHallsPage: mapEventHallsPage(dto.eventHalls),
+  };
+}
+
+function mapEventHalls(dto: PublicStorefrontEventHall[] | undefined): import('../models/event-hall.models').ShowcaseEventHall[] {
+  return (dto ?? []).map((h) => ({
+    id: h.id,
+    name: h.name,
+    description: h.description,
+    rentalPrice: h.rentalPrice,
+    maxCapacity: h.maxCapacity,
+    primaryImageUrl: h.primaryImageUrl,
+    imageUrls: h.imageUrls ?? [],
+  }));
+}
+
+function mapEventHallsPage(
+  halls: PublicStorefrontEventHall[] | undefined,
+): import('../models/event-hall.models').ShowcaseEventHallsPage | null {
+  if (!halls?.length) {
+    return null;
+  }
+
+  return {
+    navLabel: 'Event halls',
+    heroEyebrow: 'Meetings & celebrations',
+    heroTitle: 'Event spaces',
+    heroSubtitle:
+      'Submit a request and our events team will confirm availability. No online payment required.',
+    heroImageUrl: halls[0]?.primaryImageUrl ?? null,
   };
 }
 

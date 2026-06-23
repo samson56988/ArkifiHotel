@@ -23,11 +23,16 @@ public class RestaurantMenuSettingsConfiguration : IEntityTypeConfiguration<Rest
         builder.Property(e => e.Enabled).IsRequired().HasDefaultValue(false);
         builder.Property(e => e.CreatedAt).IsRequired();
 
-        builder.HasIndex(e => e.BusinessRegistrationId).IsUnique();
+        builder.HasIndex(e => new { e.BusinessRegistrationId, e.LocationId }).IsUnique();
 
         builder.HasOne(e => e.BusinessRegistration)
             .WithMany()
             .HasForeignKey(e => e.BusinessRegistrationId)
+            .OnDelete(DeleteBehavior.Cascade);
+
+        builder.HasOne(e => e.Location)
+            .WithMany()
+            .HasForeignKey(e => e.LocationId)
             .OnDelete(DeleteBehavior.Cascade);
     }
 }

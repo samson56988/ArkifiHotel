@@ -9,6 +9,10 @@ public class RestaurantMenuSettings
 
     public BusinessRegistration BusinessRegistration { get; set; } = null!;
 
+    public Guid LocationId { get; set; }
+
+    public BusinessLocation Location { get; set; } = null!;
+
     public bool Enabled { get; set; }
 
     public string NavLabel { get; set; } = "Restaurant & menu";

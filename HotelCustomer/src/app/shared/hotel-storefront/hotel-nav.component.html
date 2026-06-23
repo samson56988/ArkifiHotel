@@ -16,6 +16,11 @@
         <a [routerLink]="ctx.path('restaurant')" routerLinkActive="active">{{ sf.restaurant!.navLabel }}</a>
       </li>
     }
+    @if (sf.eventHallsPage && sf.eventHalls.length > 0) {
+      <li>
+        <a [routerLink]="ctx.path('event-halls')" routerLinkActive="active">{{ sf.eventHallsPage.navLabel }}</a>
+      </li>
+    }
     @if (sf.theme.about.enabled) {
       <li>
         <a [routerLink]="ctx.path('about')" routerLinkActive="active">About us</a>

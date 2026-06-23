@@ -38,6 +38,7 @@ public static class DependencyInjection
         services.Configure<JwtOptions>(configuration.GetSection(JwtOptions.SectionName));
         services.Configure<EncryptionSettings>(configuration.GetSection(EncryptionSettings.SectionName));
         services.Configure<CustomerAppOptions>(configuration.GetSection(CustomerAppOptions.SectionName));
+        services.Configure<PaystackOptions>(configuration.GetSection(PaystackOptions.SectionName));
 
         services.AddHttpClient<PaystackGatewayHandler>();
         services.AddHttpClient<FlutterwaveGatewayHandler>();
@@ -60,10 +61,13 @@ public static class DependencyInjection
         services.AddScoped<IBusinessLocationService, BusinessLocationService>();
         services.AddScoped<IBusinessRoomService, BusinessRoomService>();
         services.AddScoped<IBusinessPropertyFacilityService, BusinessPropertyFacilityService>();
+        services.AddScoped<IBusinessEventHallService, BusinessEventHallService>();
+        services.AddScoped<IPublicEventHallRequestService, PublicEventHallRequestService>();
         services.AddScoped<IBusinessRestaurantMenuService, BusinessRestaurantMenuService>();
         services.AddScoped<IPublicRestaurantOrderService, PublicRestaurantOrderService>();
         services.AddScoped<IBusinessRestaurantOrderService, BusinessRestaurantOrderService>();
         services.AddScoped<RestaurantMenuSeedService>();
+        services.AddScoped<RestaurantMenuLocationBackfillService>();
         services.AddHttpClient(nameof(RestaurantMenuSeedService));
         services.AddScoped<IBusinessBookingService, BusinessBookingService>();
         services.AddScoped<IPublicBookingLookupService, PublicBookingLookupService>();
@@ -72,6 +76,10 @@ public static class DependencyInjection
         services.AddScoped<IBusinessPaymentConfigurationService, BusinessPaymentConfigurationService>();
         services.AddScoped<IBusinessCustomerService, BusinessCustomerService>();
         services.AddScoped<IBusinessBookingPaymentService, BusinessBookingPaymentService>();
+        services.AddScoped<ISubscriptionPlanService, SubscriptionPlanService>();
+        services.AddScoped<IBusinessSubscriptionService, BusinessSubscriptionService>();
+        services.AddScoped<IBusinessDashboardService, BusinessDashboardService>();
+        services.AddScoped<BusinessSubscriptionSeedService>();
 
         return services;
     }

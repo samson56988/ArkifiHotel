@@ -79,6 +79,7 @@ public sealed class PublicRestaurantOrderService : IPublicRestaurantOrderService
             .Include(i => i.Category)
             .Where(i => menuItemIds.Contains(i.Id)
                         && i.Category.BusinessRegistrationId == business.Id
+                        && i.Category.LocationId == request.LocationId
                         && !i.IsArchived
                         && i.IsAvailable
                         && !i.Category.IsArchived)
@@ -503,7 +504,10 @@ public sealed class PublicRestaurantOrderService : IPublicRestaurantOrderService
         return await _db.BusinessRegistrations
             .AsNoTracking()
             .FirstOrDefaultAsync(b => b.Slug == normalized, cancellationToken)
-            .ConfigureAwait(false);
+            .ConfigureAwait(false) is { } business
+            && SubscriptionAccessHelper.IsStorefrontAccessible(business)
+            ? business
+            : null;
     }
 
     private Task<string> GenerateUniqueOrderNumberAsync(

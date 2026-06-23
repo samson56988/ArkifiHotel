@@ -175,6 +175,76 @@
   border-color: var(--navy);
 }
 
+.btn--block {
+  width: 100%;
+}
+
+/* ── Pricing ── */
+.pricing {
+  background: var(--white);
+}
+
+.pricing__loading {
+  text-align: center;
+  color: var(--muted);
+}
+
+.pricing__grid {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 1.25rem;
+}
+
+.pricing-card {
+  background: var(--off-white);
+  border: 1px solid rgba(11, 22, 40, 0.08);
+  border-radius: 12px;
+  padding: 1.5rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.65rem;
+}
+
+.pricing-card--featured {
+  border-color: rgba(201, 168, 76, 0.45);
+  box-shadow: 0 12px 40px rgba(201, 168, 76, 0.12);
+}
+
+.pricing-card h3 {
+  margin: 0;
+  font-family: 'Playfair Display', serif;
+  font-size: 1.35rem;
+  color: var(--navy);
+}
+
+.pricing-card__price {
+  margin: 0;
+  font-size: 1.75rem;
+  font-weight: 700;
+  color: var(--navy);
+}
+
+.pricing-card__save {
+  margin: 0;
+  font-size: 0.85rem;
+  font-weight: 600;
+  color: #287a4b;
+}
+
+.pricing-card__desc {
+  margin: 0 0 0.5rem;
+  font-size: 0.9rem;
+  line-height: 1.55;
+  color: var(--muted);
+  flex: 1;
+}
+
+@media (max-width: 860px) {
+  .pricing__grid {
+    grid-template-columns: 1fr;
+  }
+}
+
 /* ── Hero ── */
 .hero {
   position: relative;

@@ -1,4 +1,5 @@
 import type { ApiResult } from './api-result.model';
+import type { PublicStorefrontEventHall } from './event-hall.models';
 import type { PublicStorefrontRestaurant } from './public-restaurant.models';
 
 export type GlobalFontId =
@@ -197,6 +198,7 @@ export interface PublicStorefront {
   heroImages: string[];
   aboutImageUrl: string | null;
   restaurant?: PublicStorefrontRestaurant | null;
+  eventHalls?: PublicStorefrontEventHall[];
 }
 
 export type StorefrontThemeApiResponse = ApiResult<StorefrontTheme>;

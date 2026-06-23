@@ -1,7 +1,7 @@
 @use '../auth/auth-shared';
 
 .auth-panel--wide {
-  width: min(100%, 480px);
+  width: min(100%, 520px);
 }
 
 .auth-field-grid {
@@ -54,4 +54,66 @@
 
 .auth-hint--ok {
   color: #2f6b4f;
+}
+
+.auth-segment {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 0.55rem;
+}
+
+.auth-segment--compact {
+  margin-top: 0.65rem;
+}
+
+.auth-segment__option {
+  display: flex;
+  align-items: center;
+  gap: 0.45rem;
+  padding: 0.65rem 0.75rem;
+  border: 1px solid var(--color-border);
+  border-radius: 0.55rem;
+  background: var(--color-surface);
+  cursor: pointer;
+  font-size: 0.88rem;
+}
+
+.auth-segment__option:has(input:checked) {
+  border-color: color-mix(in srgb, var(--color-accent) 45%, var(--color-border));
+  background: color-mix(in srgb, var(--color-accent) 8%, var(--color-surface));
+}
+
+.auth-segment__option input {
+  accent-color: var(--color-accent-dark);
+}
+
+.plan-picker {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 0.55rem;
+}
+
+.plan-picker__card {
+  display: grid;
+  gap: 0.25rem;
+  text-align: left;
+  padding: 0.75rem;
+  border: 1px solid var(--color-border);
+  border-radius: 0.55rem;
+  background: var(--color-surface);
+  cursor: pointer;
+}
+
+.plan-picker__card strong {
+  color: var(--color-heading);
+}
+
+.plan-picker__card span {
+  font-size: 0.82rem;
+  color: var(--color-muted);
+}
+
+.plan-picker__card--active {
+  border-color: color-mix(in srgb, var(--color-accent) 45%, var(--color-border));
+  box-shadow: 0 0 0 1px color-mix(in srgb, var(--color-accent) 18%, transparent);
 }

@@ -84,8 +84,14 @@ app.MapGet("/", () => Results.Ok(new { name = "ArkifiHub API", version = "1.0" }
 
 using (var scope = app.Services.CreateScope())
 {
+    var menuLocationBackfill = scope.ServiceProvider.GetRequiredService<RestaurantMenuLocationBackfillService>();
+    await menuLocationBackfill.BackfillAsync();
+
     var seeder = scope.ServiceProvider.GetRequiredService<RestaurantMenuSeedService>();
     await seeder.SeedMissingMenusAsync(webRoot);
+
+    var subscriptionSeeder = scope.ServiceProvider.GetRequiredService<BusinessSubscriptionSeedService>();
+    await subscriptionSeeder.SeedMissingSubscriptionsAsync();
 }
 
 app.Run();

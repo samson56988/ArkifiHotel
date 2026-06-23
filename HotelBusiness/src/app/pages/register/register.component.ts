@@ -1,4 +1,4 @@
-import { Component, DestroyRef, inject } from '@angular/core';
+import { Component, computed, DestroyRef, inject, OnInit, signal } from '@angular/core';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import {
   AbstractControl,
@@ -11,8 +11,10 @@ import { Router, RouterLink } from '@angular/router';
 import { of } from 'rxjs';
 import { debounceTime, distinctUntilChanged, finalize, switchMap } from 'rxjs/operators';
 import { buildStorefrontUrl, CUSTOMER_STOREFRONT_BASE_URL } from '../../core/constants/storefront';
+import type { PlanTierOption, SubscriptionPlanDto } from '../../core/models/subscription.models';
 import { AuthApiService } from '../../core/services/auth-api.service';
 import { RegistrationApiService } from '../../core/services/registration-api.service';
+import { SubscriptionApiService } from '../../core/services/subscription-api.service';
 import { ToastService } from '../../core/services/toast.service';
 import { showAuthRequestError } from '../../core/utils/auth-request-error';
 import {
@@ -37,19 +39,25 @@ function passwordsMatch(control: AbstractControl): ValidationErrors | null {
   templateUrl: './register.component.html',
   styleUrl: './register.component.scss',
 })
-export class RegisterComponent {
+export class RegisterComponent implements OnInit {
   private readonly fb = inject(FormBuilder);
   private readonly authApi = inject(AuthApiService);
   private readonly registrationApi = inject(RegistrationApiService);
+  private readonly subscriptionApi = inject(SubscriptionApiService);
   private readonly router = inject(Router);
   private readonly toast = inject(ToastService);
   private readonly destroyRef = inject(DestroyRef);
 
   readonly storefrontBase = CUSTOMER_STOREFRONT_BASE_URL;
+  readonly plans = signal<SubscriptionPlanDto[]>([]);
+  readonly plansLoading = signal(true);
 
   readonly form = this.fb.nonNullable.group(
     {
       propertyName: ['', [Validators.required, Validators.minLength(2)]],
+      businessType: ['Hotel' as 'Hotel' | 'Shortlet', Validators.required],
+      planTier: ['free' as PlanTierOption, Validators.required],
+      proBilling: ['monthly' as 'monthly' | 'yearly'],
       slug: ['', [Validators.required, Validators.minLength(3), Validators.maxLength(128)]],
       firstName: ['', [Validators.required, Validators.minLength(2)]],
       lastName: ['', [Validators.required, Validators.minLength(2)]],
@@ -61,6 +69,10 @@ export class RegisterComponent {
     },
     { validators: [passwordsMatch] },
   );
+
+  readonly freePlan = computed(() => this.plans().find((p) => p.code === 'free') ?? null);
+  readonly proMonthlyPlan = computed(() => this.plans().find((p) => p.code === 'pro-monthly') ?? null);
+  readonly proYearlyPlan = computed(() => this.plans().find((p) => p.code === 'pro-yearly') ?? null);
 
   submitted = false;
   loading = false;
@@ -107,8 +119,49 @@ export class RegisterComponent {
       });
   }
 
+  ngOnInit(): void {
+    this.subscriptionApi
+      .listPublicPlans()
+      .pipe(finalize(() => this.plansLoading.set(false)))
+      .subscribe({
+        next: (res) => {
+          if (res.success && res.data) {
+            this.plans.set(res.data);
+          }
+        },
+      });
+  }
+
   storefrontPreview(): string {
     return buildStorefrontUrl(this.form.controls.slug.value);
+  }
+
+  formatPlanPrice(plan: SubscriptionPlanDto | null): string {
+    if (!plan || plan.priceAmount <= 0) {
+      return 'Free · 30-day trial';
+    }
+    const amount = new Intl.NumberFormat('en-NG', {
+      style: 'currency',
+      currency: plan.currency || 'NGN',
+      maximumFractionDigits: 0,
+    }).format(plan.priceAmount);
+    return plan.billingInterval === 'Yearly' ? `${amount}/year` : `${amount}/month`;
+  }
+
+  selectPlanTier(tier: PlanTierOption): void {
+    this.form.controls.planTier.setValue(tier);
+  }
+
+  selectProBilling(interval: 'monthly' | 'yearly'): void {
+    this.form.controls.proBilling.setValue(interval);
+  }
+
+  private selectedPlanCode(): string {
+    const tier = this.form.controls.planTier.value;
+    if (tier === 'free') {
+      return 'free';
+    }
+    return this.form.controls.proBilling.value === 'yearly' ? 'pro-yearly' : 'pro-monthly';
   }
 
   onSubmit(): void {
@@ -142,6 +195,8 @@ export class RegisterComponent {
         phoneNumber: raw.phoneNumber.trim(),
         password: raw.password,
         acceptTerms: raw.acceptTerms,
+        businessType: raw.businessType,
+        planCode: this.selectedPlanCode(),
       })
       .pipe(finalize(() => (this.loading = false)))
       .subscribe({
@@ -150,6 +205,9 @@ export class RegisterComponent {
             this.toast.success('We sent a verification code to your email.', 'Account created');
             this.form.reset({
               propertyName: '',
+              businessType: 'Hotel',
+              planTier: 'free',
+              proBilling: 'monthly',
               slug: '',
               firstName: '',
               lastName: '',
@@ -174,7 +232,15 @@ export class RegisterComponent {
   }
 
   showError(
-    field: 'propertyName' | 'slug' | 'firstName' | 'lastName' | 'email' | 'phoneNumber' | 'password' | 'confirmPassword',
+    field:
+      | 'propertyName'
+      | 'slug'
+      | 'firstName'
+      | 'lastName'
+      | 'email'
+      | 'phoneNumber'
+      | 'password'
+      | 'confirmPassword',
   ): boolean {
     const c = this.form.controls[field];
     return (c.touched || this.submitted) && c.invalid;

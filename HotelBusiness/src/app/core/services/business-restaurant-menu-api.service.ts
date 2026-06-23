@@ -27,8 +27,18 @@ export class BusinessRestaurantMenuApiService {
   private readonly baseUrl = inject(API_BASE_URL);
   private readonly root = `${this.baseUrl}/api/business/restaurant-menu`;
 
-  getSettings(): Observable<RestaurantMenuSettingsApiResponse> {
-    return this.http.get<unknown>(`${this.root}/settings`).pipe(
+  private query(locationId: string, extra?: Record<string, string>): string {
+    const params = new URLSearchParams({ locationId });
+    if (extra) {
+      for (const [key, value] of Object.entries(extra)) {
+        params.set(key, value);
+      }
+    }
+    return `?${params.toString()}`;
+  }
+
+  getSettings(locationId: string): Observable<RestaurantMenuSettingsApiResponse> {
+    return this.http.get<unknown>(`${this.root}/settings${this.query(locationId)}`).pipe(
       map((body) => normalizeApiResult<RestaurantMenuSettingsDto>(body)),
       catchError((err: HttpErrorResponse) =>
         throwError(() => parseHttpApiResult<RestaurantMenuSettingsDto>(err)),
@@ -36,8 +46,11 @@ export class BusinessRestaurantMenuApiService {
     );
   }
 
-  updateSettings(body: UpdateRestaurantMenuSettingsRequest): Observable<RestaurantMenuSettingsApiResponse> {
-    return this.http.put<unknown>(`${this.root}/settings`, body).pipe(
+  updateSettings(
+    locationId: string,
+    body: UpdateRestaurantMenuSettingsRequest,
+  ): Observable<RestaurantMenuSettingsApiResponse> {
+    return this.http.put<unknown>(`${this.root}/settings${this.query(locationId)}`, body).pipe(
       map((res) => normalizeApiResult<RestaurantMenuSettingsDto>(res)),
       catchError((err: HttpErrorResponse) =>
         throwError(() => parseHttpApiResult<RestaurantMenuSettingsDto>(err)),
@@ -45,10 +58,10 @@ export class BusinessRestaurantMenuApiService {
     );
   }
 
-  uploadHeroImage(file: File): Observable<RestaurantMenuSettingsApiResponse> {
+  uploadHeroImage(locationId: string, file: File): Observable<RestaurantMenuSettingsApiResponse> {
     const form = new FormData();
     form.append('file', file);
-    return this.http.post<unknown>(`${this.root}/settings/hero-image`, form).pipe(
+    return this.http.post<unknown>(`${this.root}/settings/hero-image${this.query(locationId)}`, form).pipe(
       map((res) => normalizeApiResult<RestaurantMenuSettingsDto>(res)),
       catchError((err: HttpErrorResponse) =>
         throwError(() => parseHttpApiResult<RestaurantMenuSettingsDto>(err)),
@@ -56,23 +69,26 @@ export class BusinessRestaurantMenuApiService {
     );
   }
 
-  deleteHeroImage(): Observable<ApiResult<unknown>> {
-    return this.http.delete<unknown>(`${this.root}/settings/hero-image`).pipe(
+  deleteHeroImage(locationId: string): Observable<ApiResult<unknown>> {
+    return this.http.delete<unknown>(`${this.root}/settings/hero-image${this.query(locationId)}`).pipe(
       map((res) => normalizeApiResult<unknown>(res)),
       catchError((err: HttpErrorResponse) => throwError(() => parseHttpApiResult<unknown>(err))),
     );
   }
 
-  listCategories(section?: 'food' | 'drink', includeArchived = false): Observable<RestaurantMenuCategoriesApiResponse> {
-    const params = new URLSearchParams();
+  listCategories(
+    locationId: string,
+    section?: 'food' | 'drink',
+    includeArchived = false,
+  ): Observable<RestaurantMenuCategoriesApiResponse> {
+    const extra: Record<string, string> = {};
     if (section) {
-      params.set('section', section);
+      extra['section'] = section;
     }
     if (includeArchived) {
-      params.set('includeArchived', 'true');
+      extra['includeArchived'] = 'true';
     }
-    const q = params.toString();
-    return this.http.get<unknown>(`${this.root}/categories${q ? `?${q}` : ''}`).pipe(
+    return this.http.get<unknown>(`${this.root}/categories${this.query(locationId, extra)}`).pipe(
       map((body) => normalizeApiResult<RestaurantMenuCategoryDto[]>(body)),
       catchError((err: HttpErrorResponse) =>
         throwError(() => parseHttpApiResult<RestaurantMenuCategoryDto[]>(err)),
@@ -80,8 +96,11 @@ export class BusinessRestaurantMenuApiService {
     );
   }
 
-  createCategory(body: CreateRestaurantMenuCategoryRequest): Observable<RestaurantMenuCategoryApiResponse> {
-    return this.http.post<unknown>(`${this.root}/categories`, body).pipe(
+  createCategory(
+    locationId: string,
+    body: CreateRestaurantMenuCategoryRequest,
+  ): Observable<RestaurantMenuCategoryApiResponse> {
+    return this.http.post<unknown>(`${this.root}/categories${this.query(locationId)}`, body).pipe(
       map((res) => normalizeApiResult<RestaurantMenuCategoryDto>(res)),
       catchError((err: HttpErrorResponse) =>
         throwError(() => parseHttpApiResult<RestaurantMenuCategoryDto>(err)),
@@ -89,8 +108,12 @@ export class BusinessRestaurantMenuApiService {
     );
   }
 
-  updateCategory(id: string, body: UpdateRestaurantMenuCategoryRequest): Observable<RestaurantMenuCategoryApiResponse> {
-    return this.http.put<unknown>(`${this.root}/categories/${id}`, body).pipe(
+  updateCategory(
+    locationId: string,
+    id: string,
+    body: UpdateRestaurantMenuCategoryRequest,
+  ): Observable<RestaurantMenuCategoryApiResponse> {
+    return this.http.put<unknown>(`${this.root}/categories/${id}${this.query(locationId)}`, body).pipe(
       map((res) => normalizeApiResult<RestaurantMenuCategoryDto>(res)),
       catchError((err: HttpErrorResponse) =>
         throwError(() => parseHttpApiResult<RestaurantMenuCategoryDto>(err)),
@@ -98,32 +121,57 @@ export class BusinessRestaurantMenuApiService {
     );
   }
 
-  archiveCategory(id: string): Observable<ApiResult<unknown>> {
-    return this.http.post<unknown>(`${this.root}/categories/${id}/archive`, {}).pipe(
+  archiveCategory(locationId: string, id: string): Observable<ApiResult<unknown>> {
+    return this.http.post<unknown>(`${this.root}/categories/${id}/archive${this.query(locationId)}`, {}).pipe(
       map((res) => normalizeApiResult<unknown>(res)),
       catchError((err: HttpErrorResponse) => throwError(() => parseHttpApiResult<unknown>(err))),
     );
   }
 
-  restoreCategory(id: string): Observable<ApiResult<unknown>> {
-    return this.http.post<unknown>(`${this.root}/categories/${id}/restore`, {}).pipe(
+  restoreCategory(locationId: string, id: string): Observable<ApiResult<unknown>> {
+    return this.http.post<unknown>(`${this.root}/categories/${id}/restore${this.query(locationId)}`, {}).pipe(
       map((res) => normalizeApiResult<unknown>(res)),
       catchError((err: HttpErrorResponse) => throwError(() => parseHttpApiResult<unknown>(err))),
     );
   }
 
-  listItems(categoryId: string, includeArchived = false): Observable<RestaurantMenuItemsApiResponse> {
-    const q = includeArchived ? '?includeArchived=true' : '';
-    return this.http.get<unknown>(`${this.root}/categories/${categoryId}/items${q}`).pipe(
-      map((body) => normalizeApiResult<RestaurantMenuItemDto[]>(body)),
-      catchError((err: HttpErrorResponse) =>
-        throwError(() => parseHttpApiResult<RestaurantMenuItemDto[]>(err)),
-      ),
-    );
+  listItems(
+    locationId: string,
+    categoryId: string,
+    includeArchived = false,
+  ): Observable<RestaurantMenuItemsApiResponse> {
+    const extra = includeArchived ? { includeArchived: 'true' } : undefined;
+    return this.http
+      .get<unknown>(`${this.root}/categories/${categoryId}/items${this.query(locationId, extra)}`)
+      .pipe(
+        map((body) => normalizeApiResult<RestaurantMenuItemDto[]>(body)),
+        catchError((err: HttpErrorResponse) =>
+          throwError(() => parseHttpApiResult<RestaurantMenuItemDto[]>(err)),
+        ),
+      );
   }
 
-  createItem(categoryId: string, body: CreateRestaurantMenuItemRequest): Observable<RestaurantMenuItemApiResponse> {
-    return this.http.post<unknown>(`${this.root}/categories/${categoryId}/items`, body).pipe(
+  createItem(
+    locationId: string,
+    categoryId: string,
+    body: CreateRestaurantMenuItemRequest,
+  ): Observable<RestaurantMenuItemApiResponse> {
+    return this.http
+      .post<unknown>(`${this.root}/categories/${categoryId}/items${this.query(locationId)}`, body)
+      .pipe(
+        map((res) => normalizeApiResult<RestaurantMenuItemDto>(res)),
+        catchError((err: HttpErrorResponse) =>
+          throwError(() => parseHttpApiResult<RestaurantMenuItemDto>(err)),
+        ),
+      );
+  }
+
+  updateItem(
+    locationId: string,
+    itemId: string,
+    body: UpdateRestaurantMenuItemRequest,
+  ): Observable<RestaurantMenuItemApiResponse> {
+    return this.http.put<unknown>(`${this.root}/items/${itemId}${this.query(locationId)}`, body).pipe(
       map((res) => normalizeApiResult<RestaurantMenuItemDto>(res)),
       catchError((err: HttpErrorResponse) =>
         throwError(() => parseHttpApiResult<RestaurantMenuItemDto>(err)),
@@ -131,33 +179,24 @@ export class BusinessRestaurantMenuApiService {
     );
   }
 
-  updateItem(itemId: string, body: UpdateRestaurantMenuItemRequest): Observable<RestaurantMenuItemApiResponse> {
-    return this.http.put<unknown>(`${this.root}/items/${itemId}`, body).pipe(
-      map((res) => normalizeApiResult<RestaurantMenuItemDto>(res)),
-      catchError((err: HttpErrorResponse) =>
-        throwError(() => parseHttpApiResult<RestaurantMenuItemDto>(err)),
-      ),
-    );
-  }
-
-  archiveItem(itemId: string): Observable<ApiResult<unknown>> {
-    return this.http.post<unknown>(`${this.root}/items/${itemId}/archive`, {}).pipe(
+  archiveItem(locationId: string, itemId: string): Observable<ApiResult<unknown>> {
+    return this.http.post<unknown>(`${this.root}/items/${itemId}/archive${this.query(locationId)}`, {}).pipe(
       map((res) => normalizeApiResult<unknown>(res)),
       catchError((err: HttpErrorResponse) => throwError(() => parseHttpApiResult<unknown>(err))),
     );
   }
 
-  restoreItem(itemId: string): Observable<ApiResult<unknown>> {
-    return this.http.post<unknown>(`${this.root}/items/${itemId}/restore`, {}).pipe(
+  restoreItem(locationId: string, itemId: string): Observable<ApiResult<unknown>> {
+    return this.http.post<unknown>(`${this.root}/items/${itemId}/restore${this.query(locationId)}`, {}).pipe(
       map((res) => normalizeApiResult<unknown>(res)),
       catchError((err: HttpErrorResponse) => throwError(() => parseHttpApiResult<unknown>(err))),
     );
   }
 
-  uploadItemImage(itemId: string, file: File): Observable<RestaurantMenuItemApiResponse> {
+  uploadItemImage(locationId: string, itemId: string, file: File): Observable<RestaurantMenuItemApiResponse> {
     const form = new FormData();
     form.append('file', file);
-    return this.http.post<unknown>(`${this.root}/items/${itemId}/image`, form).pipe(
+    return this.http.post<unknown>(`${this.root}/items/${itemId}/image${this.query(locationId)}`, form).pipe(
       map((res) => normalizeApiResult<RestaurantMenuItemDto>(res)),
       catchError((err: HttpErrorResponse) =>
         throwError(() => parseHttpApiResult<RestaurantMenuItemDto>(err)),
@@ -165,20 +204,26 @@ export class BusinessRestaurantMenuApiService {
     );
   }
 
-  deleteItemImage(itemId: string): Observable<ApiResult<unknown>> {
-    return this.http.delete<unknown>(`${this.root}/items/${itemId}/image`).pipe(
+  deleteItemImage(locationId: string, itemId: string): Observable<ApiResult<unknown>> {
+    return this.http.delete<unknown>(`${this.root}/items/${itemId}/image${this.query(locationId)}`).pipe(
       map((res) => normalizeApiResult<unknown>(res)),
       catchError((err: HttpErrorResponse) => throwError(() => parseHttpApiResult<unknown>(err))),
     );
   }
 
-  setItemAvailability(itemId: string, isAvailable: boolean): Observable<RestaurantMenuItemApiResponse> {
-    return this.http.put<unknown>(`${this.root}/items/${itemId}/availability`, { isAvailable }).pipe(
-      map((res) => normalizeApiResult<RestaurantMenuItemDto>(res)),
-      catchError((err: HttpErrorResponse) =>
-        throwError(() => parseHttpApiResult<RestaurantMenuItemDto>(err)),
-      ),
-    );
+  setItemAvailability(
+    locationId: string,
+    itemId: string,
+    isAvailable: boolean,
+  ): Observable<RestaurantMenuItemApiResponse> {
+    return this.http
+      .put<unknown>(`${this.root}/items/${itemId}/availability${this.query(locationId)}`, { isAvailable })
+      .pipe(
+        map((res) => normalizeApiResult<RestaurantMenuItemDto>(res)),
+        catchError((err: HttpErrorResponse) =>
+          throwError(() => parseHttpApiResult<RestaurantMenuItemDto>(err)),
+        ),
+      );
   }
 
   resolveImageUrl(path: string | null | undefined): string {

@@ -1,9 +1,12 @@
 import { Component, inject, OnInit, signal } from '@angular/core';
 import { FormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
+import { RouterLink } from '@angular/router';
 import type {
   RestaurantMenuCategoryDto,
   RestaurantMenuItemDto,
 } from '../../core/models/restaurant-menu.models';
+import type { BusinessLocationDto } from '../../core/models/locations.models';
+import { BusinessLocationsApiService } from '../../core/services/business-locations-api.service';
 import { BusinessRestaurantMenuApiService } from '../../core/services/business-restaurant-menu-api.service';
 import { ToastService } from '../../core/services/toast.service';
 import { ALLOWED_IMAGE_ACCEPT, filterAllowedImageFiles } from '../../core/utils/image-upload';
@@ -14,13 +17,14 @@ type MenuSection = 'food' | 'drink';
 @Component({
   selector: 'app-restaurant-menu',
   standalone: true,
-  imports: [ReactiveFormsModule, BusinessWorkspaceComponent],
+  imports: [ReactiveFormsModule, RouterLink, BusinessWorkspaceComponent],
   templateUrl: './restaurant-menu.component.html',
   styleUrl: './restaurant-menu.component.scss',
 })
 export class RestaurantMenuComponent implements OnInit {
   private readonly fb = inject(FormBuilder);
   private readonly api = inject(BusinessRestaurantMenuApiService);
+  private readonly locationsApi = inject(BusinessLocationsApiService);
   private readonly toast = inject(ToastService);
 
   readonly imageAccept = ALLOWED_IMAGE_ACCEPT;
@@ -32,6 +36,8 @@ export class RestaurantMenuComponent implements OnInit {
   readonly items = signal<RestaurantMenuItemDto[]>([]);
   readonly itemsLoading = signal(false);
   readonly editingItemId = signal<string | null>(null);
+  readonly locations = signal<BusinessLocationDto[]>([]);
+  readonly locationId = signal<string | null>(null);
 
   readonly settingsForm = this.fb.nonNullable.group({
     enabled: [false],
@@ -59,27 +65,70 @@ export class RestaurantMenuComponent implements OnInit {
   heroImageUrl: string | null = null;
 
   ngOnInit(): void {
-    this.loadSettings();
-    this.loadCategories();
+    this.locationsApi.listLocations().subscribe({
+      next: (res) => {
+        if (!res.success || !res.data?.length) {
+          this.loading.set(false);
+          return;
+        }
+        this.locations.set(res.data);
+        this.locationId.set(res.data[0].id);
+        this.loadMenuForLocation();
+      },
+      error: () => {
+        this.loading.set(false);
+        this.toast.error('Could not load locations.', 'Restaurant');
+      },
+    });
   }
 
-  loadSettings(): void {
-    this.api.getSettings().subscribe((res) => {
-      if (res.success && res.data) {
-        this.settingsForm.patchValue(res.data);
-        this.heroImageUrl = res.data.heroImageUrl;
-      }
+  onLocationChange(locationId: string): void {
+    if (!locationId || locationId === this.locationId()) {
+      return;
+    }
+    this.locationId.set(locationId);
+    this.selectedCategoryId.set(null);
+    this.items.set([]);
+    this.loadMenuForLocation();
+  }
+
+  private locationIdOrNull(): string | null {
+    const id = this.locationId();
+    return id && id.length > 0 ? id : null;
+  }
+
+  loadMenuForLocation(): void {
+    const locationId = this.locationIdOrNull();
+    if (!locationId) {
       this.loading.set(false);
+      return;
+    }
+
+    this.loading.set(true);
+    this.api.getSettings(locationId).subscribe({
+      next: (res) => {
+        if (res.success && res.data) {
+          this.settingsForm.patchValue(res.data);
+          this.heroImageUrl = res.data.heroImageUrl;
+        }
+        this.loading.set(false);
+        this.loadCategories();
+      },
+      error: () => {
+        this.loading.set(false);
+        this.toast.error('Could not load menu settings.', 'Restaurant');
+      },
     });
   }
 
   saveSettings(): void {
-    if (this.settingsForm.invalid) {
+    const locationId = this.locationIdOrNull();
+    if (!locationId || this.settingsForm.invalid) {
       this.settingsForm.markAllAsTouched();
       return;
     }
     this.savingSettings.set(true);
-    this.api.updateSettings(this.settingsForm.getRawValue()).subscribe({
+    this.api.updateSettings(locationId, this.settingsForm.getRawValue()).subscribe({
       next: (res) => {
         this.savingSettings.set(false);
         if (res.success) {
@@ -97,6 +146,10 @@ export class RestaurantMenuComponent implements OnInit {
   }
 
   onHeroImageSelected(event: Event): void {
+    const locationId = this.locationIdOrNull();
+    if (!locationId) {
+      return;
+    }
     const input = event.target as HTMLInputElement;
     const picked = input.files ? Array.from(input.files) : [];
     input.value = '';
@@ -104,7 +157,7 @@ export class RestaurantMenuComponent implements OnInit {
     if (!file) {
       return;
     }
-    this.api.uploadHeroImage(file).subscribe((res) => {
+    this.api.uploadHeroImage(locationId, file).subscribe((res) => {
       if (res.success && res.data) {
         this.heroImageUrl = res.data.heroImageUrl;
         this.toast.success('Hero photo updated.', 'Restaurant');
@@ -115,7 +168,11 @@ export class RestaurantMenuComponent implements OnInit {
   }
 
   removeHeroImage(): void {
-    this.api.deleteHeroImage().subscribe((res) => {
+    const locationId = this.locationIdOrNull();
+    if (!locationId) {
+      return;
+    }
+    this.api.deleteHeroImage(locationId).subscribe((res) => {
       if (res.success) {
         this.heroImageUrl = null;
         this.toast.success('Hero photo removed.', 'Restaurant');
@@ -131,7 +188,11 @@ export class RestaurantMenuComponent implements OnInit {
   }
 
   loadCategories(): void {
-    this.api.listCategories(this.activeSection()).subscribe((res) => {
+    const locationId = this.locationIdOrNull();
+    if (!locationId) {
+      return;
+    }
+    this.api.listCategories(locationId, this.activeSection()).subscribe((res) => {
       if (res.success && res.data) {
         this.categories.set(res.data);
       }
@@ -139,13 +200,14 @@ export class RestaurantMenuComponent implements OnInit {
   }
 
   addCategory(): void {
-    if (this.categoryForm.invalid) {
+    const locationId = this.locationIdOrNull();
+    if (!locationId || this.categoryForm.invalid) {
       this.categoryForm.markAllAsTouched();
       return;
     }
     const raw = this.categoryForm.getRawValue();
     this.api
-      .createCategory({
+      .createCategory(locationId, {
         name: raw.name,
         section: this.activeSection(),
         sortOrder: raw.sortOrder,
@@ -169,8 +231,12 @@ export class RestaurantMenuComponent implements OnInit {
   }
 
   loadItems(categoryId: string): void {
+    const locationId = this.locationIdOrNull();
+    if (!locationId) {
+      return;
+    }
     this.itemsLoading.set(true);
-    this.api.listItems(categoryId, true).subscribe((res) => {
+    this.api.listItems(locationId, categoryId, true).subscribe((res) => {
       this.itemsLoading.set(false);
       if (res.success && res.data) {
         this.items.set(res.data);
@@ -195,8 +261,9 @@ export class RestaurantMenuComponent implements OnInit {
   }
 
   saveItem(): void {
+    const locationId = this.locationIdOrNull();
     const categoryId = this.selectedCategoryId();
-    if (!categoryId || this.itemForm.invalid) {
+    if (!locationId || !categoryId || this.itemForm.invalid) {
       this.itemForm.markAllAsTouched();
       return;
     }
@@ -213,8 +280,8 @@ export class RestaurantMenuComponent implements OnInit {
     };
     const editId = this.editingItemId();
     const req = editId
-      ? this.api.updateItem(editId, body)
-      : this.api.createItem(categoryId, body);
+      ? this.api.updateItem(locationId, editId, body)
+      : this.api.createItem(locationId, categoryId, body);
 
     req.subscribe((res) => {
       if (res.success) {
@@ -229,11 +296,14 @@ export class RestaurantMenuComponent implements OnInit {
   }
 
   toggleItemArchive(item: RestaurantMenuItemDto): void {
+    const locationId = this.locationIdOrNull();
     const categoryId = this.selectedCategoryId();
-    if (!categoryId) {
+    if (!locationId || !categoryId) {
       return;
     }
-    const req = item.isArchived ? this.api.restoreItem(item.id) : this.api.archiveItem(item.id);
+    const req = item.isArchived
+      ? this.api.restoreItem(locationId, item.id)
+      : this.api.archiveItem(locationId, item.id);
     req.subscribe((res) => {
       if (res.success) {
         this.loadItems(categoryId);
@@ -243,11 +313,12 @@ export class RestaurantMenuComponent implements OnInit {
   }
 
   toggleItemAvailability(item: RestaurantMenuItemDto): void {
+    const locationId = this.locationIdOrNull();
     const categoryId = this.selectedCategoryId();
-    if (!categoryId) {
+    if (!locationId || !categoryId) {
       return;
     }
-    this.api.setItemAvailability(item.id, !item.isAvailable).subscribe((res) => {
+    this.api.setItemAvailability(locationId, item.id, !item.isAvailable).subscribe((res) => {
       if (res.success) {
         this.loadItems(categoryId);
         this.toast.success(
@@ -261,15 +332,16 @@ export class RestaurantMenuComponent implements OnInit {
   }
 
   onItemImageSelected(item: RestaurantMenuItemDto, event: Event): void {
+    const locationId = this.locationIdOrNull();
     const input = event.target as HTMLInputElement;
     const picked = input.files ? Array.from(input.files) : [];
     input.value = '';
     const file = filterAllowedImageFiles(picked).accepted[0];
     const categoryId = this.selectedCategoryId();
-    if (!file || !categoryId) {
+    if (!file || !locationId || !categoryId) {
       return;
     }
-    this.api.uploadItemImage(item.id, file).subscribe((res) => {
+    this.api.uploadItemImage(locationId, item.id, file).subscribe((res) => {
       if (res.success) {
         this.loadItems(categoryId);
         this.toast.success('Item photo updated.', 'Restaurant');

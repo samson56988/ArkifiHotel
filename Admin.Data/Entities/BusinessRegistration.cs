@@ -47,5 +47,16 @@ public class BusinessRegistration
 
     /// <summary>JSON theme for the guest storefront (banner, sections, footer, colors).</summary>
     public string? StorefrontThemeJson { get; set; }
+
+    /// <summary>Hotel or shortlet property type.</summary>
+    public BusinessType BusinessType { get; set; }
+
+    /// <summary>Current subscription plan.</summary>
+    public Guid SubscriptionPlanId { get; set; }
+
+    public SubscriptionPlan SubscriptionPlan { get; set; } = null!;
+
+    /// <summary>When the current subscription period ends (UTC).</summary>
+    public DateTimeOffset? SubscriptionExpiresAt { get; set; }
 }
 

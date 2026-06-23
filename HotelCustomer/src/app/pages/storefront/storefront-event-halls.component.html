@@ -1,0 +1,190 @@
+@if (ctx.storefront(); as sf) {
+  @if (page(); as pg) {
+    @if (halls().length > 0) {
+      <header
+        class="page-hero"
+        [class.page-hero--photo]="!!pg.heroImageUrl"
+        [style.background-image]="pg.heroImageUrl ? 'url(' + pg.heroImageUrl + ')' : null"
+      >
+        <div class="page-hero__inner">
+          <a [routerLink]="ctx.path()" class="back-link">← Back to home</a>
+          <div class="sec-eyebrow sec-eyebrow--light">{{ pg.heroEyebrow }}</div>
+          <h1 class="page-hero__title">{{ pg.heroTitle }}</h1>
+          @if (pg.heroSubtitle) {
+            <p class="page-hero__sub">{{ pg.heroSubtitle }}</p>
+          }
+        </div>
+      </header>
+
+      <section class="halls-section section-wrap">
+        <div class="section-header">
+          <div class="sec-eyebrow">Our spaces</div>
+          <h2 class="sec-title">Choose a venue</h2>
+          <p class="sec-sub">
+            Rental prices are starting rates. Submit a request — our team will confirm dates and send a formal quote. No payment online.
+          </p>
+        </div>
+
+        <div class="halls-grid">
+          @for (hall of halls(); track hall.id) {
+            <article class="hall-card">
+              @if (hall.primaryImageUrl) {
+                <div class="hall-card__media" [style.background-image]="'url(' + hall.primaryImageUrl + ')'"></div>
+              } @else {
+                <div class="hall-card__media hall-card__media--placeholder" aria-hidden="true">🎪</div>
+              }
+              <div class="hall-card__body">
+                <div class="hall-card__head">
+                  <h3 class="hall-card__name">{{ hall.name }}</h3>
+                  <span class="hall-card__price">From {{ formatNaira(hall.rentalPrice) }}</span>
+                </div>
+                <p class="hall-card__meta">{{ capacityLabel(hall) }}</p>
+                @if (hall.description) {
+                  <p class="hall-card__desc">{{ hall.description }}</p>
+                }
+                <button type="button" class="hall-card__btn" (click)="openRequest(hall)">Request this space</button>
+              </div>
+            </article>
+          }
+        </div>
+      </section>
+
+      @if (requestOpen()) {
+        <div class="checkout-modal-overlay" (click)="closeRequest()" role="presentation">
+          <div
+            class="checkout-modal"
+            role="dialog"
+            aria-modal="true"
+            aria-labelledby="request-title"
+            (click)="$event.stopPropagation()"
+          >
+            <button
+              type="button"
+              class="checkout-modal__close"
+              (click)="closeRequest()"
+              [disabled]="submitting()"
+              aria-label="Close"
+            >
+              ✕
+            </button>
+
+            @if (selectedHall(); as hall) {
+              <header class="checkout-modal__head">
+                <h2 id="request-title">Request {{ hall.name }}</h2>
+                <p class="checkout-modal__sub">
+                  From {{ formatNaira(hall.rentalPrice) }} · {{ capacityLabel(hall) }}
+                </p>
+              </header>
+
+              @if (successMessage()) {
+                <div class="request-success" role="status">
+                  <div class="request-success__icon">✓</div>
+                  <p>{{ successMessage() }}</p>
+                  <button type="button" class="hall-card__btn" (click)="closeRequest()">Close</button>
+                </div>
+              } @else {
+                <form class="checkout-form" (ngSubmit)="submitRequest()">
+                  <label class="field">
+                    <span>Full name</span>
+                    <input
+                      class="field__input"
+                      type="text"
+                      [ngModel]="guestName()"
+                      (ngModelChange)="guestName.set($event)"
+                      name="guestName"
+                      required
+                    />
+                  </label>
+
+                  <label class="field">
+                    <span>Email</span>
+                    <input
+                      class="field__input"
+                      type="email"
+                      [ngModel]="guestEmail()"
+                      (ngModelChange)="guestEmail.set($event)"
+                      name="guestEmail"
+                      required
+                    />
+                  </label>
+
+                  <label class="field">
+                    <span>Phone</span>
+                    <input
+                      class="field__input"
+                      type="tel"
+                      [ngModel]="guestPhone()"
+                      (ngModelChange)="guestPhone.set($event)"
+                      name="guestPhone"
+                      placeholder="+2348012345678 or 08012345678"
+                      required
+                    />
+                  </label>
+
+                  <div class="field-row">
+                    <label class="field">
+                      <span>Event date</span>
+                      <input
+                        class="field__input"
+                        type="date"
+                        [ngModel]="eventDate()"
+                        (ngModelChange)="eventDate.set($event)"
+                        name="eventDate"
+                        required
+                      />
+                    </label>
+                    <label class="field">
+                      <span>End date (optional)</span>
+                      <input
+                        class="field__input"
+                        type="date"
+                        [ngModel]="eventEndDate()"
+                        (ngModelChange)="eventEndDate.set($event)"
+                        name="eventEndDate"
+                      />
+                    </label>
+                  </div>
+
+                  <label class="field">
+                    <span>Notes (optional)</span>
+                    <textarea
+                      class="field__input field__input--area"
+                      rows="3"
+                      [ngModel]="notes()"
+                      (ngModelChange)="notes.set($event)"
+                      name="notes"
+                      placeholder="Expected guest count, setup needs, catering preferences…"
+                    ></textarea>
+                  </label>
+
+                  @if (formError()) {
+                    <p class="checkout-error" role="alert">{{ formError() }}</p>
+                  }
+
+                  <button type="submit" class="checkout-pay" [disabled]="submitting()">
+                    {{ submitting() ? 'Submitting…' : 'Submit request' }}
+                  </button>
+                  <p class="request-note">No payment required — we will contact you to confirm availability.</p>
+                </form>
+              }
+            }
+          </div>
+        </div>
+      }
+
+      <app-hotel-footer [storefront]="sf" />
+    } @else {
+      <section class="halls-unavailable section-wrap">
+        <a [routerLink]="ctx.path()" class="back-link back-link--dark">← Back to home</a>
+        <h1 class="sec-title">Event halls</h1>
+        <p class="sec-sub">No event spaces are listed for this branch yet.</p>
+      </section>
+    }
+  } @else {
+    <section class="halls-unavailable section-wrap">
+      <a [routerLink]="ctx.path()" class="back-link back-link--dark">← Back to home</a>
+      <h1 class="sec-title">Event halls</h1>
+      <p class="sec-sub">This hotel has not published event spaces yet.</p>
+    </section>
+  }
+}

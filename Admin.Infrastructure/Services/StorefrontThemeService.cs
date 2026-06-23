@@ -10,11 +10,16 @@ public sealed class StorefrontThemeService : IStorefrontThemeService
 {
     private readonly AdminDbContext _db;
     private readonly IBusinessRestaurantMenuService _restaurantMenu;
+    private readonly IBusinessEventHallService _eventHalls;
 
-    public StorefrontThemeService(AdminDbContext db, IBusinessRestaurantMenuService restaurantMenu)
+    public StorefrontThemeService(
+        AdminDbContext db,
+        IBusinessRestaurantMenuService restaurantMenu,
+        IBusinessEventHallService eventHalls)
     {
         _db = db;
         _restaurantMenu = restaurantMenu;
+        _eventHalls = eventHalls;
     }
 
     public async Task<StorefrontThemeDto?> GetAsync(Guid businessId, CancellationToken cancellationToken = default)
@@ -79,6 +84,11 @@ public sealed class StorefrontThemeService : IStorefrontThemeService
             .ConfigureAwait(false);
 
         if (business is null)
+        {
+            return null;
+        }
+
+        if (!SubscriptionAccessHelper.IsStorefrontAccessible(business))
         {
             return null;
         }
@@ -238,9 +248,19 @@ public sealed class StorefrontThemeService : IStorefrontThemeService
             .FirstOrDefaultAsync(cancellationToken)
             .ConfigureAwait(false);
 
-        var restaurant = await _restaurantMenu
-            .GetPublicMenuAsync(business.Id, cancellationToken)
-            .ConfigureAwait(false);
+        PublicStorefrontRestaurantDto? restaurant = null;
+        IReadOnlyList<PublicStorefrontEventHallDto> eventHalls = Array.Empty<PublicStorefrontEventHallDto>();
+
+        if (effectiveLocationId.HasValue)
+        {
+            restaurant = await _restaurantMenu
+                .GetPublicMenuAsync(business.Id, effectiveLocationId.Value, cancellationToken)
+                .ConfigureAwait(false);
+
+            eventHalls = await _eventHalls
+                .GetPublicForLocationAsync(business.Id, effectiveLocationId.Value, cancellationToken)
+                .ConfigureAwait(false);
+        }
 
         return new PublicStorefrontDto
         {
@@ -258,6 +278,7 @@ public sealed class StorefrontThemeService : IStorefrontThemeService
             HeroImages = bannerImages,
             AboutImageUrl = aboutImagePath,
             Restaurant = restaurant,
+            EventHalls = eventHalls,
         };
     }
 

@@ -9,6 +9,7 @@ export interface RestaurantMenuSettingsDto {
   mealsSectionTitle: string;
   drinksSectionTitle: string;
   heroImageUrl: string | null;
+  locationId?: string;
 }
 
 export interface UpdateRestaurantMenuSettingsRequest {

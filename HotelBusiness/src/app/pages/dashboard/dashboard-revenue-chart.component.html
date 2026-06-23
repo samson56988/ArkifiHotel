@@ -1,0 +1,31 @@
+@if (bars().length === 0) {
+  <p class="empty">No revenue data for this period.</p>
+} @else if (!hasData()) {
+  <p class="empty">No completed payments in this period yet.</p>
+} @else {
+  <div class="legend">
+    <span class="legend__item"><i class="legend__swatch legend__swatch--booking"></i> Bookings</span>
+    <span class="legend__item"><i class="legend__swatch legend__swatch--restaurant"></i> Restaurant</span>
+  </div>
+
+  <div class="chart" role="img" aria-label="Revenue trend chart">
+  @for (bar of bars(); track bar.date) {
+    <div class="chart__column">
+      <div
+        class="chart__bar"
+        [title]="bar.label + ': ' + formatMoney(bar.total) + ' (Bookings ' + formatMoney(bar.booking) + ', Restaurant ' + formatMoney(bar.restaurant) + ')'"
+      >
+        @if (bar.restaurantHeight > 0) {
+          <span class="chart__segment chart__segment--restaurant" [style.height.%]="bar.restaurantHeight"></span>
+        }
+        @if (bar.bookingHeight > 0) {
+          <span class="chart__segment chart__segment--booking" [style.height.%]="bar.bookingHeight"></span>
+        }
+      </div>
+      @if (bar.showLabel) {
+        <span class="chart__label">{{ bar.label }}</span>
+      }
+    </div>
+  }
+  </div>
+}

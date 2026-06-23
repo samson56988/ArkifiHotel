@@ -17,6 +17,8 @@ public sealed class RestaurantMenuSettingsDto
     public string DrinksSectionTitle { get; set; } = "Drinks";
 
     public string? HeroImageUrl { get; set; }
+
+    public Guid LocationId { get; set; }
 }
 
 public sealed class UpdateRestaurantMenuSettingsRequest

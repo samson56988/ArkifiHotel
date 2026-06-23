@@ -1,6 +1,7 @@
 import { createDefaultTheme } from '../models/storefront-theme.models';
 import type { HotelShowcase } from '../models/hotel-showcase.models';
 import { LEKKI_RESTAURANT_MENU } from './mock-restaurant-menu.data';
+import { LEKKI_EVENT_HALLS, LEKKI_EVENT_HALLS_PAGE } from './mock-event-halls.data';
 
 const IMG = {
   hero1: 'https://images.unsplash.com/photo-1571896349842-33c89424de2d?w=1600&q=80',
@@ -352,6 +353,8 @@ export const MOCK_HOTELS: Record<string, HotelShowcase> = {
       },
     ],
     restaurant: LEKKI_RESTAURANT_MENU,
+    eventHalls: LEKKI_EVENT_HALLS,
+    eventHallsPage: LEKKI_EVENT_HALLS_PAGE,
   },
 
   'heritage-abuja': {
@@ -543,6 +546,8 @@ export const MOCK_HOTELS: Record<string, HotelShowcase> = {
       },
     ],
     restaurant: null,
+    eventHalls: [],
+    eventHallsPage: null,
   },
 };
 
@@ -567,6 +572,8 @@ export function getMockHotel(slug: string, locationRouteId?: string | null): Hot
       heroImages: [],
       galleryImages: [],
       restaurant: null,
+      eventHalls: [],
+      eventHallsPage: null,
     };
   }
 
@@ -590,6 +597,10 @@ export function getMockHotel(slug: string, locationRouteId?: string | null): Hot
     ? base.facilities.filter((f) => !f.locationId || f.locationId === effectiveId)
     : base.facilities;
 
+  const eventHalls = filterByBranch
+    ? base.eventHalls.filter((h) => !h.locationId || h.locationId === effectiveId)
+    : base.eventHalls;
+
   const heroImages = filterByBranch
     ? rooms.map((r) => r.primaryImageUrl).filter((u): u is string => !!u)
     : base.heroImages;
@@ -601,6 +612,8 @@ export function getMockHotel(slug: string, locationRouteId?: string | null): Hot
     branchName,
     rooms,
     facilities,
+    eventHalls,
+    eventHallsPage: eventHalls.length > 0 ? base.eventHallsPage : null,
     heroImages: heroImages.length > 0 ? heroImages : base.heroImages,
     galleryImages: base.galleryImages,
   };

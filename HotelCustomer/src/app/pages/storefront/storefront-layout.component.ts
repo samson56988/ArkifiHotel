@@ -30,13 +30,14 @@ export class StorefrontLayoutComponent implements OnInit, OnDestroy {
       filter((e) => e instanceof NavigationEnd),
       map(() => {
         const url = this.router.url;
-        return url.includes('/rooms') || url.includes('/facilities') || url.includes('/about') || url.includes('/restaurant');
+        return url.includes('/rooms') || url.includes('/facilities') || url.includes('/about') || url.includes('/restaurant') || url.includes('/event-halls');
       }),
       startWith(
         this.router.url.includes('/rooms') ||
           this.router.url.includes('/facilities') ||
           this.router.url.includes('/about') ||
-          this.router.url.includes('/restaurant'),
+          this.router.url.includes('/restaurant') ||
+          this.router.url.includes('/event-halls'),
       ),
     ),
     { initialValue: false },

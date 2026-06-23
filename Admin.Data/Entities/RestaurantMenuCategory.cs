@@ -8,6 +8,10 @@ public class RestaurantMenuCategory
 
     public BusinessRegistration BusinessRegistration { get; set; } = null!;
 
+    public Guid LocationId { get; set; }
+
+    public BusinessLocation Location { get; set; } = null!;
+
     public string Name { get; set; } = null!;
 
     public RestaurantMenuSection Section { get; set; }

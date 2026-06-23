@@ -20,4 +20,10 @@ public sealed class RegisterBusinessRequest
 
     /// <summary>URL-safe storefront path segment, e.g. marina-suites.</summary>
     public string Slug { get; set; } = string.Empty;
+
+    /// <summary>Hotel or Shortlet.</summary>
+    public string BusinessType { get; set; } = "Hotel";
+
+    /// <summary>Plan code: free, pro-monthly, or pro-yearly.</summary>
+    public string PlanCode { get; set; } = "free";
 }

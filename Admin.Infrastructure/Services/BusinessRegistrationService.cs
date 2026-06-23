@@ -102,7 +102,30 @@ public sealed class BusinessRegistrationService : IBusinessRegistrationService
             return RegisterBusinessResult.Fail("DuplicateSlug", "This hotel slug is already taken. Choose another.");
         }
 
+        if (!TryParseBusinessType(request.BusinessType, out var businessType))
+        {
+            return RegisterBusinessResult.Fail("Validation", "Business type must be Hotel or Shortlet.");
+        }
+
+        var planCode = string.IsNullOrWhiteSpace(request.PlanCode)
+            ? "free"
+            : request.PlanCode.Trim().ToLowerInvariant();
+
+        var plan = await _db.SubscriptionPlans
+            .AsNoTracking()
+            .FirstOrDefaultAsync(p => p.Code == planCode && p.IsActive, cancellationToken)
+            .ConfigureAwait(false);
+
+        if (plan is null)
+        {
+            return RegisterBusinessResult.Fail("Validation", "Select a valid subscription plan.");
+        }
+
         var now = DateTimeOffset.UtcNow;
+        var subscriptionExpiresAt = plan.Tier == SubscriptionPlanTier.Free
+            ? SubscriptionAccessHelper.ComputeTrialExpiry(now)
+            : SubscriptionAccessHelper.ComputeTrialExpiry(now);
+
         var entity = new BusinessRegistration
         {
             Id = Guid.NewGuid(),
@@ -117,6 +140,9 @@ public sealed class BusinessRegistrationService : IBusinessRegistrationService
             TermsAcceptedAt = now,
             CreatedAt = now,
             Slug = slug,
+            BusinessType = businessType,
+            SubscriptionPlanId = plan.Id,
+            SubscriptionExpiresAt = subscriptionExpiresAt,
         };
 
         entity.HashedPassword = _passwordHasher.HashPassword(entity, request.Password);
@@ -187,4 +213,26 @@ public sealed class BusinessRegistrationService : IBusinessRegistrationService
             Slug = e.Slug,
             LogoUrl = e.LogoPath,
         };
+
+    private static bool TryParseBusinessType(string? raw, out BusinessType businessType)
+    {
+        businessType = BusinessType.Hotel;
+        if (string.IsNullOrWhiteSpace(raw))
+        {
+            return true;
+        }
+
+        return raw.Trim().ToLowerInvariant() switch
+        {
+            "hotel" => Assign(BusinessType.Hotel, out businessType),
+            "shortlet" or "shortlets" => Assign(BusinessType.Shortlet, out businessType),
+            _ => false,
+        };
+    }
+
+    private static bool Assign(BusinessType value, out BusinessType businessType)
+    {
+        businessType = value;
+        return true;
+    }
 }

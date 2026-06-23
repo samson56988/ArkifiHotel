@@ -1,0 +1,147 @@
+@import '../../shared/hotel-storefront/hotel-shared';
+@import './storefront-restaurant.component.scss';
+
+.halls-section {
+  padding-top: 2.5rem;
+  padding-bottom: 4rem;
+}
+
+.halls-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(min(100%, 320px), 1fr));
+  gap: 1.75rem;
+}
+
+.hall-card {
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  overflow: hidden;
+  background: var(--surface, #fff);
+  display: flex;
+  flex-direction: column;
+}
+
+.hall-card__media {
+  aspect-ratio: 16 / 10;
+  background-size: cover;
+  background-position: center;
+}
+
+.hall-card__media--placeholder {
+  display: grid;
+  place-items: center;
+  font-size: 2.5rem;
+  background: color-mix(in srgb, var(--primary) 8%, var(--background));
+}
+
+.hall-card__body {
+  padding: 1.25rem 1.35rem 1.5rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.65rem;
+  flex: 1;
+}
+
+.hall-card__head {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: 0.75rem;
+}
+
+.hall-card__name {
+  margin: 0;
+  font-family: var(--font-heading, 'Cormorant Garamond', serif);
+  font-size: 1.35rem;
+  line-height: 1.2;
+  color: var(--text);
+}
+
+.hall-card__price {
+  font-size: 0.85rem;
+  font-weight: 600;
+  color: var(--accent);
+  white-space: nowrap;
+}
+
+.hall-card__meta {
+  margin: 0;
+  font-size: 0.82rem;
+  color: color-mix(in srgb, var(--text) 55%, transparent);
+}
+
+.hall-card__desc {
+  margin: 0;
+  font-size: 0.9rem;
+  line-height: 1.65;
+  color: color-mix(in srgb, var(--text) 72%, transparent);
+  flex: 1;
+}
+
+.hall-card__btn {
+  appearance: none;
+  border: none;
+  border-radius: 8px;
+  padding: 0.75rem 1rem;
+  font: inherit;
+  font-weight: 600;
+  cursor: pointer;
+  background: var(--primary);
+  color: #fff;
+  margin-top: 0.35rem;
+  transition: opacity 0.2s;
+}
+
+.hall-card__btn:hover {
+  opacity: 0.92;
+}
+
+.field-row {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 0.75rem;
+}
+
+@media (max-width: 520px) {
+  .field-row {
+    grid-template-columns: 1fr;
+  }
+}
+
+.field__input--area {
+  resize: vertical;
+  min-height: 88px;
+}
+
+.request-note {
+  margin: 0.75rem 0 0;
+  font-size: 0.82rem;
+  color: color-mix(in srgb, var(--text) 55%, transparent);
+  text-align: center;
+}
+
+.request-success {
+  text-align: center;
+  padding: 1rem 0 0.5rem;
+}
+
+.request-success__icon {
+  width: 3rem;
+  height: 3rem;
+  border-radius: 50%;
+  background: color-mix(in srgb, #2e7d32 15%, transparent);
+  color: #2e7d32;
+  display: grid;
+  place-items: center;
+  font-size: 1.5rem;
+  margin: 0 auto 1rem;
+}
+
+.request-success p {
+  margin: 0 0 1.25rem;
+  line-height: 1.6;
+}
+
+.halls-unavailable {
+  padding: 6rem 5vw 4rem;
+}

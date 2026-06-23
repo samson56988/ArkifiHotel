@@ -2,100 +2,240 @@
   <header class="topbar">
     <div>
       <p class="eyebrow">Business Dashboard</p>
-      <h1>Welcome back, Marina Suites</h1>
+      <h1>
+        @if (dashboard(); as data) {
+          Welcome back, {{ data.businessName }}
+        } @else {
+          Welcome back
+        }
+      </h1>
     </div>
     <div class="topbar__actions">
-      <button type="button" class="btn btn--ghost">Export report</button>
       <a routerLink="/rooms/new" class="btn btn--primary">Add room</a>
     </div>
   </header>
 
-  <section class="kpi-grid">
-    @for (kpi of kpis; track kpi.label) {
-      <article class="kpi-card">
-        <p class="kpi-card__label">{{ kpi.label }}</p>
-        <p class="kpi-card__value">{{ kpi.value }}</p>
-        <p class="kpi-card__delta" [class.is-down]="kpi.trend === 'down'">{{ kpi.delta }} vs last month</p>
-      </article>
+  @if (subscription(); as sub) {
+    <section
+      class="subscription-banner"
+      [class.subscription-banner--warn]="sub.status === 'GracePeriod'"
+      [class.subscription-banner--bad]="sub.status === 'Expired'"
+    >
+      <div>
+        <p class="subscription-banner__eyebrow">Your subscription</p>
+        <p class="subscription-banner__title">
+          {{ sub.plan.name }}
+          <span class="subscription-banner__status">{{ subscriptionStatusLabel(sub) }}</span>
+        </p>
+        <p class="subscription-banner__meta">
+          Expires {{ formatExpiry(sub.expiresAt) }}
+          @if (sub.daysRemaining !== null) {
+            · {{ sub.daysRemaining }} day(s) left
+          }
+          @if (!sub.isStorefrontAccessible) {
+            · Guest storefront is blocked
+          }
+        </p>
+      </div>
+      <a routerLink="/subscription" class="btn btn--ghost">Manage plan</a>
+    </section>
+  } @else if (subscriptionLoading()) {
+    <p class="subscription-loading">Loading subscription…</p>
+  }
+
+  <section class="range-toolbar panel">
+    <div class="range-toolbar__presets">
+      <span class="range-toolbar__label">Date range</span>
+      <div class="range-toolbar__buttons">
+        <button
+          type="button"
+          class="range-btn"
+          [class.range-btn--active]="rangePreset() === 'last7'"
+          (click)="setRangePreset('last7')"
+        >
+          Last 7 days
+        </button>
+        <button
+          type="button"
+          class="range-btn"
+          [class.range-btn--active]="rangePreset() === 'last30'"
+          (click)="setRangePreset('last30')"
+        >
+          Last 30 days
+        </button>
+        <button
+          type="button"
+          class="range-btn"
+          [class.range-btn--active]="rangePreset() === 'thisMonth'"
+          (click)="setRangePreset('thisMonth')"
+        >
+          This month
+        </button>
+        <button
+          type="button"
+          class="range-btn"
+          [class.range-btn--active]="rangePreset() === 'custom'"
+          (click)="setRangePreset('custom')"
+        >
+          Custom
+        </button>
+      </div>
+    </div>
+
+    @if (rangePreset() === 'custom') {
+      <div class="range-toolbar__custom">
+        <label>
+          <span>From</span>
+          <input type="date" [(ngModel)]="customFrom" />
+        </label>
+        <label>
+          <span>To</span>
+          <input type="date" [(ngModel)]="customTo" />
+        </label>
+        <button type="button" class="btn btn--ghost" (click)="applyCustomRange()">Apply</button>
+      </div>
+    }
+
+    @if (periodLabel()) {
+      <p class="range-toolbar__period">Showing {{ periodLabel() }}</p>
     }
   </section>
 
-  <section class="panel-grid">
-    <article class="panel panel--wide">
-      <header class="panel__head">
-        <h2>Recent bookings</h2>
-        <a routerLink="/bookings">View all</a>
-      </header>
-      <div class="table-wrap">
-        <table>
-          <thead>
-            <tr>
-              <th>Guest</th>
-              <th>Unit</th>
-              <th>Check-in</th>
-              <th>Nights</th>
-              <th>Status</th>
-            </tr>
-          </thead>
-          <tbody>
-            @for (booking of bookings; track booking.guest) {
-              <tr>
-                <td>{{ booking.guest }}</td>
-                <td>{{ booking.unit }}</td>
-                <td>{{ booking.checkIn }}</td>
-                <td>{{ booking.nights }}</td>
-                <td><span class="status">{{ booking.status }}</span></td>
-              </tr>
-            }
-          </tbody>
-        </table>
-      </div>
-    </article>
+  @if (dashboardLoading()) {
+    <p class="loading">Loading dashboard…</p>
+  } @else if (dashboard(); as data) {
+    <section class="kpi-grid">
+      @for (kpi of kpis(); track kpi.label) {
+        <article class="kpi-card">
+          <p class="kpi-card__label">{{ kpi.label }}</p>
+          <p class="kpi-card__value">{{ kpi.value }}</p>
+          @if (kpi.delta) {
+            <p
+              class="kpi-card__delta"
+              [class.is-down]="kpi.trend === 'down'"
+              [class.is-flat]="kpi.trend === 'flat'"
+            >
+              {{ kpi.delta }}
+            </p>
+          }
+          @if (kpi.hint) {
+            <p class="kpi-card__hint">{{ kpi.hint }}</p>
+          }
+        </article>
+      }
+    </section>
 
-    <article class="panel">
+    <section class="panel chart-panel">
       <header class="panel__head">
-        <h2>Payment split</h2>
+        <div>
+          <h2>Revenue over time</h2>
+          <p class="panel__sub">Completed booking and restaurant payments</p>
+        </div>
       </header>
-      <ul class="chips">
-        <li><strong>Paystack</strong><span>48%</span></li>
-        <li><strong>Flutterwave</strong><span>32%</span></li>
-        <li><strong>Monnify</strong><span>20%</span></li>
-      </ul>
-    </article>
+      <app-dashboard-revenue-chart [points]="data.revenueTrend" [currency]="data.currency" />
+    </section>
 
-    <article class="panel">
-      <header class="panel__head">
-        <h2>Top performing units</h2>
-      </header>
-      <ul class="units">
-        @for (unit of units; track unit.name) {
-          <li>
-            <div class="units__row">
-              <strong>{{ unit.name }}</strong>
-              <span>{{ unit.revenue }}</span>
-            </div>
-            <div class="bar">
-              <span [style.width.%]="unit.occupancy"></span>
-            </div>
-          </li>
+    <section class="panel-grid">
+      <article class="panel panel--wide">
+        <header class="panel__head">
+          <h2>Recent bookings</h2>
+          <a routerLink="/bookings">View all</a>
+        </header>
+        @if (data.recentBookings.length === 0) {
+          <p class="empty">No bookings yet. Share your storefront link to start receiving reservations.</p>
+        } @else {
+          <div class="table-wrap">
+            <table>
+              <thead>
+                <tr>
+                  <th>Guest</th>
+                  <th>Unit</th>
+                  <th>Check-in</th>
+                  <th>Nights</th>
+                  <th>Amount</th>
+                  <th>Status</th>
+                </tr>
+              </thead>
+              <tbody>
+                @for (booking of data.recentBookings; track booking.id) {
+                  <tr>
+                    <td>{{ booking.guestName }}</td>
+                    <td>{{ booking.roomName }}</td>
+                    <td>{{ formatCheckIn(booking.checkInDate) }}</td>
+                    <td>{{ booking.nights }}</td>
+                    <td>{{ formatMoney(booking.totalAmount, booking.currency) }}</td>
+                    <td>
+                      <span [class]="bookingStatusClass(booking.status)">{{ booking.status }}</span>
+                    </td>
+                  </tr>
+                }
+              </tbody>
+            </table>
+          </div>
         }
-      </ul>
-    </article>
+      </article>
 
-    <article class="panel">
-      <header class="panel__head">
-        <h2>Quick actions</h2>
-      </header>
-      <div class="quick-actions">
-        <a routerLink="/rooms" class="quick quick--link">Manage rooms</a>
-        <a routerLink="/facilities" class="quick quick--link">Pool, gym &amp; shared spaces</a>
-        <a routerLink="/payment-configuration" class="quick quick--link">Payment configuration</a>
-        <a routerLink="/customers" class="quick quick--link">Customers</a>
-        <a routerLink="/booking-payments" class="quick quick--link">Booking payments</a>
-        <button type="button" class="quick">Create promo code</button>
-        <button type="button" class="quick">Send customer campaign</button>
-        <button type="button" class="quick">Payout summary</button>
-      </div>
-    </article>
-  </section>
+      <article class="panel">
+        <header class="panel__head">
+          <h2>Payment channels</h2>
+          <span class="panel__sub">{{ periodLabel() }}</span>
+        </header>
+        @if (data.gatewaySplit.length === 0) {
+          <p class="empty">No completed payments in this period.</p>
+        } @else {
+          <ul class="chips">
+            @for (channel of data.gatewaySplit; track channel.label) {
+              <li>
+                <strong>{{ channel.label }}</strong>
+                <span>{{ channel.percent }}%</span>
+              </li>
+            }
+          </ul>
+        }
+      </article>
+
+      <article class="panel">
+        <header class="panel__head">
+          <h2>Top performing rooms</h2>
+          <span class="panel__sub">{{ periodLabel() }}</span>
+        </header>
+        @if (data.topRooms.length === 0) {
+          <p class="empty">Add rooms and record payments to see performance here.</p>
+        } @else {
+          <ul class="units">
+            @for (unit of data.topRooms; track unit.roomId) {
+              <li>
+                <div class="units__row">
+                  <strong>{{ unit.roomName }}</strong>
+                  <span>{{ formatMoney(unit.revenue, unit.currency) }}</span>
+                </div>
+                <div class="bar">
+                  <span [style.width.%]="unit.occupancyPercent"></span>
+                </div>
+                <p class="units__meta">{{ unit.occupancyPercent }}% peak occupancy</p>
+              </li>
+            }
+          </ul>
+        }
+      </article>
+
+      <article class="panel">
+        <header class="panel__head">
+          <h2>Quick actions</h2>
+        </header>
+        <div class="quick-actions">
+          <a routerLink="/bookings" class="quick quick--link">View bookings</a>
+          <a routerLink="/rooms" class="quick quick--link">Manage rooms</a>
+          <a routerLink="/restaurant-orders" class="quick quick--link">Restaurant orders</a>
+          <a routerLink="/booking-payments" class="quick quick--link">Booking payments</a>
+          <a routerLink="/payment-configuration" class="quick quick--link">Payment configuration</a>
+          <a routerLink="/customers" class="quick quick--link">Customers</a>
+          <a routerLink="/subscription" class="quick quick--link">Subscription &amp; billing</a>
+        </div>
+      </article>
+    </section>
+  } @else {
+    <p class="loading">Dashboard data is unavailable.</p>
+    <button type="button" class="btn btn--ghost" (click)="loadDashboard()">Try again</button>
+  }
 </app-business-workspace>

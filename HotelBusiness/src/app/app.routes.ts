@@ -142,6 +142,11 @@ export const routes: Routes = [
       ),
   },
   {
+    path: 'subscription',
+    loadComponent: () =>
+      import('./pages/subscription/subscription.component').then((m) => m.SubscriptionComponent),
+  },
+  {
     path: 'profile',
     loadComponent: () =>
       import('./pages/business-profile/business-profile.component').then((m) => m.BusinessProfileComponent),

@@ -90,6 +90,28 @@ h1 {
   color: #995257;
 }
 
+.kpi-card__delta.is-flat {
+  color: var(--color-muted);
+}
+
+.kpi-card__hint {
+  margin: 0.35rem 0 0;
+  font-size: 0.78rem;
+  color: var(--color-muted);
+  line-height: 1.4;
+}
+
+.loading,
+.empty {
+  color: var(--color-muted);
+  font-size: 0.9rem;
+}
+
+.panel__sub {
+  font-size: 0.78rem;
+  color: var(--color-muted);
+}
+
 .panel-grid {
   display: grid;
   grid-template-columns: 2fr 1fr;
@@ -158,6 +180,24 @@ th {
   font-size: 0.75rem;
 }
 
+.status--ok {
+  background: color-mix(in srgb, #287a4b 14%, var(--color-surface));
+  border-color: color-mix(in srgb, #287a4b 26%, transparent);
+  color: #287a4b;
+}
+
+.status--bad {
+  background: color-mix(in srgb, #c44 14%, var(--color-surface));
+  border-color: color-mix(in srgb, #c44 28%, transparent);
+  color: #8b2e2e;
+}
+
+.status--pending {
+  background: color-mix(in srgb, #c98a2e 14%, var(--color-surface));
+  border-color: color-mix(in srgb, #c98a2e 28%, transparent);
+  color: #8a5a12;
+}
+
 .chips,
 .units {
   list-style: none;
@@ -182,6 +222,12 @@ th {
   justify-content: space-between;
   font-size: 0.84rem;
   margin-bottom: 0.35rem;
+}
+
+.units__meta {
+  margin: 0.35rem 0 0;
+  font-size: 0.76rem;
+  color: var(--color-muted);
 }
 
 .bar {
@@ -216,6 +262,145 @@ th {
   text-decoration: none;
   color: inherit;
   display: block;
+}
+
+.quick--link {
+  text-decoration: none;
+  color: inherit;
+  display: block;
+}
+
+.subscription-banner {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 1rem;
+  margin-bottom: 1rem;
+  padding: 0.95rem 1rem;
+  border-radius: 0.8rem;
+  border: 1px solid color-mix(in srgb, var(--color-sage) 24%, var(--color-border));
+  background: color-mix(in srgb, var(--color-sage) 8%, var(--color-surface-elevated));
+}
+
+.subscription-banner--warn {
+  border-color: color-mix(in srgb, #c98a2e 35%, var(--color-border));
+  background: color-mix(in srgb, #c98a2e 10%, var(--color-surface-elevated));
+}
+
+.subscription-banner--bad {
+  border-color: color-mix(in srgb, #c44 35%, var(--color-border));
+  background: color-mix(in srgb, #c44 8%, var(--color-surface-elevated));
+}
+
+.subscription-banner__eyebrow {
+  margin: 0 0 0.2rem;
+  font-size: 0.72rem;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--color-muted);
+  font-weight: 700;
+}
+
+.subscription-banner__title {
+  margin: 0;
+  font-weight: 700;
+  color: var(--color-heading);
+}
+
+.subscription-banner__status {
+  margin-left: 0.5rem;
+  font-size: 0.75rem;
+  font-weight: 600;
+  padding: 0.15rem 0.5rem;
+  border-radius: 999px;
+  background: var(--color-surface);
+  border: 1px solid var(--color-border);
+}
+
+.subscription-banner__meta {
+  margin: 0.35rem 0 0;
+  font-size: 0.86rem;
+  color: var(--color-muted);
+}
+
+.subscription-loading {
+  margin: 0 0 1rem;
+  font-size: 0.88rem;
+  color: var(--color-muted);
+}
+
+.range-toolbar {
+  margin-bottom: 1rem;
+}
+
+.range-toolbar__presets {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.75rem;
+}
+
+.range-toolbar__label {
+  font-size: 0.78rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  color: var(--color-muted);
+}
+
+.range-toolbar__buttons {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.45rem;
+}
+
+.range-btn {
+  border: 1px solid var(--color-border);
+  background: var(--color-surface);
+  border-radius: 999px;
+  padding: 0.42rem 0.8rem;
+  font-size: 0.82rem;
+  font-weight: 600;
+  cursor: pointer;
+  color: var(--color-heading);
+}
+
+.range-btn--active {
+  border-color: color-mix(in srgb, var(--color-accent) 40%, var(--color-border));
+  background: color-mix(in srgb, var(--color-accent) 12%, var(--color-surface));
+}
+
+.range-toolbar__custom {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-end;
+  gap: 0.75rem;
+  margin-top: 0.85rem;
+}
+
+.range-toolbar__custom label {
+  display: grid;
+  gap: 0.25rem;
+  font-size: 0.78rem;
+  color: var(--color-muted);
+}
+
+.range-toolbar__custom input {
+  border: 1px solid var(--color-border);
+  border-radius: 0.5rem;
+  padding: 0.45rem 0.55rem;
+  background: var(--color-surface);
+  color: var(--color-heading);
+}
+
+.range-toolbar__period {
+  margin: 0.75rem 0 0;
+  font-size: 0.84rem;
+  color: var(--color-muted);
+}
+
+.chart-panel {
+  margin-bottom: 0.9rem;
 }
 
 @media (max-width: 820px) {

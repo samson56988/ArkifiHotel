@@ -1,0 +1,148 @@
+<app-business-workspace>
+  <header class="topbar">
+    <div>
+      <p class="eyebrow">Billing</p>
+      <h1>Subscription</h1>
+    </div>
+  </header>
+
+  @if (verifying()) {
+    <p class="loading">Confirming your Paystack payment…</p>
+  } @else if (loading()) {
+    <p class="loading">Loading subscription…</p>
+  } @else if (current(); as sub) {
+    <section class="current panel">
+      <header class="panel__head">
+        <h2>Current plan</h2>
+        <span class="status" [class.status--warn]="sub.status === 'GracePeriod'" [class.status--bad]="sub.status === 'Expired'">
+          {{ statusLabel(sub.status) }}
+        </span>
+      </header>
+      <div class="current__grid">
+        <div>
+          <p class="label">Plan</p>
+          <p class="value">{{ sub.plan.name }}</p>
+          <p class="hint">{{ sub.plan.description }}</p>
+        </div>
+        <div>
+          <p class="label">Property type</p>
+          <p class="value">{{ sub.businessType }}</p>
+        </div>
+        <div>
+          <p class="label">Expires</p>
+          <p class="value">{{ formatDate(sub.expiresAt) }}</p>
+          @if (sub.daysRemaining !== null) {
+            <p class="hint">{{ sub.daysRemaining }} day(s) remaining</p>
+          }
+        </div>
+        <div>
+          <p class="label">Guest storefront</p>
+          <p class="value">{{ sub.isStorefrontAccessible ? 'Accessible' : 'Blocked' }}</p>
+          @if (sub.status === 'GracePeriod') {
+            <p class="hint warn">
+              Your storefront stays live for {{ sub.gracePeriodDays }} days after expiry, then guests cannot access your slug.
+            </p>
+          }
+          @if (sub.status === 'Expired' && !sub.isStorefrontAccessible) {
+            <p class="hint bad">Renew to restore your public booking link.</p>
+          }
+        </div>
+      </div>
+    </section>
+
+    <section class="plans">
+      <header class="plans__head">
+        <h2>Available plans</h2>
+        <p>Upgrade anytime with Paystack. Downgrades are available only after your current plan expires.</p>
+      </header>
+      <div class="plans__grid">
+        @for (plan of displayPlans(); track plan.id) {
+          <article class="plan-card" [class.plan-card--current]="plan.changeType === 'Current'">
+            @if (plan.changeType === 'Current') {
+              <span class="plan-card__badge">Current</span>
+            }
+            <div class="plan-card__body">
+              <h3>{{ plan.tier === 'Pro' && plan.billingInterval === 'Yearly' ? 'Pro (Yearly)' : plan.name }}</h3>
+              <p class="plan-card__price">{{ formatPrice(plan) }}</p>
+              <p class="plan-card__save" [class.plan-card__save--empty]="!plan.yearlyDiscountPercent">
+                @if (plan.yearlyDiscountPercent) {
+                  Save {{ plan.yearlyDiscountPercent }}% vs monthly
+                }
+              </p>
+              <p class="plan-card__desc">{{ plan.description }}</p>
+              <ul class="plan-card__features">
+                @if (plan.tier === 'Free') {
+                  <li>30-day trial</li>
+                  <li>Storefront &amp; bookings</li>
+                  <li>Payment configuration</li>
+                } @else {
+                  <li>Everything in Free</li>
+                  <li>Restaurant &amp; event halls</li>
+                  <li>Priority support</li>
+                }
+              </ul>
+            </div>
+            <div class="plan-card__footer">
+              @if (plan.canSelect) {
+                <button
+                  type="button"
+                  class="plan-card__action"
+                  [disabled]="paying()"
+                  (click)="selectPlan(plan)"
+                >
+                  {{ paying() ? 'Please wait…' : planActionLabel(plan) }}
+                </button>
+              } @else if (plan.disabledReason) {
+                <p class="plan-card__disabled">{{ plan.disabledReason }}</p>
+              }
+            </div>
+          </article>
+        }
+      </div>
+    </section>
+
+    <section class="history panel">
+      <header class="panel__head">
+        <div>
+          <h2>Payment history</h2>
+          <p class="history__lead">Paystack subscription charges for your property.</p>
+        </div>
+      </header>
+
+      @if (loadingPayments()) {
+        <p class="loading">Loading payment history…</p>
+      } @else if (paymentHistory().length === 0) {
+        <p class="hint">No subscription payments yet. Upgrades and renewals will appear here.</p>
+      } @else {
+        <div class="table-wrap">
+          <table>
+            <thead>
+              <tr>
+                <th>Date</th>
+                <th>Plan</th>
+                <th>Amount</th>
+                <th>Status</th>
+                <th>Reference</th>
+                <th>Completed</th>
+              </tr>
+            </thead>
+            <tbody>
+              @for (payment of paymentHistory(); track payment.id) {
+                <tr>
+                  <td class="nowrap">{{ formatDateTime(payment.createdAt) }}</td>
+                  <td>{{ payment.planName }}</td>
+                  <td>{{ payment.amount | number: '1.2-2' }} {{ payment.currency }}</td>
+                  <td>
+                    <span [class]="paymentStatusClass(payment.status)">{{ payment.status }}</span>
+                  </td>
+                  <td class="ref">{{ payment.paymentReference }}</td>
+                  <td class="nowrap">{{ formatDateTime(payment.completedAt) }}</td>
+                </tr>
+              }
+            </tbody>
+          </table>
+        </div>
+      }
+    </section>
+  }
+</app-business-workspace>

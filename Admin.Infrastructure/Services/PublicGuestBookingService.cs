@@ -695,7 +695,10 @@ public sealed class PublicGuestBookingService : IPublicGuestBookingService
         return await _db.BusinessRegistrations
             .AsNoTracking()
             .FirstOrDefaultAsync(b => b.Slug == normalized, cancellationToken)
-            .ConfigureAwait(false);
+            .ConfigureAwait(false) is { } business
+            && SubscriptionAccessHelper.IsStorefrontAccessible(business)
+            ? business
+            : null;
     }
 
     private async Task<bool> IsFullyBookedAsync(

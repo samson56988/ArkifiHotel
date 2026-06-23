@@ -36,6 +36,11 @@ public class AdminDbContext : DbContext
     public DbSet<RestaurantOrder> RestaurantOrders => Set<RestaurantOrder>();
     public DbSet<RestaurantOrderLine> RestaurantOrderLines => Set<RestaurantOrderLine>();
     public DbSet<RestaurantOrderPayment> RestaurantOrderPayments => Set<RestaurantOrderPayment>();
+    public DbSet<EventHall> EventHalls => Set<EventHall>();
+    public DbSet<EventHallImage> EventHallImages => Set<EventHallImage>();
+    public DbSet<EventHallRequest> EventHallRequests => Set<EventHallRequest>();
+    public DbSet<SubscriptionPlan> SubscriptionPlans => Set<SubscriptionPlan>();
+    public DbSet<BusinessSubscriptionPayment> BusinessSubscriptionPayments => Set<BusinessSubscriptionPayment>();
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
@@ -64,6 +69,12 @@ public class AdminDbContext : DbContext
         modelBuilder.ApplyConfiguration(new RestaurantOrderConfiguration());
         modelBuilder.ApplyConfiguration(new RestaurantOrderLineConfiguration());
         modelBuilder.ApplyConfiguration(new RestaurantOrderPaymentConfiguration());
+        modelBuilder.ApplyConfiguration(new EventHallConfiguration());
+        modelBuilder.ApplyConfiguration(new EventHallImageConfiguration());
+        modelBuilder.ApplyConfiguration(new EventHallRequestConfiguration());
+        modelBuilder.ApplyConfiguration(new SubscriptionPlanConfiguration());
+        modelBuilder.ApplyConfiguration(new BusinessSubscriptionPaymentConfiguration());
         DefaultAmenitySeed.Apply(modelBuilder);
+        SubscriptionPlanSeed.Apply(modelBuilder);
     }
 }

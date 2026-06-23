@@ -31,37 +31,39 @@ public sealed class RestaurantMenuSeedService
 
     public async Task SeedMissingMenusAsync(string webRootPath, CancellationToken cancellationToken = default)
     {
-        var businessIds = await _db.BusinessRegistrations
-            .AsNoTracking()
-            .Select(b => new { b.Id, b.BusinessName })
+        var locations = await (
+            from l in _db.BusinessLocations.AsNoTracking()
+            join b in _db.BusinessRegistrations.AsNoTracking() on l.BusinessRegistrationId equals b.Id
+            select new { l.Id, l.BusinessRegistrationId, BusinessName = b.BusinessName })
             .ToListAsync(cancellationToken)
             .ConfigureAwait(false);
 
         var existing = await _db.RestaurantMenuSettings
             .AsNoTracking()
-            .Select(s => s.BusinessRegistrationId)
+            .Select(s => new { s.BusinessRegistrationId, s.LocationId })
             .ToListAsync(cancellationToken)
             .ConfigureAwait(false);
 
-        var existingSet = existing.ToHashSet();
-        var toSeed = businessIds.Where(b => !existingSet.Contains(b.Id)).ToList();
+        var existingSet = existing.Select(e => (e.BusinessRegistrationId, e.LocationId)).ToHashSet();
+        var toSeed = locations.Where(l => !existingSet.Contains((l.BusinessRegistrationId, l.Id))).ToList();
 
         if (toSeed.Count == 0)
         {
             return;
         }
 
-        _logger.LogInformation("Seeding restaurant menus for {Count} business(es).", toSeed.Count);
+        _logger.LogInformation("Seeding restaurant menus for {Count} branch(es).", toSeed.Count);
 
-        foreach (var business in toSeed)
+        foreach (var location in toSeed)
         {
-            await SeedBusinessAsync(business.Id, business.BusinessName, webRootPath, cancellationToken)
+            await SeedLocationAsync(location.BusinessRegistrationId, location.Id, location.BusinessName, webRootPath, cancellationToken)
                 .ConfigureAwait(false);
         }
     }
 
-    private async Task SeedBusinessAsync(
+    private async Task SeedLocationAsync(
         Guid businessId,
+        Guid locationId,
         string businessName,
         string webRootPath,
         CancellationToken cancellationToken)
@@ -71,6 +73,7 @@ public sealed class RestaurantMenuSeedService
         {
             Id = Guid.NewGuid(),
             BusinessRegistrationId = businessId,
+            LocationId = locationId,
             Enabled = true,
             NavLabel = "Restaurant & menu",
             HeroEyebrow = "Dining",
@@ -104,6 +107,7 @@ public sealed class RestaurantMenuSeedService
             {
                 Id = Guid.NewGuid(),
                 BusinessRegistrationId = businessId,
+                LocationId = locationId,
                 Name = seedCategory.Name,
                 Section = seedCategory.Section,
                 SortOrder = seedCategory.SortOrder,
@@ -146,7 +150,7 @@ public sealed class RestaurantMenuSeedService
         }
 
         await _db.SaveChangesAsync(cancellationToken).ConfigureAwait(false);
-        _logger.LogInformation("Seeded restaurant menu for business {BusinessId}.", businessId);
+        _logger.LogInformation("Seeded restaurant menu for business {BusinessId} location {LocationId}.", businessId, locationId);
     }
 
     private async Task<string?> DownloadImageAsync(
