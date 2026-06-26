@@ -1,4 +1,5 @@
 using Admin.Data;
+using Admin.Data.Constants;
 using Admin.Data.Entities;
 using Admin.Data.Enums;
 using Admin.Infrastructure.Helpers;
@@ -11,19 +12,35 @@ namespace Admin.Infrastructure.Services;
 public sealed class BusinessBookingPaymentService : IBusinessBookingPaymentService
 {
     private readonly AdminDbContext _db;
+    private readonly IOrganizationUserContext _actor;
+    private readonly IOrganizationAuditService _audit;
+    private readonly ICustomerConfirmationEmailService _confirmationEmails;
 
-    public BusinessBookingPaymentService(AdminDbContext db)
+    public BusinessBookingPaymentService(
+        AdminDbContext db,
+        IOrganizationUserContext actor,
+        IOrganizationAuditService audit,
+        ICustomerConfirmationEmailService confirmationEmails)
     {
         _db = db;
+        _actor = actor;
+        _audit = audit;
+        _confirmationEmails = confirmationEmails;
     }
 
     public async Task<IReadOnlyList<BookingPaymentSummaryDto>> ListAsync(Guid businessId, CancellationToken cancellationToken = default)
     {
-        var rows = await _db.BookingPayments
+        var query = _db.BookingPayments
             .AsNoTracking()
             .Include(p => p.Booking)
             .ThenInclude(b => b.Room)
-            .Where(p => p.BusinessRegistrationId == businessId)
+            .Include(p => p.Booking)
+            .ThenInclude(b => b.Location)
+            .Where(p => p.BusinessRegistrationId == businessId);
+
+        query = OrganizationQueryScope.ApplyBookingPaymentScope(query, _actor);
+
+        var rows = await query
             .OrderByDescending(p => p.CreatedAt)
             .ToListAsync(cancellationToken)
             .ConfigureAwait(false);
@@ -81,6 +98,11 @@ public sealed class BusinessBookingPaymentService : IBusinessBookingPaymentServi
             return null;
         }
 
+        if (!OrganizationLocationHelper.CanAccessLocation(_actor, booking.LocationId))
+        {
+            return null;
+        }
+
         var notes = string.IsNullOrWhiteSpace(request.Notes) ? null : request.Notes.Trim();
         if (notes is { Length: > 4000 })
         {
@@ -130,6 +152,53 @@ public sealed class BusinessBookingPaymentService : IBusinessBookingPaymentServi
         _db.BookingPayments.Add(entity);
         await _db.SaveChangesAsync(cancellationToken).ConfigureAwait(false);
 
+        if (status == BookingPaymentStatus.Completed)
+        {
+            var bookingEntity = await _db.Bookings
+                .FirstOrDefaultAsync(
+                    b => b.Id == booking.Id && b.BusinessRegistrationId == businessId,
+                    cancellationToken)
+                .ConfigureAwait(false);
+
+            if (bookingEntity is not null && bookingEntity.Status == BookingStatus.Pending)
+            {
+                bookingEntity.Status = BookingStatus.Confirmed;
+                bookingEntity.UpdatedAt = now;
+                await _db.SaveChangesAsync(cancellationToken).ConfigureAwait(false);
+            }
+
+            var completedPaymentCount = await _db.BookingPayments
+                .CountAsync(
+                    p => p.BookingId == booking.Id && p.Status == BookingPaymentStatus.Completed,
+                    cancellationToken)
+                .ConfigureAwait(false);
+
+            if (completedPaymentCount == 1)
+            {
+                await _confirmationEmails.SendBookingConfirmationAsync(booking.Id, cancellationToken)
+                    .ConfigureAwait(false);
+            }
+        }
+
+        var locationName = booking.LocationId.HasValue
+            ? await _db.BusinessLocations.AsNoTracking()
+                .Where(l => l.Id == booking.LocationId.Value)
+                .Select(l => l.Name)
+                .FirstOrDefaultAsync(cancellationToken)
+                .ConfigureAwait(false)
+            : null;
+
+        await _audit.LogForCurrentUserAsync(
+            businessId,
+            new OrganizationAuditEntry(
+                OrganizationAuditActions.StatusChange,
+                OrganizationAuditEntityTypes.BookingPayment,
+                entity.Id,
+                booking.LocationId,
+                locationName,
+                $"Recorded booking payment {status} for {booking.ConfirmationCode} ({entity.Amount:N2} {cur})."),
+            cancellationToken).ConfigureAwait(false);
+
         return await GetSingleSummaryAsync(businessId, entity.Id, cancellationToken).ConfigureAwait(false);
     }
 
@@ -142,6 +211,8 @@ public sealed class BusinessBookingPaymentService : IBusinessBookingPaymentServi
             .AsNoTracking()
             .Include(x => x.Booking)
             .ThenInclude(b => b.Room)
+            .Include(x => x.Booking)
+            .ThenInclude(b => b.Location)
             .FirstOrDefaultAsync(x => x.Id == paymentId && x.BusinessRegistrationId == businessId, cancellationToken)
             .ConfigureAwait(false);
 
@@ -171,6 +242,8 @@ public sealed class BusinessBookingPaymentService : IBusinessBookingPaymentServi
             BookingGuestName = p.Booking.GuestName,
             BookingConfirmationCode = p.Booking.ConfirmationCode,
             RoomName = p.Booking.Room.Name,
+            LocationId = p.Booking.LocationId,
+            LocationName = p.Booking.Location?.Name,
             Amount = p.Amount,
             Currency = p.Currency,
             Status = p.Status.ToString(),

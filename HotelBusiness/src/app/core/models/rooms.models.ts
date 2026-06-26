@@ -13,7 +13,11 @@ export interface RoomImageDto {
 export interface BusinessRoomSummaryDto {
   id: string;
   name: string;
+  tagline?: string | null;
   maxOccupancy: number;
+  bedroomCount?: number | null;
+  bathroomCount?: number | null;
+  isGuestFavorite: boolean;
   basePricePerNight: number;
   quantity: number;
   locationId: string | null;
@@ -26,8 +30,12 @@ export interface BusinessRoomSummaryDto {
 export interface BusinessRoomDetailDto {
   id: string;
   name: string;
+  tagline?: string | null;
   description: string | null;
   maxOccupancy: number;
+  bedroomCount?: number | null;
+  bathroomCount?: number | null;
+  isGuestFavorite: boolean;
   basePricePerNight: number;
   quantity: number;
   locationId: string | null;
@@ -39,8 +47,12 @@ export interface BusinessRoomDetailDto {
 
 export interface CreateBusinessRoomRequest {
   name: string;
+  tagline?: string | null;
   description?: string | null;
   maxOccupancy: number;
+  bedroomCount?: number | null;
+  bathroomCount?: number | null;
+  isGuestFavorite?: boolean;
   basePricePerNight: number;
   quantity: number;
   locationId: string;

@@ -1,0 +1,41 @@
+<header class="sl-nav" [class.solid]="isSolid()" [class.open]="menuOpen()">
+  <div class="sl-nav__inner">
+    <a class="sl-nav__brand" [routerLink]="ctx.path()" (click)="closeMenu()">
+      @if (shortlet().logoUrl) {
+        <img class="sl-nav__logo" [src]="shortlet().logoUrl!" [alt]="shortlet().businessName + ' logo'" />
+      } @else {
+        <span class="sl-nav__mark">{{ shortlet().businessName.charAt(0) }}</span>
+      }
+      <span class="sl-nav__name">
+        {{ shortlet().businessName }}
+        @if (shortlet().branchName) {
+          <small class="sl-nav__branch">{{ shortlet().branchName }}</small>
+        }
+      </span>
+    </a>
+
+    <nav class="sl-nav__links">
+      <a [routerLink]="ctx.path()" routerLinkActive="active" [routerLinkActiveOptions]="{ exact: true }" (click)="closeMenu()">Home</a>
+      <a [routerLink]="ctx.path('listings')" routerLinkActive="active" (click)="closeMenu()">Listings</a>
+      <a [routerLink]="ctx.path('amenities')" routerLinkActive="active" (click)="closeMenu()">Amenities</a>
+      <a [routerLink]="ctx.path('host')" routerLinkActive="active" (click)="closeMenu()">Your host</a>
+    </nav>
+
+    <div class="sl-nav__actions">
+      <button type="button" class="sl-nav__book" (click)="openBooking($event)">Book a stay</button>
+      <button type="button" class="sl-nav__toggle" (click)="toggleMenu()" aria-label="Menu">
+        <span></span><span></span>
+      </button>
+    </div>
+  </div>
+
+  @if (menuOpen()) {
+    <div class="sl-nav__mobile">
+      <a [routerLink]="ctx.path()" (click)="closeMenu()">Home</a>
+      <a [routerLink]="ctx.path('listings')" (click)="closeMenu()">Listings</a>
+      <a [routerLink]="ctx.path('amenities')" (click)="closeMenu()">Amenities</a>
+      <a [routerLink]="ctx.path('host')" (click)="closeMenu()">Your host</a>
+      <button type="button" (click)="openBooking($event)">Book a stay</button>
+    </div>
+  }
+</header>

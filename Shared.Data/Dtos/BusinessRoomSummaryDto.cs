@@ -6,7 +6,15 @@ public sealed class BusinessRoomSummaryDto
 
     public string Name { get; set; } = string.Empty;
 
+    public string? Tagline { get; set; }
+
     public int MaxOccupancy { get; set; }
+
+    public int? BedroomCount { get; set; }
+
+    public int? BathroomCount { get; set; }
+
+    public bool IsGuestFavorite { get; set; }
 
     public decimal BasePricePerNight { get; set; }
 

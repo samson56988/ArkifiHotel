@@ -130,8 +130,8 @@ export class FacilityFormComponent implements OnInit {
 
         if (!this.isCreateMode) {
           this.saving.set(false);
-          this.patchFromFacility(res.data);
           this.toast.success('Facility details saved.', 'Saved');
+          void this.router.navigate(['/facilities'], { replaceUrl: true });
           return;
         }
 
@@ -141,7 +141,7 @@ export class FacilityFormComponent implements OnInit {
           this.pendingPhotoFiles.set([]);
           this.saving.set(false);
           this.toast.success('Facility created.', 'Done');
-          void this.router.navigate(['/facilities', newId], { replaceUrl: true });
+          void this.router.navigate(['/facilities'], { replaceUrl: true });
           return;
         }
 
@@ -158,21 +158,21 @@ export class FacilityFormComponent implements OnInit {
               if (!up.success || !up.data?.length) {
                 this.toast.warning(
                   up.message ??
-                    'Facility was created, but photos did not upload. You can add them on the next screen.',
+                    'Facility was created, but photos did not upload. You can add them from the facilities list.',
                   'Photos',
                 );
               } else {
                 this.toast.success('Facility created and photos uploaded.', 'Done');
               }
 
-              void this.router.navigate(['/facilities', newId], { replaceUrl: true });
+              void this.router.navigate(['/facilities'], { replaceUrl: true });
             },
             error: () => {
               this.toast.warning(
-                'Facility was created, but photos did not upload. You can add them on the next screen.',
+                'Facility was created, but photos did not upload. You can add them from the facilities list.',
                 'Photos',
               );
-              void this.router.navigate(['/facilities', newId], { replaceUrl: true });
+              void this.router.navigate(['/facilities'], { replaceUrl: true });
             },
           });
       },

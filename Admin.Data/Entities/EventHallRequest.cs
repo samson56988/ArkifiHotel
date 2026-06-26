@@ -28,6 +28,9 @@ public class EventHallRequest
 
     public DateOnly? EventEndDate { get; set; }
 
+    /// <summary>Why the guest needs the hall (wedding, conference, etc.).</summary>
+    public string EventPurpose { get; set; } = null!;
+
     public string? Notes { get; set; }
 
     public EventHallRequestStatus Status { get; set; }

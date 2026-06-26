@@ -21,7 +21,7 @@ public sealed class BusinessAmenityService : IBusinessAmenityService
     {
         var amenities = await _db.Amenities
             .AsNoTracking()
-            .Where(a => a.BusinessRegistrationId == businessId)
+            .Where(a => a.BusinessRegistrationId == null || a.BusinessRegistrationId == businessId)
             .OrderBy(a => a.Category)
             .ThenBy(a => a.Name)
             .ToListAsync(cancellationToken)
@@ -154,7 +154,9 @@ public sealed class BusinessAmenityService : IBusinessAmenityService
         var nameLower = name.ToLowerInvariant();
         var query = _db.Amenities
             .AsNoTracking()
-            .Where(a => a.BusinessRegistrationId == businessId && a.Name.ToLower() == nameLower);
+            .Where(a =>
+                (a.BusinessRegistrationId == businessId || a.BusinessRegistrationId == null)
+                && a.Name.ToLower() == nameLower);
 
         if (excludeAmenityId.HasValue)
         {
@@ -181,6 +183,6 @@ public sealed class BusinessAmenityService : IBusinessAmenityService
             Id = a.Id,
             Name = a.Name,
             Category = a.Category,
-            IsCustom = true,
+            IsCustom = a.BusinessRegistrationId.HasValue,
         };
 }

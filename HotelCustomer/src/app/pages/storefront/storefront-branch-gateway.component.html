@@ -1,15 +1,21 @@
-@if (ctx.loading()) {
+@if (entry.loading()) {
   <div class="gate-page">Loading…</div>
-} @else if (ctx.notFound()) {
+} @else if (entry.notFound()) {
   <div class="gate-page">
-    <h1>Hotel not found</h1>
+    <h1>Property not found</h1>
   </div>
-} @else if (ctx.storefront()?.requiresBranchSelection) {
-  <div class="gate-page" [style]="themeStyle">
+} @else if (entry.requiresBranchSelection()) {
+  <div class="gate-page" [style]="themeStyle()">
     <div class="gate-card">
-      <p class="gate-eyebrow">Choose your stay</p>
+      <p class="gate-eyebrow">{{ isShortlet ? 'Choose your area' : 'Choose your stay' }}</p>
       <h1 class="gate-title">{{ businessName }}</h1>
-      <p class="gate-lead">This hotel has more than one branch. Select where you would like to book.</p>
+      <p class="gate-lead">
+        @if (isShortlet) {
+          This shortlet has apartments in more than one area. Select a branch to browse listings.
+        } @else {
+          This hotel has more than one branch. Select where you would like to book.
+        }
+      </p>
       <ul class="branch-list">
         @for (branch of branches; track branch.id) {
           <li>

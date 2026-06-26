@@ -12,6 +12,10 @@ public sealed class BookingPaymentSummaryDto
 
     public string RoomName { get; set; } = string.Empty;
 
+    public Guid? LocationId { get; set; }
+
+    public string? LocationName { get; set; }
+
     public decimal Amount { get; set; }
 
     public string Currency { get; set; } = "NGN";

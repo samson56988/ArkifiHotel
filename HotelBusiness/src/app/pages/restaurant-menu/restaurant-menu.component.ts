@@ -7,6 +7,7 @@ import type {
 } from '../../core/models/restaurant-menu.models';
 import type { BusinessLocationDto } from '../../core/models/locations.models';
 import { BusinessLocationsApiService } from '../../core/services/business-locations-api.service';
+import { OrganizationLocationService } from '../../core/services/organization-location.service';
 import { BusinessRestaurantMenuApiService } from '../../core/services/business-restaurant-menu-api.service';
 import { ToastService } from '../../core/services/toast.service';
 import { ALLOWED_IMAGE_ACCEPT, filterAllowedImageFiles } from '../../core/utils/image-upload';
@@ -25,6 +26,7 @@ export class RestaurantMenuComponent implements OnInit {
   private readonly fb = inject(FormBuilder);
   private readonly api = inject(BusinessRestaurantMenuApiService);
   private readonly locationsApi = inject(BusinessLocationsApiService);
+  private readonly orgLocation = inject(OrganizationLocationService);
   private readonly toast = inject(ToastService);
 
   readonly imageAccept = ALLOWED_IMAGE_ACCEPT;
@@ -65,14 +67,20 @@ export class RestaurantMenuComponent implements OnInit {
   heroImageUrl: string | null = null;
 
   ngOnInit(): void {
+    this.orgLocation.hydrateFromStorage();
     this.locationsApi.listLocations().subscribe({
       next: (res) => {
         if (!res.success || !res.data?.length) {
           this.loading.set(false);
           return;
         }
-        this.locations.set(res.data);
-        this.locationId.set(res.data[0].id);
+        const allowed = this.orgLocation.filterLocations(res.data);
+        if (allowed.length === 0) {
+          this.loading.set(false);
+          return;
+        }
+        this.locations.set(allowed);
+        this.locationId.set(this.orgLocation.primaryLocationId(allowed));
         this.loadMenuForLocation();
       },
       error: () => {

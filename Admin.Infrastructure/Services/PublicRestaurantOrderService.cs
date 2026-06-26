@@ -19,17 +19,20 @@ public sealed class PublicRestaurantOrderService : IPublicRestaurantOrderService
     private readonly IBusinessPaymentConfigurationService _paymentConfig;
     private readonly PaymentGatewayRouter _gatewayRouter;
     private readonly CustomerAppOptions _customerApp;
+    private readonly ICustomerConfirmationEmailService _confirmationEmails;
 
     public PublicRestaurantOrderService(
         AdminDbContext db,
         IBusinessPaymentConfigurationService paymentConfig,
         PaymentGatewayRouter gatewayRouter,
-        IOptions<CustomerAppOptions> customerApp)
+        IOptions<CustomerAppOptions> customerApp,
+        ICustomerConfirmationEmailService confirmationEmails)
     {
         _db = db;
         _paymentConfig = paymentConfig;
         _gatewayRouter = gatewayRouter;
         _customerApp = customerApp.Value;
+        _confirmationEmails = confirmationEmails;
     }
 
     public async Task<(GuestRestaurantOrderCheckoutDto? Data, PublicRestaurantOrderError? Error, string? Message)> CreateCheckoutAsync(
@@ -43,7 +46,7 @@ public sealed class PublicRestaurantOrderService : IPublicRestaurantOrderService
             return (null, PublicRestaurantOrderError.NotFound, "Storefront not found.");
         }
 
-        if (!ValidateRequest(request, out var guestType, out var roomNumber, out var guestPhone, out var message))
+        if (!ValidateRequest(request, out var guestType, out var roomNumber, out var guestPhone, out var guestEmail, out var message))
         {
             return (null, PublicRestaurantOrderError.InvalidRequest, message);
         }
@@ -144,6 +147,7 @@ public sealed class PublicRestaurantOrderService : IPublicRestaurantOrderService
             GuestType = guestType,
             RoomNumber = roomNumber,
             GuestPhone = guestPhone,
+            GuestEmail = guestEmail,
             OrderNumber = orderNumber,
             Status = RestaurantOrderStatus.Pending,
             TotalAmount = total,
@@ -176,7 +180,6 @@ public sealed class PublicRestaurantOrderService : IPublicRestaurantOrderService
         await _db.SaveChangesAsync(cancellationToken).ConfigureAwait(false);
 
         var redirectUrl = BuildRedirectUrl(business.Slug!, request.LocationId, paymentReference);
-        var customerEmail = BuildGuestEmail(guestPhone);
 
         var initContext = new PaymentInitializeContext
         {
@@ -187,7 +190,7 @@ public sealed class PublicRestaurantOrderService : IPublicRestaurantOrderService
             Reference = paymentReference,
             Amount = total,
             Currency = DefaultCurrency,
-            CustomerEmail = customerEmail,
+            CustomerEmail = guestEmail,
             CustomerName = guestType == RestaurantGuestType.RoomGuest ? $"Room {roomNumber}" : "Restaurant guest",
             CustomerPhone = guestPhone,
             RedirectUrl = redirectUrl,
@@ -337,6 +340,8 @@ public sealed class PublicRestaurantOrderService : IPublicRestaurantOrderService
         order.UpdatedAt = now;
         await _db.SaveChangesAsync(cancellationToken).ConfigureAwait(false);
 
+        await _confirmationEmails.SendRestaurantOrderConfirmationAsync(order.Id, cancellationToken).ConfigureAwait(false);
+
         return BuildVerifySuccess(order, business.BusinessName);
     }
 
@@ -363,11 +368,13 @@ public sealed class PublicRestaurantOrderService : IPublicRestaurantOrderService
         out RestaurantGuestType guestType,
         out string? roomNumber,
         out string guestPhone,
+        out string guestEmail,
         out string message)
     {
         guestType = RestaurantGuestType.InRestaurant;
         roomNumber = null;
         guestPhone = string.Empty;
+        guestEmail = string.Empty;
         message = string.Empty;
 
         var typeRaw = (request.GuestType ?? string.Empty).Trim().ToLowerInvariant();
@@ -401,7 +408,26 @@ public sealed class PublicRestaurantOrderService : IPublicRestaurantOrderService
         }
 
         guestPhone = p;
+
+        if (!ValidateEmail(request.GuestEmail, out guestEmail))
+        {
+            message = "Enter a valid email address for your order confirmation.";
+            return false;
+        }
+
         return true;
+    }
+
+    private static bool ValidateEmail(string? email, out string trimmed)
+    {
+        trimmed = email?.Trim().ToLowerInvariant() ?? string.Empty;
+        if (trimmed.Length is < 5 or > 320)
+        {
+            return false;
+        }
+
+        var at = trimmed.IndexOf('@');
+        return at > 0 && at < trimmed.Length - 1 && trimmed.IndexOf('.', at + 1) >= 0;
     }
 
     private static bool TryNormalizeGuestPhone(string raw, out string normalized, out string message)
@@ -439,18 +465,6 @@ public sealed class PublicRestaurantOrderService : IPublicRestaurantOrderService
 
         normalized = p;
         return true;
-    }
-
-    private static string BuildGuestEmail(string guestPhone)
-    {
-        var digits = new string(guestPhone.Where(char.IsDigit).ToArray());
-        if (digits.Length == 0)
-        {
-            return "guest@orders.arkifihotel.com";
-        }
-
-        // Paystack and other gateways reject reserved TLDs like .local — use a valid public format.
-        return $"order.{digits}@orders.arkifihotel.com";
     }
 
     private string BuildRedirectUrl(string slug, Guid locationId, string paymentReference)

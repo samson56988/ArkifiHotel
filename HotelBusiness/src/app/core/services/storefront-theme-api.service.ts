@@ -30,9 +30,13 @@ export class StorefrontThemeApiService {
     );
   }
 
-  getPublicStorefront(slug: string): Observable<PublicStorefrontApiResponse> {
+  getPublicStorefront(slug: string, locationId?: string | null): Observable<PublicStorefrontApiResponse> {
     const encoded = encodeURIComponent(slug);
-    return this.http.get<unknown>(`${this.baseUrl}/api/public/stores/${encoded}`).pipe(
+    const query =
+      locationId && locationId !== 'default'
+        ? `?locationId=${encodeURIComponent(locationId)}`
+        : '';
+    return this.http.get<unknown>(`${this.baseUrl}/api/public/stores/${encoded}${query}`).pipe(
       map((body) => normalizeApiResult<PublicStorefront>(body)),
       catchError((err: HttpErrorResponse) => throwError(() => parseHttpApiResult<PublicStorefront>(err))),
     );

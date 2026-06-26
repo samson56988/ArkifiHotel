@@ -14,9 +14,21 @@ public class Room
 
     public string Name { get; set; } = null!;
 
+    /// <summary>Short marketing line shown on shortlet listing cards (e.g. "Floor-to-ceiling windows & city skyline").</summary>
+    public string? Tagline { get; set; }
+
     public string? Description { get; set; }
 
     public int MaxOccupancy { get; set; }
+
+    /// <summary>Bedrooms — used for shortlet listings.</summary>
+    public int? BedroomCount { get; set; }
+
+    /// <summary>Bathrooms — used for shortlet listings.</summary>
+    public int? BathroomCount { get; set; }
+
+    /// <summary>When true, the listing shows a "Guest favorite" badge on the shortlet storefront.</summary>
+    public bool IsGuestFavorite { get; set; }
 
     public decimal BasePricePerNight { get; set; }
 

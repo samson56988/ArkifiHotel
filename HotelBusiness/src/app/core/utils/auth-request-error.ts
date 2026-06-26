@@ -9,6 +9,7 @@ export interface AuthErrorContext {
 
 export interface AuthErrorHandlers {
   EmailNotVerified?: (result: ApiResult<unknown>, email: string) => void;
+  AccountBlocked?: (result: ApiResult<unknown>) => void;
 }
 
 /** Shows API `message` / `validationErrors` from a failed auth request (HTTP 4xx with ApiResult body). */
@@ -26,6 +27,11 @@ export function showAuthRequestError(
 
   if (err.code === 'EmailNotVerified' && handlers?.EmailNotVerified && context?.email) {
     handlers.EmailNotVerified(err, context.email);
+    return;
+  }
+
+  if (err.code === 'AccountBlocked' && handlers?.AccountBlocked) {
+    handlers.AccountBlocked(err);
     return;
   }
 

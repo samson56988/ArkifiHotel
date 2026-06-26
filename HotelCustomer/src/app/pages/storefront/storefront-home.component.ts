@@ -3,6 +3,7 @@ import { RouterLink } from '@angular/router';
 import { resolveSectionFont } from '../../core/data/storefront-theme-presets';
 import { HotelUiService } from '../../core/services/hotel-ui.service';
 import { StorefrontContextService } from '../../core/services/storefront-context.service';
+import { formatNaira } from '../../core/utils/hotel-theme';
 import { HotelFooterComponent } from '../../shared/hotel-storefront/hotel-footer.component';
 import { RoomCarouselSlideComponent } from '../../shared/hotel-storefront/room-carousel-slide.component';
 
@@ -35,6 +36,14 @@ export class StorefrontHomeComponent implements OnInit, OnDestroy {
   });
 
   readonly allRooms = computed(() => this.storefront().rooms);
+
+  readonly featuredHalls = computed(() => this.storefront().eventHalls.slice(0, 3));
+
+  readonly hasEventHalls = computed(
+    () => this.storefront().eventHalls.length > 0 && !!this.storefront().eventHallsPage,
+  );
+
+  readonly formatNaira = formatNaira;
 
   readonly allRoomsViewed = computed(() => {
     const rooms = this.allRooms();

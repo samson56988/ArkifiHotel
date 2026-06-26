@@ -1,4 +1,4 @@
-import { Component, inject, OnInit, signal } from '@angular/core';
+import { Component, computed, inject, OnInit, signal } from '@angular/core';
 import { FormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
 import { RouterLink } from '@angular/router';
 import { finalize } from 'rxjs/operators';
@@ -21,6 +21,8 @@ export class AmenitiesListComponent implements OnInit {
   private readonly toast = inject(ToastService);
 
   readonly amenities = signal<AmenityDto[]>([]);
+  readonly catalogAmenities = computed(() => this.amenities().filter((a) => !a.isCustom));
+  readonly customAmenities = computed(() => this.amenities().filter((a) => a.isCustom));
   readonly initialLoadDone = signal(false);
   readonly loadFailed = signal(false);
   readonly loading = signal(false);
@@ -78,6 +80,10 @@ export class AmenitiesListComponent implements OnInit {
   }
 
   startEdit(amenity: AmenityDto): void {
+    if (!amenity.isCustom) {
+      return;
+    }
+
     this.editingId.set(amenity.id);
     this.form.patchValue({
       name: amenity.name,
@@ -141,6 +147,10 @@ export class AmenitiesListComponent implements OnInit {
   }
 
   deleteAmenity(amenity: AmenityDto): void {
+    if (!amenity.isCustom) {
+      return;
+    }
+
     if (
       !globalThis.confirm(
         `Delete "${amenity.name}"? Rooms that use this amenity must be updated first.`,
@@ -175,5 +185,24 @@ export class AmenitiesListComponent implements OnInit {
 
   categoryLabel(amenity: AmenityDto): string {
     return amenity.category?.trim() || 'General';
+  }
+
+  groupedCatalogAmenities(): { category: string; items: AmenityDto[] }[] {
+    const map = new Map<string, AmenityDto[]>();
+    for (const a of this.catalogAmenities()) {
+      const key = this.categoryLabel(a);
+      if (!map.has(key)) {
+        map.set(key, []);
+      }
+
+      map.get(key)!.push(a);
+    }
+
+    return [...map.entries()]
+      .sort(([a], [b]) => a.localeCompare(b))
+      .map(([category, items]) => ({
+        category,
+        items: items.sort((x, y) => x.name.localeCompare(y.name)),
+      }));
   }
 }

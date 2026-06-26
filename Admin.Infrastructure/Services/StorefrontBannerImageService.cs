@@ -35,7 +35,7 @@ public sealed class StorefrontBannerImageService : IStorefrontBannerImageService
             .ToListAsync(cancellationToken)
             .ConfigureAwait(false);
 
-        return rows.Select(Map).ToList();
+        return rows.Select(row => Map(row, row.Location?.Name)).ToList();
     }
 
     public async Task<int> CountAsync(Guid businessId, Guid locationId, CancellationToken cancellationToken = default) =>
@@ -58,14 +58,14 @@ public sealed class StorefrontBannerImageService : IStorefrontBannerImageService
             return null;
         }
 
-        var location = await _db.BusinessLocations
+        var locationName = await _db.BusinessLocations
             .AsNoTracking()
-            .FirstOrDefaultAsync(
-                l => l.Id == locationId && l.BusinessRegistrationId == businessId,
-                cancellationToken)
+            .Where(l => l.Id == locationId && l.BusinessRegistrationId == businessId)
+            .Select(l => l.Name)
+            .FirstOrDefaultAsync(cancellationToken)
             .ConfigureAwait(false);
 
-        if (location is null)
+        if (locationName is null)
         {
             return null;
         }
@@ -96,8 +96,7 @@ public sealed class StorefrontBannerImageService : IStorefrontBannerImageService
         _db.StorefrontBannerImages.Add(entity);
         await _db.SaveChangesAsync(cancellationToken).ConfigureAwait(false);
 
-        entity.Location = location;
-        return Map(entity);
+        return Map(entity, locationName);
     }
 
     public async Task<bool> DeleteAsync(Guid businessId, Guid imageId, CancellationToken cancellationToken = default)
@@ -116,7 +115,7 @@ public sealed class StorefrontBannerImageService : IStorefrontBannerImageService
         return true;
     }
 
-    private static StorefrontBannerImageDto Map(StorefrontBannerImage entity) =>
+    private static StorefrontBannerImageDto Map(StorefrontBannerImage entity, string? locationName = null) =>
         new()
         {
             Id = entity.Id,
@@ -124,7 +123,7 @@ public sealed class StorefrontBannerImageService : IStorefrontBannerImageService
             OriginalFileName = entity.OriginalFileName,
             SortOrder = entity.SortOrder,
             LocationId = entity.LocationId,
-            LocationName = entity.Location?.Name,
+            LocationName = locationName ?? entity.Location?.Name,
         };
 
     private static string? NormalizeRelativePath(string path)

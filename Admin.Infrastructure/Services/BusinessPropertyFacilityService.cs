@@ -1,5 +1,6 @@
 using Admin.Data;
 using Admin.Data.Entities;
+using Admin.Infrastructure.Helpers;
 using Admin.Services.Abstractions;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.EntityFrameworkCore;
@@ -11,11 +12,16 @@ public sealed class BusinessPropertyFacilityService : IBusinessPropertyFacilityS
 {
     private readonly AdminDbContext _db;
     private readonly IWebHostEnvironment _env;
+    private readonly IOrganizationUserContext _actor;
 
-    public BusinessPropertyFacilityService(AdminDbContext db, IWebHostEnvironment env)
+    public BusinessPropertyFacilityService(
+        AdminDbContext db,
+        IWebHostEnvironment env,
+        IOrganizationUserContext actor)
     {
         _db = db;
         _env = env;
+        _actor = actor;
     }
 
     public async Task<IReadOnlyList<PropertyFacilitySummaryDto>> ListAsync(
@@ -28,6 +34,8 @@ public sealed class BusinessPropertyFacilityService : IBusinessPropertyFacilityS
             .Include(f => f.Images)
             .Include(f => f.Location)
             .Where(f => f.BusinessRegistrationId == businessId);
+
+        query = OrganizationQueryScope.ApplyFacilityScope(query, _actor);
 
         if (!includeArchived)
         {

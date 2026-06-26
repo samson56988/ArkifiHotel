@@ -110,18 +110,13 @@ export class CustomerFormComponent implements OnInit {
         }
 
         if (this.isCreateMode) {
-          void this.router.navigate(['/customers', res.data.id], { replaceUrl: true });
           this.toast.success('Customer created.', 'Customer');
+          void this.router.navigate(['/customers'], { replaceUrl: true });
           return;
         }
 
-        this.form.patchValue({
-          fullName: res.data.fullName,
-          email: res.data.email,
-          phone: res.data.phone ?? '',
-          notes: res.data.notes ?? '',
-        });
         this.toast.success('Customer updated.', 'Customer');
+        void this.router.navigate(['/customers'], { replaceUrl: true });
       },
       error: (err: unknown) => {
         const r = err as ApiResult<unknown>;

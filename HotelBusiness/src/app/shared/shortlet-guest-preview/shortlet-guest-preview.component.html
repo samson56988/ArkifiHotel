@@ -1,0 +1,150 @@
+<div class="sl-preview" [style]="themeStyle()">
+  <header class="sl-preview__nav">
+    <div class="sl-preview__brand-wrap">
+      @if (data().logoUrl) {
+        <img class="sl-preview__logo" [src]="data().logoUrl!" [alt]="data().businessName + ' logo'" />
+      } @else {
+        <span class="sl-preview__mark">{{ data().businessName.charAt(0) }}</span>
+      }
+      <span class="sl-preview__brand">
+        {{ data().businessName }}
+        @if (data().branchName) {
+          <small>{{ data().branchName }}</small>
+        }
+      </span>
+    </div>
+    <nav>
+      <span [class.on]="page() === 'home'">Home</span>
+      <span [class.on]="page() === 'listings'">Listings</span>
+      <span [class.on]="page() === 'amenities'">Amenities</span>
+      <span [class.on]="page() === 'host'">Host</span>
+    </nav>
+  </header>
+
+  @if (page() === 'home') {
+    <section
+      class="hero"
+      [class.hero--empty]="!data().heroImage"
+      [style.backgroundImage]="data().heroImage ? 'url(' + data().heroImage + ')' : null"
+    >
+      <div class="hero__shade">
+        <p class="eyebrow">{{ data().neighborhood }}</p>
+        <h1>{{ data().tagline || data().headline }}</h1>
+        <p>
+          {{ data().listings.length }} apartment{{ data().listings.length === 1 ? '' : 's' }} · Check-in
+          {{ data().checkIn }}
+        </p>
+      </div>
+    </section>
+    <section class="block">
+      <h2>{{ data().featuredTitle }}</h2>
+      @if (featured().length === 0) {
+        <p class="empty">Add apartments under Rooms and assign a branch to see them here.</p>
+      } @else {
+        <div class="cards">
+          @for (l of featured(); track l.id) {
+            <article class="card">
+              @if (l.image) {
+                <img [src]="l.image" [alt]="l.title" />
+              } @else {
+                <div class="card__placeholder">No photo</div>
+              }
+              <div class="card__body">
+                <h3>{{ l.title }}</h3>
+                <p>{{ l.tagline }}</p>
+                <strong>{{ formatPrice(l.nightlyPrice) }}<small>/ night</small></strong>
+              </div>
+            </article>
+          }
+        </div>
+      }
+    </section>
+    <section class="block host-teaser">
+      @if (data().hostPhoto) {
+        <img [src]="data().hostPhoto" [alt]="data().hostName" />
+      } @else {
+        <div class="host-teaser__placeholder">{{ data().hostName.charAt(0) }}</div>
+      }
+      <div>
+        <p class="eyebrow">Your host</p>
+        <h3>{{ data().hostName }}</h3>
+        <p>{{ data().hostBio }}</p>
+      </div>
+    </section>
+  }
+
+  @if (page() === 'listings') {
+    <section class="block page-head">
+      <h1>{{ data().listingsTitle }}</h1>
+      <p>{{ data().listingsSubtitle }}</p>
+    </section>
+    @if (data().listings.length === 0) {
+      <p class="empty block">No apartments for this branch yet. Create rooms and link them to this location.</p>
+    } @else {
+      <div class="cards cards--grid">
+        @for (l of data().listings; track l.id) {
+          <article class="card">
+            @if (l.image) {
+              <img [src]="l.image" [alt]="l.title" />
+            } @else {
+              <div class="card__placeholder">No photo</div>
+            }
+            <div class="card__body">
+              <span class="meta">{{ l.beds }} bed · {{ l.guests }} guests</span>
+              <h3>{{ l.title }}</h3>
+              <p>{{ l.tagline }}</p>
+              @if (l.amenities.length) {
+                <div class="chips">
+                  @for (a of l.amenities; track a) {
+                    <span>{{ a }}</span>
+                  }
+                </div>
+              }
+              <strong>{{ formatPrice(l.nightlyPrice) }}<small>/ night</small></strong>
+            </div>
+          </article>
+        }
+      </div>
+    }
+  }
+
+  @if (page() === 'amenities') {
+    <section class="block page-head">
+      <h1>{{ data().amenitiesTitle }}</h1>
+      <p>{{ data().amenitiesSubtitle }}</p>
+    </section>
+    @if (data().amenities.length === 0) {
+      <p class="empty block">Add amenities under Room amenities in the sidebar.</p>
+    } @else {
+      <div class="amenity-grid">
+        @for (a of data().amenities; track a.id) {
+          <div class="amenity">
+            <span>{{ a.icon }}</span>
+            <div>
+              <strong>{{ a.label }}</strong>
+              <p>{{ a.description }}</p>
+            </div>
+          </div>
+        }
+      </div>
+    }
+  }
+
+  @if (page() === 'host') {
+    <section class="block host-page">
+      @if (data().hostPhoto) {
+        <img class="host-page__photo" [src]="data().hostPhoto" [alt]="data().hostName" />
+      } @else {
+        <div class="host-page__placeholder">{{ data().hostName.charAt(0) }}</div>
+      }
+      <h1>{{ data().hostName }}</h1>
+      <p>{{ data().hostBio }}</p>
+      <h2>House rules</h2>
+      <ul>
+        @for (rule of data().houseRules; track rule) {
+          <li>{{ rule }}</li>
+        }
+      </ul>
+    </section>
+  }
+</div>

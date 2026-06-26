@@ -20,6 +20,7 @@ public sealed class BusinessRegistrationService : IBusinessRegistrationService
     private readonly IBusinessEmailVerificationService _emailVerificationService;
     private readonly ILogger<BusinessRegistrationService> _logger;
     private readonly PasswordHasher<BusinessRegistration> _passwordHasher = new();
+    private readonly PasswordHasher<UserOrganization> _userPasswordHasher = new();
 
     public BusinessRegistrationService(
         AdminDbContext db,
@@ -82,7 +83,11 @@ public sealed class BusinessRegistrationService : IBusinessRegistrationService
         var exists = await _db.BusinessRegistrations
             .AsNoTracking()
             .AnyAsync(r => r.ContactEmail == email, cancellationToken)
-            .ConfigureAwait(false);
+            .ConfigureAwait(false)
+            || await _db.UserOrganizations
+                .AsNoTracking()
+                .AnyAsync(u => u.Email == email, cancellationToken)
+                .ConfigureAwait(false);
 
         if (exists)
         {
@@ -147,7 +152,26 @@ public sealed class BusinessRegistrationService : IBusinessRegistrationService
 
         entity.HashedPassword = _passwordHasher.HashPassword(entity, request.Password);
 
+        var superAdmin = new UserOrganization
+        {
+            Id = Guid.NewGuid(),
+            BusinessRegistrationId = entity.Id,
+            FirstName = firstName,
+            LastName = lastName,
+            Email = email,
+            HashedPassword = string.Empty,
+            IsSuperAdmin = true,
+            IsDefaultPassword = false,
+            HasAllModuleAccess = true,
+            HasAllLocationAccess = true,
+            IsEmailVerified = false,
+            IsActive = true,
+            CreatedAt = now,
+        };
+        superAdmin.HashedPassword = _userPasswordHasher.HashPassword(superAdmin, request.Password);
+
         _db.BusinessRegistrations.Add(entity);
+        _db.UserOrganizations.Add(superAdmin);
         await _db.SaveChangesAsync(cancellationToken).ConfigureAwait(false);
 
         await SendWelcomeOnboardEmailAsync(entity, cancellationToken).ConfigureAwait(false);

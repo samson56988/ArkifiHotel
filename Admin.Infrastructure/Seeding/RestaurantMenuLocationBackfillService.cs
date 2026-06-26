@@ -1,4 +1,5 @@
 using Admin.Data;
+using Admin.Data.Entities;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
 
@@ -23,33 +24,46 @@ public sealed class RestaurantMenuLocationBackfillService
 
     public async Task BackfillAsync(CancellationToken cancellationToken = default)
     {
-        var primaryLocationByBusiness = await _db.BusinessLocations
+        var locations = await _db.BusinessLocations
             .AsNoTracking()
             .OrderBy(l => l.Name)
-            .GroupBy(l => l.BusinessRegistrationId)
-            .Select(g => new { BusinessId = g.Key, LocationId = g.First().Id })
-            .ToDictionaryAsync(x => x.BusinessId, x => x.LocationId, cancellationToken)
+            .ToListAsync(cancellationToken)
             .ConfigureAwait(false);
 
-        if (primaryLocationByBusiness.Count == 0)
+        if (locations.Count == 0)
         {
             return;
         }
 
-        var validLocationIds = primaryLocationByBusiness.Values.ToHashSet();
+        var primaryLocationByBusiness = locations
+            .GroupBy(l => l.BusinessRegistrationId)
+            .ToDictionary(g => g.Key, g => g.First().Id);
+
+        var locationBusinessMap = locations.ToDictionary(l => l.Id, l => l.BusinessRegistrationId);
         var now = DateTimeOffset.UtcNow;
         var updated = 0;
+        var removed = 0;
 
         var settings = await _db.RestaurantMenuSettings
             .ToListAsync(cancellationToken)
             .ConfigureAwait(false);
 
-        foreach (var row in settings)
+        var settingsToRemove = new List<RestaurantMenuSettings>();
+        var occupiedSettingsKeys = new HashSet<(Guid BusinessId, Guid LocationId)>();
+
+        foreach (var row in settings.OrderBy(s => s.CreatedAt))
         {
-            if (validLocationIds.Contains(row.LocationId)
-                && await LocationBelongsToBusinessAsync(row.LocationId, row.BusinessRegistrationId, cancellationToken)
-                    .ConfigureAwait(false))
+            var hasValidLocation = locationBusinessMap.TryGetValue(row.LocationId, out var ownerBusinessId)
+                && ownerBusinessId == row.BusinessRegistrationId;
+
+            if (hasValidLocation)
             {
+                var key = (row.BusinessRegistrationId, row.LocationId);
+                if (!occupiedSettingsKeys.Add(key))
+                {
+                    settingsToRemove.Add(row);
+                }
+
                 continue;
             }
 
@@ -58,9 +72,23 @@ public sealed class RestaurantMenuLocationBackfillService
                 continue;
             }
 
+            var targetKey = (row.BusinessRegistrationId, locationId);
+            if (occupiedSettingsKeys.Contains(targetKey))
+            {
+                settingsToRemove.Add(row);
+                continue;
+            }
+
             row.LocationId = locationId;
             row.UpdatedAt = now;
+            occupiedSettingsKeys.Add(targetKey);
             updated++;
+        }
+
+        if (settingsToRemove.Count > 0)
+        {
+            _db.RestaurantMenuSettings.RemoveRange(settingsToRemove);
+            removed = settingsToRemove.Count;
         }
 
         var categories = await _db.RestaurantMenuCategories
@@ -69,9 +97,10 @@ public sealed class RestaurantMenuLocationBackfillService
 
         foreach (var row in categories)
         {
-            if (validLocationIds.Contains(row.LocationId)
-                && await LocationBelongsToBusinessAsync(row.LocationId, row.BusinessRegistrationId, cancellationToken)
-                    .ConfigureAwait(false))
+            var hasValidLocation = locationBusinessMap.TryGetValue(row.LocationId, out var ownerBusinessId)
+                && ownerBusinessId == row.BusinessRegistrationId;
+
+            if (hasValidLocation)
             {
                 continue;
             }
@@ -86,20 +115,15 @@ public sealed class RestaurantMenuLocationBackfillService
             updated++;
         }
 
-        if (updated == 0)
+        if (updated == 0 && removed == 0)
         {
             return;
         }
 
         await _db.SaveChangesAsync(cancellationToken).ConfigureAwait(false);
-        _logger.LogInformation("Backfilled LocationId on {Count} restaurant menu row(s).", updated);
+        _logger.LogInformation(
+            "Restaurant menu location backfill: updated {Updated} row(s), removed {Removed} duplicate settings row(s).",
+            updated,
+            removed);
     }
-
-    private Task<bool> LocationBelongsToBusinessAsync(
-        Guid locationId,
-        Guid businessId,
-        CancellationToken cancellationToken) =>
-        _db.BusinessLocations
-            .AsNoTracking()
-            .AnyAsync(l => l.Id == locationId && l.BusinessRegistrationId == businessId, cancellationToken);
 }

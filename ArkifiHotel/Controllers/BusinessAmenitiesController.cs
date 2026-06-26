@@ -53,7 +53,7 @@ public sealed class BusinessAmenitiesController : ControllerBase
             return BadRequest(
                 ApiResult<AmenityDto>.Fail(
                     "Validation",
-                    "Could not create amenity. Check the name (2–128 characters) and ensure it is not a duplicate."));
+                    "Could not create amenity. Check the name (2–128 characters) and ensure it is not already in the standard list or your custom list."));
         }
 
         return Created($"/api/business/amenities/{dto.Id}", ApiResult<AmenityDto>.Ok(dto));

@@ -1,5 +1,6 @@
 using Admin.Data;
 using Admin.Data.Entities;
+using Admin.Infrastructure.Helpers;
 using Admin.Services.Abstractions;
 using Microsoft.EntityFrameworkCore;
 using Shared.Data.Dtos;
@@ -9,19 +10,25 @@ namespace Admin.Infrastructure.Services;
 public sealed class BusinessLocationService : IBusinessLocationService
 {
     private readonly AdminDbContext _db;
+    private readonly IOrganizationUserContext _actor;
 
-    public BusinessLocationService(AdminDbContext db)
+    public BusinessLocationService(AdminDbContext db, IOrganizationUserContext actor)
     {
         _db = db;
+        _actor = actor;
     }
 
     public async Task<IReadOnlyList<BusinessLocationDto>> ListAsync(
         Guid businessId,
         CancellationToken cancellationToken = default)
     {
-        var rows = await _db.BusinessLocations
+        var query = _db.BusinessLocations
             .AsNoTracking()
-            .Where(l => l.BusinessRegistrationId == businessId)
+            .Where(l => l.BusinessRegistrationId == businessId);
+
+        query = OrganizationQueryScope.ApplyLocationScope(query, _actor);
+
+        var rows = await query
             .OrderBy(l => l.Name)
             .ToListAsync(cancellationToken)
             .ConfigureAwait(false);

@@ -77,4 +77,11 @@ export class StorefrontContextService {
     this.loading.set(false);
     this.notFound.set(false);
   }
+
+  apply(data: HotelShowcase, locationRouteId?: string | null): void {
+    this.storefront.set(data);
+    this.locationRouteId.set(locationRouteId ?? data.activeLocationId ?? null);
+    this.loading.set(false);
+    this.notFound.set(false);
+  }
 }

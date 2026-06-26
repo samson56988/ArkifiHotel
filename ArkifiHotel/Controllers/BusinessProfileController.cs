@@ -1,3 +1,4 @@
+using Admin.Infrastructure.Helpers;
 using Admin.Services.Abstractions;
 using ArkifiHotel.Extensions;
 using Microsoft.AspNetCore.Authorization;
@@ -13,25 +14,17 @@ namespace ArkifiHotel.Controllers;
 [Authorize(Roles = "Business")]
 public sealed class BusinessProfileController : ControllerBase
 {
-    private const long MaxUploadBytes = 8 * 1024 * 1024;
-    private static readonly HashSet<string> AllowedContentTypes = new(StringComparer.OrdinalIgnoreCase)
-    {
-        "image/jpeg",
-        "image/png",
-    };
+    private const long MaxUploadBytes = BusinessLogoFileHelper.MaxUploadBytes;
 
     private readonly IBusinessProfileService _profile;
     private readonly IWebHostEnvironment _env;
-    private readonly ILogger<BusinessProfileController> _logger;
 
     public BusinessProfileController(
         IBusinessProfileService profile,
-        IWebHostEnvironment env,
-        ILogger<BusinessProfileController> logger)
+        IWebHostEnvironment env)
     {
         _profile = profile;
         _env = env;
-        _logger = logger;
     }
 
     [HttpGet]
@@ -99,53 +92,25 @@ public sealed class BusinessProfileController : ControllerBase
             return BadRequest(ApiResult<BusinessProfileDto>.Fail("Validation", "No logo file uploaded."));
         }
 
-        if (file.Length > MaxUploadBytes)
+        var validationError = BusinessLogoFileHelper.Validate(file);
+        if (validationError is not null)
         {
-            return BadRequest(ApiResult<BusinessProfileDto>.Fail("Validation", "Logo must be 8MB or smaller."));
+            return BadRequest(ApiResult<BusinessProfileDto>.Fail("Validation", validationError));
         }
-
-        if (string.IsNullOrEmpty(file.ContentType) || !AllowedContentTypes.Contains(file.ContentType))
-        {
-            return BadRequest(ApiResult<BusinessProfileDto>.Fail("Validation", "Only JPEG or PNG images are allowed."));
-        }
-
-        var ext = Path.GetExtension(file.FileName);
-        if (string.IsNullOrEmpty(ext) || ext.Length > 10)
-        {
-            ext = file.ContentType switch
-            {
-                "image/jpeg" => ".jpg",
-                "image/png" => ".png",
-                _ => ".bin",
-            };
-        }
-
-        var webRoot = _env.WebRootPath ?? Path.Combine(_env.ContentRootPath, "wwwroot");
-        var relativeFolder = $"uploads/{businessId.Value:N}/logo";
-        var physicalDir = Path.Combine(webRoot, "uploads", businessId.Value.ToString("N"), "logo");
-        Directory.CreateDirectory(physicalDir);
 
         var existing = await _profile.GetAsync(businessId.Value, cancellationToken).ConfigureAwait(false);
         if (existing?.LogoUrl is not null)
         {
-            TryDeleteStoredFile(webRoot, existing.LogoUrl);
+            BusinessLogoFileHelper.TryDeleteStoredFile(_env, existing.LogoUrl);
         }
 
-        var fileName = $"logo{ext}";
-        var relativePath = $"{relativeFolder}/{fileName}";
-        var physicalPath = Path.Combine(physicalDir, fileName);
+        var (relativePath, saveError) = await BusinessLogoFileHelper
+            .SaveAsync(_env, businessId.Value, file, cancellationToken)
+            .ConfigureAwait(false);
 
-        try
+        if (saveError is not null || relativePath is null)
         {
-            await using (var stream = System.IO.File.Create(physicalPath))
-            {
-                await file.CopyToAsync(stream, cancellationToken).ConfigureAwait(false);
-            }
-        }
-        catch (Exception ex)
-        {
-            _logger.LogWarning(ex, "Failed saving business logo for {BusinessId}", businessId);
-            return BadRequest(ApiResult<BusinessProfileDto>.Fail("UploadFailed", "Could not save logo."));
+            return BadRequest(ApiResult<BusinessProfileDto>.Fail("UploadFailed", saveError ?? "Could not save logo."));
         }
 
         var (data, error, message) = await _profile
@@ -154,7 +119,7 @@ public sealed class BusinessProfileController : ControllerBase
 
         if (error != BusinessProfileUpdateError.None || data is null)
         {
-            TryDeleteFile(physicalPath);
+            BusinessLogoFileHelper.TryDeleteStoredFile(_env, relativePath);
             return BadRequest(ApiResult<BusinessProfileDto>.Fail("UploadFailed", message ?? "Could not update profile."));
         }
 
@@ -174,8 +139,7 @@ public sealed class BusinessProfileController : ControllerBase
         var existing = await _profile.GetAsync(businessId.Value, cancellationToken).ConfigureAwait(false);
         if (existing?.LogoUrl is not null)
         {
-            var webRoot = _env.WebRootPath ?? Path.Combine(_env.ContentRootPath, "wwwroot");
-            TryDeleteStoredFile(webRoot, existing.LogoUrl);
+            BusinessLogoFileHelper.TryDeleteStoredFile(_env, existing.LogoUrl);
         }
 
         var (data, error, message) = await _profile
@@ -219,6 +183,7 @@ public sealed class BusinessProfileController : ControllerBase
             LastName = dto.LastName,
             IsEmailVerified = dto.IsEmailVerified,
             Status = dto.Status,
+            BusinessType = dto.BusinessType,
             CreatedAt = dto.CreatedAt,
             UpdatedAt = dto.UpdatedAt,
         };
@@ -238,34 +203,5 @@ public sealed class BusinessProfileController : ControllerBase
 
         var path = urlOrPath.StartsWith('/') ? urlOrPath : "/" + urlOrPath;
         return $"{Request.Scheme}://{Request.Host}{path}";
-    }
-
-    private static void TryDeleteStoredFile(string webRoot, string relativeOrAbsolutePath)
-    {
-        var path = relativeOrAbsolutePath;
-        if (path.StartsWith("http://", StringComparison.OrdinalIgnoreCase)
-            || path.StartsWith("https://", StringComparison.OrdinalIgnoreCase))
-        {
-            var uri = new Uri(path);
-            path = uri.AbsolutePath.TrimStart('/');
-        }
-
-        path = path.TrimStart('/').Replace('/', Path.DirectorySeparatorChar);
-        TryDeleteFile(Path.Combine(webRoot, path));
-    }
-
-    private static void TryDeleteFile(string physicalPath)
-    {
-        try
-        {
-            if (System.IO.File.Exists(physicalPath))
-            {
-                System.IO.File.Delete(physicalPath);
-            }
-        }
-        catch
-        {
-            // Best effort cleanup.
-        }
     }
 }

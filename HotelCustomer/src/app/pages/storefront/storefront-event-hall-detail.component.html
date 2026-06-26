@@ -1,0 +1,122 @@
+@if (ctx.storefront(); as sf) {
+  @if (hall(); as h) {
+    <section class="detail section-wrap">
+      <a [routerLink]="ctx.path('event-halls')" class="back-link">← All event spaces</a>
+
+      <div class="detail__layout">
+        <div class="detail__gallery">
+          @if (activeImage(); as img) {
+            <div class="detail__hero" [style.background-image]="'url(' + img + ')'"></div>
+          } @else {
+            <div class="detail__hero detail__hero--placeholder" aria-hidden="true">🎪</div>
+          }
+          @if (galleryImages().length > 1) {
+            <div class="detail__thumbs">
+              @for (img of galleryImages(); track img; let i = $index) {
+                <button
+                  type="button"
+                  class="detail__thumb"
+                  [class.detail__thumb--active]="activeImageIndex() === i"
+                  [style.background-image]="'url(' + img + ')'"
+                  (click)="selectImage(i)"
+                  [attr.aria-label]="'Photo ' + (i + 1)"
+                ></button>
+              }
+            </div>
+          }
+        </div>
+
+        <div class="detail__info">
+          <div class="sec-eyebrow">Event space</div>
+          <h1 class="detail__title">{{ h.name }}</h1>
+          <p class="detail__price">From {{ formatNaira(h.rentalPrice) }}</p>
+          <p class="detail__meta">{{ capacityLabel(h) }}</p>
+          @if (h.description) {
+            <p class="detail__desc">{{ h.description }}</p>
+          }
+          <p class="detail__note">
+            Rental price is a starting rate. Submit a request and our team will confirm availability and send a formal quote — no online payment.
+          </p>
+          <button type="button" class="hall-card__btn" (click)="openRequest()">Request this space</button>
+        </div>
+      </div>
+    </section>
+
+    @if (requestOpen()) {
+      <div class="checkout-modal-overlay" (click)="closeRequest()" role="presentation">
+        <div class="checkout-modal" role="dialog" aria-modal="true" (click)="$event.stopPropagation()">
+          <button type="button" class="checkout-modal__close" (click)="closeRequest()" [disabled]="submitting()">✕</button>
+          <header class="checkout-modal__head">
+            <h2>Request {{ h.name }}</h2>
+            <p class="checkout-modal__sub">From {{ formatNaira(h.rentalPrice) }} · {{ capacityLabel(h) }}</p>
+          </header>
+          @if (successMessage()) {
+            <div class="request-success" role="status">
+              <div class="request-success__icon">✓</div>
+              <p>{{ successMessage() }}</p>
+              <button type="button" class="hall-card__btn" (click)="closeRequest()">Close</button>
+            </div>
+          } @else {
+            <form class="checkout-form" (ngSubmit)="submitRequest()">
+              <label class="field">
+                <span>Full name</span>
+                <input class="field__input" type="text" [ngModel]="guestName()" (ngModelChange)="guestName.set($event)" name="guestName" required />
+              </label>
+              <label class="field">
+                <span>Email</span>
+                <input class="field__input" type="email" [ngModel]="guestEmail()" (ngModelChange)="guestEmail.set($event)" name="guestEmail" required />
+              </label>
+              <label class="field">
+                <span>Phone</span>
+                <input class="field__input" type="tel" [ngModel]="guestPhone()" (ngModelChange)="guestPhone.set($event)" name="guestPhone" required />
+              </label>
+              <label class="field">
+                <span>Event purpose</span>
+                <select class="field__input" [ngModel]="eventPurpose()" (ngModelChange)="eventPurpose.set($event)" name="eventPurpose" required>
+                  <option value="" disabled>Select event type</option>
+                  @for (option of eventPurposeOptions; track option) {
+                    <option [value]="option">{{ option }}</option>
+                  }
+                </select>
+              </label>
+              @if (eventPurpose() === 'Other') {
+                <label class="field">
+                  <span>Describe your event</span>
+                  <input class="field__input" type="text" [ngModel]="eventPurposeOther()" (ngModelChange)="eventPurposeOther.set($event)" name="eventPurposeOther" required />
+                </label>
+              }
+              <div class="field-row">
+                <label class="field">
+                  <span>Event date</span>
+                  <input class="field__input" type="date" [ngModel]="eventDate()" (ngModelChange)="eventDate.set($event)" name="eventDate" required />
+                </label>
+                <label class="field">
+                  <span>End date (optional)</span>
+                  <input class="field__input" type="date" [ngModel]="eventEndDate()" (ngModelChange)="eventEndDate.set($event)" name="eventEndDate" />
+                </label>
+              </div>
+              <label class="field">
+                <span>Additional notes (optional)</span>
+                <textarea class="field__input field__input--area" rows="3" [ngModel]="notes()" (ngModelChange)="notes.set($event)" name="notes"></textarea>
+              </label>
+              @if (formError()) {
+                <p class="checkout-error" role="alert">{{ formError() }}</p>
+              }
+              <button type="submit" class="checkout-pay" [disabled]="submitting()">
+                {{ submitting() ? 'Submitting…' : 'Submit request' }}
+              </button>
+            </form>
+          }
+        </div>
+      </div>
+    }
+
+    <app-hotel-footer [storefront]="sf" />
+  } @else {
+    <section class="halls-unavailable section-wrap">
+      <a [routerLink]="ctx.path('event-halls')" class="back-link back-link--dark">← Event spaces</a>
+      <h1 class="sec-title">Space not found</h1>
+      <p class="sec-sub">This event hall is not available at the selected branch.</p>
+    </section>
+  }
+}

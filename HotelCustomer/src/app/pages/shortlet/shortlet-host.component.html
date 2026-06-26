@@ -1,0 +1,56 @@
+<section class="page-hero">
+  <p class="eyebrow">Your host</p>
+  <h1>Meet {{ shortlet().host.name.split(' ')[0] }}</h1>
+</section>
+
+<div class="host-layout">
+  <div class="host-profile">
+    <div class="host-profile__visual">
+      <img class="avatar" [src]="shortlet().host.photoUrl" [alt]="shortlet().host.name" />
+      @if (shortlet().host.verified) {
+        <span class="badge">Verified host</span>
+      }
+    </div>
+    <div class="host-profile__info">
+      <h2>{{ shortlet().host.name }}</h2>
+      <p class="role">{{ shortlet().host.role }}</p>
+      <div class="stats">
+        <div><strong>★ {{ shortlet().host.rating }}</strong><span>Rating</span></div>
+        <div><strong>{{ shortlet().host.reviewCount }}</strong><span>Reviews</span></div>
+        <div><strong>{{ shortlet().host.yearsHosting }}</strong><span>Years hosting</span></div>
+        <div><strong>{{ shortlet().host.responseTime }}</strong><span>Response</span></div>
+      </div>
+      <p class="bio">{{ shortlet().host.bio }}</p>
+      <div class="langs">
+        <span class="label">Languages</span>
+        @for (lang of shortlet().host.languages; track lang) {
+          <span class="pill">{{ lang }}</span>
+        }
+      </div>
+    </div>
+  </div>
+
+  <section class="reviews">
+    <h2>What guests are saying</h2>
+    <div class="reviews__grid">
+      @for (r of reviews; track r.name) {
+        <article>
+          <div class="review-head">
+            <strong>{{ r.name }}</strong>
+            <span>{{ r.date }}</span>
+          </div>
+          <p>{{ r.text }}</p>
+        </article>
+      }
+    </div>
+  </section>
+
+  <section class="rules-block">
+    <h2>House rules</h2>
+    <ul>
+      @for (rule of shortlet().houseRules; track rule) {
+        <li>{{ rule }}</li>
+      }
+    </ul>
+  </section>
+</div>

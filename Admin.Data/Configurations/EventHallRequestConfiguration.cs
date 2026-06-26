@@ -15,6 +15,7 @@ public class EventHallRequestConfiguration : IEntityTypeConfiguration<EventHallR
         builder.Property(e => e.GuestName).IsRequired().HasMaxLength(200);
         builder.Property(e => e.GuestEmail).IsRequired().HasMaxLength(320);
         builder.Property(e => e.GuestPhone).IsRequired().HasMaxLength(40);
+        builder.Property(e => e.EventPurpose).IsRequired().HasMaxLength(200);
         builder.Property(e => e.Notes).HasMaxLength(2000);
         builder.Property(e => e.Status).IsRequired();
         builder.Property(e => e.CreatedAt).IsRequired();

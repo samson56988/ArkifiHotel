@@ -5,36 +5,75 @@
     </a>
 
     <nav class="menu">
-      <a
-        class="menu__item"
-        routerLink="/dashboard"
-        routerLinkActive="menu__item--active"
-        [routerLinkActiveOptions]="{ exact: true }"
-        >Overview</a
-      >
-      <a class="menu__item" routerLink="/rooms" routerLinkActive="menu__item--active">Rooms</a>
-      <a class="menu__item" routerLink="/locations" routerLinkActive="menu__item--active">Locations</a>
-      <a class="menu__item" routerLink="/amenities" routerLinkActive="menu__item--active">Amenities</a>
-      <a class="menu__item" routerLink="/facilities" routerLinkActive="menu__item--active">Facilities</a>
-      <a class="menu__item" routerLink="/restaurant-menu" routerLinkActive="menu__item--active">Restaurant & menu</a>
-      <a class="menu__item" routerLink="/restaurant-orders" routerLinkActive="menu__item--active">Restaurant orders</a>
-      <a class="menu__item" routerLink="/bookings" routerLinkActive="menu__item--active">Bookings</a>
-      <a
-        class="menu__item"
-        routerLink="/payment-configuration"
-        routerLinkActive="menu__item--active"
-        >Payment configuration</a
-      >
-      <a class="menu__item" routerLink="/customers" routerLinkActive="menu__item--active">Customers</a>
-      <a class="menu__item" routerLink="/booking-payments" routerLinkActive="menu__item--active"
-        >Booking payments</a
-      >
-      <a class="menu__item" routerLink="/subscription" routerLinkActive="menu__item--active">Subscription</a>
-      <a class="menu__item" routerLink="/profile" routerLinkActive="menu__item--active">Profile</a>
-      <a class="menu__item" routerLink="/social-profile" routerLinkActive="menu__item--active">Social & contact</a>
-      <a class="menu__item" routerLink="/storefront-designer" routerLinkActive="menu__item--active"
-        >Storefront designer</a
-      >
+      @if (canAccess('dashboard')) {
+        <a
+          class="menu__item"
+          routerLink="/dashboard"
+          routerLinkActive="menu__item--active"
+          [routerLinkActiveOptions]="{ exact: true }"
+          >Overview</a
+        >
+      }
+      @if (canAccess('rooms')) {
+        <a class="menu__item" routerLink="/rooms" routerLinkActive="menu__item--active">
+          {{ biz.isShortlet() ? 'Apartments' : 'Rooms' }}
+        </a>
+      }
+      @if (canAccess('locations')) {
+        <a class="menu__item" routerLink="/locations" routerLinkActive="menu__item--active">Locations</a>
+      }
+      @if (canAccess('amenities')) {
+        <a class="menu__item" routerLink="/amenities" routerLinkActive="menu__item--active">Amenities</a>
+      }
+      @if (canAccess('facilities')) {
+        <a class="menu__item" routerLink="/facilities" routerLinkActive="menu__item--active">Facilities</a>
+      }
+      @if (biz.isHotel()) {
+        @if (canAccess('event_halls')) {
+          <a class="menu__item" routerLink="/event-halls" routerLinkActive="menu__item--active">Event halls</a>
+        }
+        @if (canAccess('restaurant_menu')) {
+          <a class="menu__item" routerLink="/restaurant-menu" routerLinkActive="menu__item--active">Restaurant & menu</a>
+        }
+        @if (canAccess('restaurant_orders')) {
+          <a class="menu__item" routerLink="/restaurant-orders" routerLinkActive="menu__item--active">Restaurant orders</a>
+        }
+      }
+      @if (canAccess('bookings')) {
+        <a class="menu__item" routerLink="/bookings" routerLinkActive="menu__item--active">
+          {{ biz.isShortlet() ? 'Apartment bookings' : 'Bookings' }}
+        </a>
+      }
+      @if (canAccess('payment_configuration')) {
+        <a class="menu__item" routerLink="/payment-configuration" routerLinkActive="menu__item--active"
+          >Payment configuration</a
+        >
+      }
+      @if (canAccess('customers')) {
+        <a class="menu__item" routerLink="/customers" routerLinkActive="menu__item--active">Customers</a>
+      }
+      @if (canAccess('booking_payments')) {
+        <a class="menu__item" routerLink="/booking-payments" routerLinkActive="menu__item--active">Booking payments</a>
+      }
+      @if (canAccess('subscription')) {
+        <a class="menu__item" routerLink="/subscription" routerLinkActive="menu__item--active">Subscription</a>
+      }
+      @if (canAccess('profile')) {
+        <a class="menu__item" routerLink="/profile" routerLinkActive="menu__item--active">Profile</a>
+      }
+      @if (canAccess('social_profile')) {
+        <a class="menu__item" routerLink="/social-profile" routerLinkActive="menu__item--active">Social & contact</a>
+      }
+      @if (canAccess('storefront_designer')) {
+        <a class="menu__item" routerLink="/storefront-designer" routerLinkActive="menu__item--active"
+          >Storefront designer</a
+        >
+      }
+      @if (access.isSuperAdmin()) {
+        <a class="menu__item" routerLink="/team" routerLinkActive="menu__item--active">Team</a>
+        <a class="menu__item" routerLink="/team/invites" routerLinkActive="menu__item--active">Sent invites</a>
+        <a class="menu__item" routerLink="/audit" routerLinkActive="menu__item--active">Audit log</a>
+      }
       <a class="menu__item" routerLink="/">Platform home</a>
     </nav>
   </aside>

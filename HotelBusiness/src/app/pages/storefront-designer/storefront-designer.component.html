@@ -4,7 +4,7 @@
       <p class="eyebrow">Storefront</p>
       <h1>Theme designer</h1>
       <p class="lead">
-        Design how guests experience your hotel — banner, sections, fonts, colors, and footer.
+        Design how guests experience your {{ isShortletPreview() ? 'shortlet' : 'hotel' }} — banner, sections, fonts, colors, and footer.
         @if (liveUrl(); as url) {
           Live at <strong>{{ url }}</strong>
         } @else {
@@ -32,8 +32,12 @@
           <button type="button" class="tabs__btn" [class.tabs__btn--active]="activeTab() === 'global'" (click)="setTab('global')">Global</button>
           <button type="button" class="tabs__btn" [class.tabs__btn--active]="activeTab() === 'banner'" (click)="setTab('banner')">Banner</button>
           <button type="button" class="tabs__btn" [class.tabs__btn--active]="activeTab() === 'about'" (click)="setTab('about')">About us</button>
-          <button type="button" class="tabs__btn" [class.tabs__btn--active]="activeTab() === 'rooms'" (click)="setTab('rooms')">Rooms</button>
-          <button type="button" class="tabs__btn" [class.tabs__btn--active]="activeTab() === 'facilities'" (click)="setTab('facilities')">Facilities</button>
+          <button type="button" class="tabs__btn" [class.tabs__btn--active]="activeTab() === 'rooms'" (click)="setTab('rooms')">
+            {{ isShortletPreview() ? 'Listings' : 'Rooms' }}
+          </button>
+          <button type="button" class="tabs__btn" [class.tabs__btn--active]="activeTab() === 'facilities'" (click)="setTab('facilities')">
+            {{ isShortletPreview() ? 'Amenities' : 'Facilities' }}
+          </button>
           <button type="button" class="tabs__btn" [class.tabs__btn--active]="activeTab() === 'footer'" (click)="setTab('footer')">Footer</button>
           <button type="button" class="tabs__btn" [class.tabs__btn--active]="activeTab() === 'contact'" (click)="setTab('contact')">Contact</button>
           <button type="button" class="tabs__btn" [class.tabs__btn--active]="activeTab() === 'colors'" (click)="setTab('colors')">Colors</button>
@@ -581,28 +585,59 @@
             >
               Home
             </button>
-            <button
-              type="button"
-              class="preview-chrome__page"
-              [class.preview-chrome__page--active]="previewPage() === 'rooms'"
-              (click)="setPreviewPage('rooms')"
-            >
-              Rooms
-            </button>
-            <button
-              type="button"
-              class="preview-chrome__page"
-              [class.preview-chrome__page--active]="previewPage() === 'facilities'"
-              (click)="setPreviewPage('facilities')"
-            >
-              Facilities
-            </button>
+            @if (isShortletPreview()) {
+              <button
+                type="button"
+                class="preview-chrome__page"
+                [class.preview-chrome__page--active]="previewPage() === 'listings'"
+                (click)="setPreviewPage('listings')"
+              >
+                Listings
+              </button>
+              <button
+                type="button"
+                class="preview-chrome__page"
+                [class.preview-chrome__page--active]="previewPage() === 'amenities'"
+                (click)="setPreviewPage('amenities')"
+              >
+                Amenities
+              </button>
+              <button
+                type="button"
+                class="preview-chrome__page"
+                [class.preview-chrome__page--active]="previewPage() === 'host'"
+                (click)="setPreviewPage('host')"
+              >
+                Host
+              </button>
+            } @else {
+              <button
+                type="button"
+                class="preview-chrome__page"
+                [class.preview-chrome__page--active]="previewPage() === 'rooms'"
+                (click)="setPreviewPage('rooms')"
+              >
+                Rooms
+              </button>
+              <button
+                type="button"
+                class="preview-chrome__page"
+                [class.preview-chrome__page--active]="previewPage() === 'facilities'"
+                (click)="setPreviewPage('facilities')"
+              >
+                Facilities
+              </button>
+            }
           </div>
           <span class="preview-chrome__label">{{ previewPageLabel() }}</span>
         </div>
         <div class="preview-frame">
           @if (previewStorefront(); as preview) {
-            <app-storefront-guest-preview [storefront]="preview" [page]="previewPage()" />
+            @if (isShortletPreview()) {
+              <app-shortlet-guest-preview [storefront]="preview" [page]="shortletPreviewPage()" />
+            } @else {
+              <app-storefront-guest-preview [storefront]="preview" [page]="hotelPreviewPage()" />
+            }
           }
         </div>
       </section>

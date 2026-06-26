@@ -20,17 +20,17 @@
 
       <form class="auth-form" [formGroup]="form" (ngSubmit)="onSubmit()" novalidate>
         <div class="auth-field">
-          <label class="auth-label" for="login-email">Email</label>
+          <label class="auth-label" for="login-id">Email or username</label>
           <input
-            id="login-email"
+            id="login-id"
             class="auth-input"
-            type="email"
-            formControlName="email"
-            autocomplete="email"
-            placeholder="you@hotel.com"
+            type="text"
+            formControlName="login"
+            autocomplete="username"
+            placeholder="you@hotel.com or your-slug/username"
           />
-          @if (showError('email')) {
-            <p class="auth-error">Enter a valid email address.</p>
+          @if (showError('login')) {
+            <p class="auth-error">Enter your email or business-slug/username.</p>
           }
         </div>
 

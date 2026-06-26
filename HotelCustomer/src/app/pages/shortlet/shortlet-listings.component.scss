@@ -1,0 +1,73 @@
+@use '../../shared/shortlet-storefront/shortlet-shared' as *;
+
+:host {
+  display: block;
+  padding-top: 5.5rem;
+  @include sl-container;
+  padding-bottom: 3rem;
+}
+
+.page-hero {
+  margin-bottom: 2rem;
+
+  h1 {
+    @include sl-display;
+    font-size: clamp(1.8rem, 4vw, 2.5rem);
+    margin: 0 0 0.5rem;
+  }
+
+  p {
+    @include sl-body;
+    margin: 0;
+    max-width: 520px;
+  }
+}
+
+.eyebrow {
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+  font-size: 0.75rem;
+  color: var(--sl-accent);
+  font-weight: 600;
+  margin: 0 0 0.5rem;
+}
+
+.filters {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+  margin-bottom: 2rem;
+
+  button {
+    padding: 0.5rem 1rem;
+    border-radius: 999px;
+    border: 1.5px solid color-mix(in srgb, var(--sl-primary) 15%, transparent);
+    background: var(--sl-surface);
+    font-family: var(--font-body);
+    font-size: 0.85rem;
+    font-weight: 500;
+    cursor: pointer;
+    color: var(--sl-muted);
+    transition: all 0.15s;
+
+    &.active,
+    &:hover {
+      border-color: var(--sl-accent);
+      color: var(--sl-ink);
+      background: var(--sl-accent-soft);
+    }
+  }
+}
+
+.grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+  gap: 1.5rem;
+}
+
+.empty {
+  grid-column: 1 / -1;
+  text-align: center;
+  color: var(--sl-muted);
+  padding: 3rem;
+}

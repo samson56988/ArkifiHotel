@@ -1,0 +1,75 @@
+<app-business-workspace>
+  <header class="page-head">
+    <div>
+      <p class="eyebrow">Property</p>
+      <h1>Event halls</h1>
+      <p class="lead">
+        Configure rentable event spaces per branch. Guests browse halls on your storefront and submit requests — no online payment.
+      </p>
+    </div>
+    <div class="page-head__actions">
+      <a routerLink="/event-hall-requests" class="btn btn--ghost">Guest requests</a>
+      <label class="check-inline">
+        <input type="checkbox" [checked]="showArchived" (change)="onShowArchivedChange($event)" />
+        <span>Show archived</span>
+      </label>
+      <a routerLink="/event-halls/new" class="btn btn--primary">Add event hall</a>
+    </div>
+  </header>
+
+  @if (loading()) {
+    <p class="muted">Loading event halls…</p>
+  } @else if (loadFailed()) {
+    <p class="muted">We could not load your event halls.</p>
+    <button type="button" class="btn btn--ghost" (click)="load()">Try again</button>
+  } @else if (initialLoadDone() && halls().length === 0) {
+    <p class="muted">
+      @if (showArchived) {
+        No event halls found.
+      } @else {
+        No active event halls yet. Add a hall and attach it to a branch so guests can request bookings.
+      }
+    </p>
+  } @else if (initialLoadDone()) {
+    <div class="table-wrap">
+      <table>
+        <thead>
+          <tr>
+            <th>Hall</th>
+            <th>Branch</th>
+            <th>Rental price</th>
+            <th>Capacity</th>
+            <th>Photos</th>
+            <th></th>
+          </tr>
+        </thead>
+        <tbody>
+          @for (hall of halls(); track hall.id) {
+            <tr>
+              <td>
+                <div class="cell">
+                  @if (hall.primaryImageUrl) {
+                    <img [src]="imageUrl(hall.primaryImageUrl)" width="48" height="48" alt="" class="thumb" />
+                  } @else {
+                    <span class="thumb thumb--placeholder" aria-hidden="true">🎪</span>
+                  }
+                  <div class="cell__text">
+                    <span class="hall-name">{{ hall.name }}</span>
+                    @if (hall.isArchived) {
+                      <span class="badge-archived">Archived</span>
+                    }
+                  </div>
+                </div>
+              </td>
+              <td>{{ hall.locationName || '—' }}</td>
+              <td>{{ formatPrice(hall.rentalPrice) }}</td>
+              <td>{{ hall.maxCapacity ?? '—' }}</td>
+              <td>{{ hall.imageCount }}</td>
+              <td><a class="link" [routerLink]="['/event-halls', hall.id]">Edit</a></td>
+            </tr>
+          }
+        </tbody>
+      </table>
+    </div>
+  }
+</app-business-workspace>

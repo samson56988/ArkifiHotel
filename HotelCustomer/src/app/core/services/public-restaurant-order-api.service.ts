@@ -16,6 +16,7 @@ export interface GuestCreateRestaurantOrderRequest {
   guestType: 'inRestaurant' | 'roomGuest';
   roomNumber?: string | null;
   guestPhone: string;
+  guestEmail: string;
   items: GuestCreateRestaurantOrderLineRequest[];
 }
 

@@ -1,0 +1,31 @@
+<section class="page-hero">
+  <p class="eyebrow">Amenities</p>
+  <h1>Move in, plug in, relax</h1>
+  <p>Every {{ shortlet().businessName }} apartment includes these essentials — no extra fees, no surprises.</p>
+</section>
+
+@for (group of grouped(); track group[0]) {
+  <section class="group">
+    <h2>{{ group[0] }}</h2>
+    <div class="grid">
+      @for (a of group[1]; track a.id) {
+        <article class="card">
+          <span class="icon">{{ a.icon }}</span>
+          <div>
+            <h3>{{ a.label }}</h3>
+            <p>{{ a.description }}</p>
+          </div>
+        </article>
+      }
+    </div>
+  </section>
+}
+
+<section class="rules">
+  <h2>House rules</h2>
+  <ul>
+    @for (rule of shortlet().houseRules; track rule) {
+      <li>{{ rule }}</li>
+    }
+  </ul>
+</section>

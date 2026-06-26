@@ -65,6 +65,7 @@ public sealed class PublicStorefrontController : ControllerBase
         {
             BusinessId = dto.BusinessId,
             BusinessName = dto.BusinessName,
+            BusinessType = dto.BusinessType,
             Slug = dto.Slug,
             LogoUrl = ToAbsoluteUrl(dto.LogoUrl),
             Theme = dto.Theme,
@@ -81,12 +82,14 @@ public sealed class PublicStorefrontController : ControllerBase
                 {
                     Id = r.Id,
                     Name = r.Name,
+                    Description = r.Description,
                     BasePricePerNight = r.BasePricePerNight,
                     MaxOccupancy = r.MaxOccupancy,
                     PrimaryImageUrl = ToAbsoluteUrl(r.PrimaryImageUrl),
                     ImageUrls = r.ImageUrls
                         .Select(u => ToAbsoluteUrl(u) ?? u)
                         .ToList(),
+                    AmenityNames = r.AmenityNames,
                     LocationId = r.LocationId,
                     LocationName = r.LocationName,
                 })
@@ -104,6 +107,7 @@ public sealed class PublicStorefrontController : ControllerBase
                     LocationName = f.LocationName,
                 })
                 .ToList(),
+            Amenities = dto.Amenities,
             Restaurant = dto.Restaurant is null
                 ? null
                 : new PublicStorefrontRestaurantDto

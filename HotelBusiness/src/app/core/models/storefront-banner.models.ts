@@ -7,4 +7,4 @@ export interface StorefrontBannerImageDto {
   locationName: string | null;
 }
 
-export const MAX_BANNER_IMAGES = 3;
+export const MAX_BANNER_IMAGES = 10;

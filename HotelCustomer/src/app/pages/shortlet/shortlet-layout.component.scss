@@ -1,0 +1,28 @@
+.shortlet {
+  min-height: 100vh;
+  background: var(--sl-bg);
+  font-family: var(--font-body);
+  color: var(--sl-ink);
+}
+
+main {
+  min-height: 60vh;
+}
+
+.sl-state {
+  min-height: 100vh;
+  display: grid;
+  place-content: center;
+  text-align: center;
+  padding: 2rem;
+  font-family: var(--font-body);
+
+  ul {
+    list-style: none;
+    padding: 0;
+
+    a {
+      color: #e07a5f;
+    }
+  }
+}

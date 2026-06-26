@@ -1,0 +1,101 @@
+<app-business-workspace>
+  <header class="page-head">
+    <div>
+      <p class="eyebrow">Property</p>
+      <h1>Event hall requests</h1>
+      <p class="lead">Guest inquiries from your storefront. Approve or reject after confirming availability offline.</p>
+    </div>
+    <a routerLink="/event-halls" class="btn btn--ghost">Manage halls</a>
+  </header>
+
+  <div class="toolbar">
+    <label>
+      <span>Status</span>
+      <select [(ngModel)]="statusFilter" (ngModelChange)="onFilterChange()">
+        <option value="">All</option>
+        @for (s of statusOptions; track s) {
+          <option [value]="s">{{ s }}</option>
+        }
+      </select>
+    </label>
+  </div>
+
+  @if (loading()) {
+    <p class="muted">Loading requests…</p>
+  } @else if (loadFailed()) {
+    <p class="muted">Could not load requests.</p>
+    <button type="button" class="btn btn--ghost" (click)="load()">Try again</button>
+  } @else if (initialLoadDone() && requests().length === 0) {
+    <p class="muted">No event hall requests yet.</p>
+  } @else if (initialLoadDone()) {
+    <div class="split">
+      <div class="table-wrap">
+        <table>
+          <thead>
+            <tr>
+              <th>When</th>
+              <th>Purpose</th>
+              <th>Hall</th>
+              <th>Guest</th>
+              <th>Status</th>
+            </tr>
+          </thead>
+          <tbody>
+            @for (r of requests(); track r.id) {
+              <tr [class.is-selected]="selectedId() === r.id" (click)="openRequest(r.id)">
+                <td class="nowrap">{{ r.eventDate | date: 'mediumDate' }}</td>
+                <td>{{ r.eventPurpose }}</td>
+                <td>{{ r.eventHallName }}</td>
+                <td>
+                  <span class="strong">{{ r.guestName }}</span>
+                  <span class="sub">{{ r.guestEmail }}</span>
+                </td>
+                <td><span [class]="statusClass(r.status)">{{ r.status }}</span></td>
+              </tr>
+            }
+          </tbody>
+        </table>
+      </div>
+
+      @if (selectedId()) {
+        <aside class="detail panel">
+          @if (detailLoading()) {
+            <p class="muted">Loading…</p>
+          } @else if (detail(); as d) {
+            <header class="detail__head">
+              <h2>{{ d.eventHallName }}</h2>
+              <button type="button" class="link" (click)="closeDetail()">Close</button>
+            </header>
+            <p><strong>Guest:</strong> {{ d.guestName }}</p>
+            <p><strong>Email:</strong> {{ d.guestEmail }}</p>
+            <p><strong>Phone:</strong> {{ d.guestPhone }}</p>
+            <p><strong>Branch:</strong> {{ d.locationName || '—' }}</p>
+            <p><strong>Event purpose:</strong> {{ d.eventPurpose }}</p>
+            <p><strong>Event date:</strong> {{ d.eventDate | date: 'mediumDate' }}</p>
+            @if (d.eventEndDate) {
+              <p><strong>End date:</strong> {{ d.eventEndDate | date: 'mediumDate' }}</p>
+            }
+            @if (d.notes) {
+              <p><strong>Additional notes:</strong> {{ d.notes }}</p>
+            }
+            <p><strong>Status:</strong> <span [class]="statusClass(d.status)">{{ d.status }}</span></p>
+            <p class="sub">Submitted {{ d.createdAt | date: 'medium' }}</p>
+
+            <div class="detail__actions">
+              @for (s of statusOptions; track s) {
+                <button
+                  type="button"
+                  class="btn btn--ghost"
+                  [disabled]="updating() || d.status === s"
+                  (click)="updateStatus(s)"
+                >
+                  Mark {{ s }}
+                </button>
+              }
+            </div>
+          }
+        </aside>
+      }
+    </div>
+  }
+</app-business-workspace>

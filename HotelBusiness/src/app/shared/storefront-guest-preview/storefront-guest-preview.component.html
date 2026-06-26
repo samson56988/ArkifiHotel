@@ -3,7 +3,14 @@
   @switch (page()) {
     @case ('rooms') {
       <nav class="hotel-nav hotel-nav--solid">
-        <span class="hotel-nav__logo">{{ sf.businessName }}</span>
+        <div class="hotel-nav__brand">
+          @if (sf.logoUrl) {
+            <img class="hotel-nav__brand-logo" [src]="sf.logoUrl" [alt]="sf.businessName + ' logo'" />
+          } @else {
+            <span class="hotel-nav__brand-mark">{{ sf.businessName.charAt(0) }}</span>
+          }
+          <span class="hotel-nav__brand-name">{{ sf.businessName }}</span>
+        </div>
         <ul class="hotel-nav__links">
           @if (sf.theme.rooms.enabled) {
             <li><span class="is-active">Rooms</span></li>
@@ -82,7 +89,14 @@
 
     @case ('facilities') {
       <nav class="hotel-nav hotel-nav--solid">
-        <span class="hotel-nav__logo">{{ sf.businessName }}</span>
+        <div class="hotel-nav__brand">
+          @if (sf.logoUrl) {
+            <img class="hotel-nav__brand-logo" [src]="sf.logoUrl" [alt]="sf.businessName + ' logo'" />
+          } @else {
+            <span class="hotel-nav__brand-mark">{{ sf.businessName.charAt(0) }}</span>
+          }
+          <span class="hotel-nav__brand-name">{{ sf.businessName }}</span>
+        </div>
         <ul class="hotel-nav__links">
           @if (sf.theme.rooms.enabled) {
             <li><span>Rooms</span></li>
@@ -167,7 +181,14 @@
 
     @default {
       <nav class="hotel-nav">
-        <span class="hotel-nav__logo">{{ sf.businessName }}</span>
+        <div class="hotel-nav__brand">
+          @if (sf.logoUrl) {
+            <img class="hotel-nav__brand-logo" [src]="sf.logoUrl" [alt]="sf.businessName + ' logo'" />
+          } @else {
+            <span class="hotel-nav__brand-mark">{{ sf.businessName.charAt(0) }}</span>
+          }
+          <span class="hotel-nav__brand-name">{{ sf.businessName }}</span>
+        </div>
         <ul class="hotel-nav__links">
           @if (sf.theme.rooms.enabled) {
             <li><span>Rooms</span></li>
@@ -184,11 +205,19 @@
       </nav>
 
       <section class="hero">
-        <div
-          class="hero__bg"
-          [class.hero__bg--photo]="!!heroBg()"
-          [style.background-image]="heroBg() ? 'url(' + heroBg() + ')' : null"
-        ></div>
+        <div class="hero__slides" aria-hidden="true">
+          @if (heroImages().length > 0) {
+            @for (img of heroImages(); track img; let i = $index) {
+              <div
+                class="hero__bg hero__bg--photo hero__slide"
+                [class.hero__slide--active]="heroIndex() === i"
+                [style.background-image]="'url(' + img + ')'"
+              ></div>
+            }
+          } @else {
+            <div class="hero__bg"></div>
+          }
+        </div>
         <div class="hero__content">
           @if (sf.theme.banner.badgeText) {
             <div class="hero-tag">

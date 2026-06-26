@@ -80,24 +80,28 @@ public sealed class BusinessStorefrontBannerController : ControllerBase
             return BadRequest(
                 ApiResult<IReadOnlyList<StorefrontBannerImageDto>>.Fail(
                     "Validation",
-                    $"You can upload up to {IStorefrontBannerImageService.MaxImages} banner images."));
+                    $"You can upload up to {IStorefrontBannerImageService.MaxImages} banner images per branch."));
         }
 
-        if (existingCount + files.Count > IStorefrontBannerImageService.MaxImages)
-        {
-            return BadRequest(
-                ApiResult<IReadOnlyList<StorefrontBannerImageDto>>.Fail(
-                    "Validation",
-                    $"Only {IStorefrontBannerImageService.MaxImages - existingCount} more banner image(s) can be added."));
-        }
+        var slotsRemaining = IStorefrontBannerImageService.MaxImages - existingCount;
+        var filesToProcess = files.Take(slotsRemaining).ToList();
+        var skippedBecauseFull = files.Count - filesToProcess.Count;
 
         var webRoot = _env.WebRootPath ?? Path.Combine(_env.ContentRootPath, "wwwroot");
         var relativeFolder = $"uploads/{businessId.Value:N}/banner";
         var physicalDir = Path.Combine(webRoot, "uploads", businessId.Value.ToString("N"), "banner");
         Directory.CreateDirectory(physicalDir);
 
-        foreach (var file in files)
+        var uploaded = 0;
+
+        foreach (var file in filesToProcess)
         {
+            var currentCount = await _bannerImages.CountAsync(businessId.Value, locationId, cancellationToken).ConfigureAwait(false);
+            if (currentCount >= IStorefrontBannerImageService.MaxImages)
+            {
+                break;
+            }
+
             if (file.Length <= 0 || file.Length > MaxUploadBytes)
             {
                 continue;
@@ -146,13 +150,40 @@ public sealed class BusinessStorefrontBannerController : ControllerBase
 
             if (dto is null)
             {
-                return BadRequest(
-                    ApiResult<IReadOnlyList<StorefrontBannerImageDto>>.Fail("UploadFailed", "Could not register banner image."));
+                try
+                {
+                    System.IO.File.Delete(physicalPath);
+                }
+                catch (Exception ex)
+                {
+                    _logger.LogWarning(ex, "Failed deleting orphaned banner file {Path}", physicalPath);
+                }
+
+                continue;
             }
+
+            uploaded++;
+        }
+
+        if (uploaded == 0)
+        {
+            return BadRequest(
+                ApiResult<IReadOnlyList<StorefrontBannerImageDto>>.Fail(
+                    "UploadFailed",
+                    "No banner images were added. Check file type (JPEG/PNG), size (max 8MB), and branch limit."));
         }
 
         var all = await _bannerImages.GetAsync(businessId.Value, locationId, cancellationToken).ConfigureAwait(false);
-        return Ok(ApiResult<IReadOnlyList<StorefrontBannerImageDto>>.Ok(MapAbsoluteUrls(all)));
+        var message = uploaded == 1
+            ? "Banner photo uploaded."
+            : $"{uploaded} banner photos uploaded.";
+
+        if (skippedBecauseFull > 0)
+        {
+            message += $" {skippedBecauseFull} file(s) were skipped because this branch already has the maximum of {IStorefrontBannerImageService.MaxImages} banner photos.";
+        }
+
+        return Ok(ApiResult<IReadOnlyList<StorefrontBannerImageDto>>.Ok(MapAbsoluteUrls(all), message));
     }
 
     [HttpDelete("images/{imageId:guid}")]

@@ -13,6 +13,7 @@ export interface BusinessProfileDto {
   status: string;
   createdAt: string;
   updatedAt: string | null;
+  businessType?: 'Hotel' | 'Shortlet';
 }
 
 export interface UpdateBusinessProfileRequest {

@@ -1,0 +1,125 @@
+@import '../amenities/amenities-list.component.scss';
+
+.page-head__actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+  align-items: center;
+}
+
+.team-grid {
+  display: grid;
+  gap: 1.25rem;
+}
+
+.team-form {
+  display: grid;
+  gap: 0.85rem;
+}
+
+.field-row {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 0.75rem;
+}
+
+.hint {
+  display: block;
+  margin-top: 0.25rem;
+  color: var(--muted, #6b7280);
+  font-size: 0.78rem;
+}
+
+.module-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
+  gap: 0.45rem;
+}
+
+.module-chip {
+  padding: 0.45rem 0.55rem;
+  border: 1px solid rgba(0, 0, 0, 0.08);
+  border-radius: 8px;
+  background: #fff;
+}
+
+.badge {
+  display: inline-block;
+  margin-left: 0.35rem;
+  padding: 0.1rem 0.4rem;
+  border-radius: 6px;
+  background: #e8f0ea;
+  color: #2f4f3f;
+  font-size: 0.68rem;
+  font-weight: 600;
+  text-transform: uppercase;
+}
+
+.link-btn {
+  border: 0;
+  background: none;
+  color: #3d5a80;
+  cursor: pointer;
+  text-decoration: underline;
+  font: inherit;
+}
+
+.link-btn--danger {
+  color: #b42318;
+}
+
+.link-btn--success {
+  color: #2f6b3c;
+}
+
+.link-btn:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+.actions-cell {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.55rem;
+  align-items: center;
+}
+
+.row--blocked {
+  opacity: 0.72;
+}
+
+.status {
+  display: inline-block;
+  padding: 0.12rem 0.45rem;
+  border-radius: 999px;
+  font-size: 0.72rem;
+  font-weight: 600;
+}
+
+.status--active {
+  background: #e8f5ea;
+  color: #2f6b3c;
+}
+
+.status--pending {
+  background: #fff4e5;
+  color: #9a5b00;
+}
+
+.status--blocked {
+  background: #fdecec;
+  color: #b42318;
+}
+
+.form-actions {
+  display: flex;
+  gap: 0.5rem;
+  flex-wrap: wrap;
+}
+
+.check {
+  display: flex;
+  align-items: flex-start;
+  gap: 0.45rem;
+  font-size: 0.88rem;
+}

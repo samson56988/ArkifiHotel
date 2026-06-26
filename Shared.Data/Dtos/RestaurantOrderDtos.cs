@@ -18,6 +18,8 @@ public sealed class GuestCreateRestaurantOrderRequest
 
     public string GuestPhone { get; set; } = string.Empty;
 
+    public string GuestEmail { get; set; } = string.Empty;
+
     public IReadOnlyList<GuestCreateRestaurantOrderLineRequest> Items { get; set; } =
         Array.Empty<GuestCreateRestaurantOrderLineRequest>();
 }

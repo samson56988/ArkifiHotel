@@ -97,7 +97,7 @@ export class StorefrontGuestPreviewComponent implements OnDestroy {
     if (fromRooms.length > 0) {
       return fromRooms;
     }
-    return this.heroImages().slice(0, 3);
+    return this.heroImages();
   });
 
   readonly facilityHeroSlides = computed(() => {
@@ -105,7 +105,7 @@ export class StorefrontGuestPreviewComponent implements OnDestroy {
     if (fromFacilities.length > 0) {
       return fromFacilities;
     }
-    return this.heroImages().slice(0, 3);
+    return this.heroImages();
   });
 
   readonly pageHeroSlides = computed(() => {

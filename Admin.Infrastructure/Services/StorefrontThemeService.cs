@@ -1,6 +1,7 @@
 using Admin.Data;
 using Admin.Infrastructure.Helpers;
 using Admin.Services.Abstractions;
+using Admin.Data.Enums;
 using Microsoft.EntityFrameworkCore;
 using Shared.Data.Dtos;
 
@@ -139,12 +140,15 @@ public sealed class StorefrontThemeService : IStorefrontThemeService
             ? new BusinessSocialProfileDto()
             : BusinessSocialProfileService.Map(socialEntity);
 
+        var businessTypeLabel = business.BusinessType == BusinessType.Shortlet ? "Shortlet" : "Hotel";
+
         if (requiresBranchSelection)
         {
             return new PublicStorefrontDto
             {
                 BusinessId = business.Id,
                 BusinessName = business.BusinessName,
+                BusinessType = businessTypeLabel,
                 Slug = business.Slug!,
                 LogoUrl = business.LogoPath,
                 Theme = theme,
@@ -158,6 +162,8 @@ public sealed class StorefrontThemeService : IStorefrontThemeService
             .AsNoTracking()
             .Include(r => r.Images)
             .Include(r => r.Location)
+            .Include(r => r.RoomAmenities)
+            .ThenInclude(ra => ra.Amenity)
             .Where(r => r.BusinessRegistrationId == business.Id && !r.IsArchived);
 
         if (effectiveLocationId.HasValue)
@@ -181,15 +187,47 @@ public sealed class StorefrontThemeService : IStorefrontThemeService
                 {
                     Id = r.Id,
                     Name = r.Name,
+                    Tagline = r.Tagline,
+                    Description = r.Description,
                     BasePricePerNight = r.BasePricePerNight,
                     MaxOccupancy = r.MaxOccupancy,
+                    BedroomCount = r.BedroomCount,
+                    BathroomCount = r.BathroomCount,
+                    IsGuestFavorite = r.IsGuestFavorite,
                     PrimaryImageUrl = imageUrls.FirstOrDefault(),
                     ImageUrls = imageUrls,
+                    AmenityNames = r.RoomAmenities
+                        .Select(ra => ra.Amenity.Name)
+                        .Distinct(StringComparer.OrdinalIgnoreCase)
+                        .OrderBy(n => n, StringComparer.OrdinalIgnoreCase)
+                        .ToList(),
                     LocationId = r.LocationId,
                     LocationName = r.Location?.Name,
                 };
             })
             .ToList();
+
+        var amenityIds = roomRows
+            .SelectMany(r => r.RoomAmenities.Select(ra => ra.AmenityId))
+            .Distinct()
+            .ToList();
+
+        var amenities = await _db.Amenities
+            .AsNoTracking()
+            .Where(a =>
+                amenityIds.Contains(a.Id)
+                || (a.BusinessRegistrationId == business.Id)
+                || a.BusinessRegistrationId == null)
+            .OrderBy(a => a.Category)
+            .ThenBy(a => a.Name)
+            .Select(a => new PublicStorefrontAmenityDto
+            {
+                Id = a.Id,
+                Name = a.Name,
+                Category = a.Category,
+            })
+            .ToListAsync(cancellationToken)
+            .ConfigureAwait(false);
 
         var facilityQuery = _db.PropertyFacilities
             .AsNoTracking()
@@ -266,6 +304,7 @@ public sealed class StorefrontThemeService : IStorefrontThemeService
         {
             BusinessId = business.Id,
             BusinessName = business.BusinessName,
+            BusinessType = businessTypeLabel,
             Slug = business.Slug!,
             LogoUrl = business.LogoPath,
             Theme = theme,
@@ -274,6 +313,7 @@ public sealed class StorefrontThemeService : IStorefrontThemeService
             ActiveLocationId = effectiveLocationId,
             Rooms = rooms,
             Facilities = facilities,
+            Amenities = amenities,
             Social = social,
             HeroImages = bannerImages,
             AboutImageUrl = aboutImagePath,

@@ -26,6 +26,7 @@ import { BusinessLocationsApiService } from '../../core/services/business-locati
 import { BusinessSocialProfileApiService } from '../../core/services/business-social-profile-api.service';
 import { StorefrontBannerApiService } from '../../core/services/storefront-banner-api.service';
 import { StorefrontAboutApiService } from '../../core/services/storefront-about-api.service';
+import { OrganizationLocationService } from '../../core/services/organization-location.service';
 import { StorefrontThemeApiService } from '../../core/services/storefront-theme-api.service';
 import { ToastService } from '../../core/services/toast.service';
 import {
@@ -40,13 +41,19 @@ import type { StorefrontAboutImageDto } from '../../core/models/storefront-about
 import type { BusinessLocationDto } from '../../core/models/locations.models';
 import { BusinessWorkspaceComponent } from '../../layouts/business-workspace/business-workspace.component';
 import { StorefrontGuestPreviewComponent, type GuestPreviewPage } from '../../shared/storefront-guest-preview/storefront-guest-preview.component';
+import { ShortletGuestPreviewComponent } from '../../shared/shortlet-guest-preview/shortlet-guest-preview.component';
+import { BusinessContextService } from '../../core/services/business-context.service';
+import { BusinessAmenitiesApiService } from '../../core/services/business-amenities-api.service';
+import type { AmenityDto } from '../../core/models/amenities.models';
+import type { ShortletPreviewPage } from '../../core/utils/shortlet-preview.mapper';
 
 type DesignerTab = 'global' | 'banner' | 'about' | 'rooms' | 'facilities' | 'footer' | 'contact' | 'colors';
+type PreviewPage = GuestPreviewPage | ShortletPreviewPage;
 
 @Component({
   selector: 'app-storefront-designer',
   standalone: true,
-  imports: [ReactiveFormsModule, RouterLink, BusinessWorkspaceComponent, StorefrontGuestPreviewComponent],
+  imports: [ReactiveFormsModule, RouterLink, BusinessWorkspaceComponent, StorefrontGuestPreviewComponent, ShortletGuestPreviewComponent],
   templateUrl: './storefront-designer.component.html',
   styleUrl: './storefront-designer.component.scss',
 })
@@ -57,9 +64,12 @@ export class StorefrontDesignerComponent implements OnInit {
   private readonly aboutApi = inject(StorefrontAboutApiService);
   private readonly profileApi = inject(BusinessProfileApiService);
   private readonly locationsApi = inject(BusinessLocationsApiService);
+  private readonly orgLocation = inject(OrganizationLocationService);
   private readonly socialApi = inject(BusinessSocialProfileApiService);
   private readonly toast = inject(ToastService);
   private readonly destroyRef = inject(DestroyRef);
+  readonly biz = inject(BusinessContextService);
+  private readonly amenitiesApi = inject(BusinessAmenitiesApiService);
 
   readonly globalFonts = GLOBAL_FONT_PRESETS;
   readonly bannerStyles = BANNER_STYLE_OPTIONS;
@@ -73,6 +83,7 @@ export class StorefrontDesignerComponent implements OnInit {
   readonly uploadingAbout = signal(false);
   readonly profile = signal<BusinessProfileDto | null>(null);
   readonly catalog = signal<PublicStorefront | null>(null);
+  readonly businessAmenities = signal<AmenityDto[]>([]);
   readonly bannerImages = signal<StorefrontBannerImageDto[]>([]);
   readonly locations = signal<BusinessLocationDto[]>([]);
   readonly bannerBranchId = signal<string | null>(null);
@@ -205,9 +216,32 @@ export class StorefrontDesignerComponent implements OnInit {
   });
 
   readonly previewStorefront = signal<PublicStorefront | null>(null);
-  readonly previewPage = signal<GuestPreviewPage>('home');
+  readonly previewPage = signal<PreviewPage>('home');
+
+  readonly isShortletPreview = computed(() => {
+    const profileType = this.profile()?.businessType;
+    if (profileType) {
+      return profileType === 'Shortlet';
+    }
+    return this.biz.businessType() === 'Shortlet';
+  });
+
+  readonly shortletPreviewPage = computed(() => this.previewPage() as ShortletPreviewPage);
+  readonly hotelPreviewPage = computed(() => this.previewPage() as GuestPreviewPage);
 
   readonly previewPageLabel = computed(() => {
+    if (this.isShortletPreview()) {
+      switch (this.previewPage()) {
+        case 'listings':
+          return 'Listings page';
+        case 'amenities':
+          return 'Amenities page';
+        case 'host':
+          return 'Host page';
+        default:
+          return 'Home page';
+      }
+    }
     switch (this.previewPage()) {
       case 'rooms':
         return 'Rooms page';
@@ -224,6 +258,8 @@ export class StorefrontDesignerComponent implements OnInit {
   });
 
   ngOnInit(): void {
+    this.orgLocation.hydrateFromStorage();
+    this.biz.ensureLoaded();
     this.load();
 
     this.form.valueChanges.pipe(takeUntilDestroyed(this.destroyRef)).subscribe(() => {
@@ -240,11 +276,23 @@ export class StorefrontDesignerComponent implements OnInit {
     this.syncPreviewPageFromTab(tab);
   }
 
-  setPreviewPage(page: GuestPreviewPage): void {
+  setPreviewPage(page: PreviewPage): void {
     this.previewPage.set(page);
   }
 
   private syncPreviewPageFromTab(tab: DesignerTab): void {
+    if (this.isShortletPreview()) {
+      if (tab === 'rooms') {
+        this.previewPage.set('listings');
+      } else if (tab === 'facilities') {
+        this.previewPage.set('amenities');
+      } else if (tab === 'about') {
+        this.previewPage.set('host');
+      } else {
+        this.previewPage.set('home');
+      }
+      return;
+    }
     if (tab === 'rooms') {
       this.previewPage.set('rooms');
     } else if (tab === 'facilities') {
@@ -267,36 +315,57 @@ export class StorefrontDesignerComponent implements OnInit {
           }
 
           this.profile.set(profileRes.data);
-          this.loadLocations();
+          if (profileRes.data.businessType) {
+            this.biz.setType(profileRes.data.businessType);
+          } else {
+            this.biz.ensureLoaded();
+          }
+          this.loadBusinessAmenities();
           this.loadBannerImages();
           this.loadAboutImage();
           this.loadSocialProfile();
-          this.themeApi.getTheme().subscribe({
-            next: (themeRes) => {
-              const theme =
-                themeRes.success && themeRes.data
-                  ? themeRes.data
-                  : createDefaultTheme(profileRes.data!.businessName);
-              this.patchTheme(theme);
 
-              const slug = profileRes.data!.slug;
-              if (slug) {
-                this.themeApi.getPublicStorefront(slug).subscribe({
-                  next: (pub) => {
-                    if (pub.success && pub.data) {
-                      this.catalog.set({
-                        ...pub.data,
-                        heroImages: pub.data.heroImages ?? [],
-                        aboutImageUrl: pub.data.aboutImageUrl ?? null,
-                      });
-                    }
-                    this.refreshPreview();
-                  },
-                  error: () => this.refreshPreview(),
-                });
-              } else {
-                this.refreshPreview();
+          const slug = profileRes.data.slug;
+          this.locationsApi.listLocations().subscribe({
+            next: (locRes) => {
+              if (locRes.success && locRes.data) {
+                const allowed = this.orgLocation.filterLocations(locRes.data);
+                this.locations.set(allowed);
+                if (allowed.length > 0) {
+                  const preferred = this.orgLocation.primaryLocationId(allowed);
+                  this.bannerBranchId.set(this.bannerBranchId() ?? preferred ?? allowed[0].id);
+                }
               }
+              this.themeApi.getTheme().subscribe({
+                next: (themeRes) => {
+                  const theme =
+                    themeRes.success && themeRes.data
+                      ? themeRes.data
+                      : createDefaultTheme(profileRes.data!.businessName);
+                  this.patchTheme(theme);
+                  if (slug) {
+                    this.loadCatalog(slug);
+                  } else {
+                    this.refreshPreview();
+                  }
+                },
+              });
+            },
+            error: () => {
+              this.themeApi.getTheme().subscribe({
+                next: (themeRes) => {
+                  const theme =
+                    themeRes.success && themeRes.data
+                      ? themeRes.data
+                      : createDefaultTheme(profileRes.data!.businessName);
+                  this.patchTheme(theme);
+                  if (slug) {
+                    this.loadCatalog(slug);
+                  } else {
+                    this.refreshPreview();
+                  }
+                },
+              });
             },
           });
         },
@@ -323,6 +392,7 @@ export class StorefrontDesignerComponent implements OnInit {
           }
 
           this.patchTheme(res.data);
+          this.refreshPreview();
           this.toast.success('Storefront theme saved.', 'Storefront');
         },
         error: (err: unknown) => {
@@ -429,17 +499,16 @@ export class StorefrontDesignerComponent implements OnInit {
             this.toast.showFailedApi(res, 'Banner');
             return;
           }
+
+          const branchId = this.bannerBranchId();
           this.bannerImages.update((items) => {
-            const merged = [...items];
-            for (const img of res.data!) {
-              if (!merged.some((m) => m.id === img.id)) {
-                merged.push(img);
-              }
-            }
-            return merged;
+            const others = branchId
+              ? items.filter((i) => i.locationId !== branchId)
+              : items;
+            return [...others, ...res.data!];
           });
           this.refreshPreview();
-          this.toast.success('Banner photo(s) uploaded.', 'Banner');
+          this.toast.success(res.message ?? 'Banner photo(s) uploaded.', 'Banner');
         },
         error: () => this.toast.error('Could not upload banner photos.', 'Banner'),
       });
@@ -475,26 +544,43 @@ export class StorefrontDesignerComponent implements OnInit {
     });
   }
 
-  private loadLocations(): void {
-    this.locationsApi.listLocations().subscribe({
+  private loadBusinessAmenities(): void {
+    this.amenitiesApi.listAmenities().subscribe({
       next: (res) => {
-        if (!res.success || !res.data) {
-          return;
+        if (res.success && res.data) {
+          this.businessAmenities.set(res.data);
+          this.refreshPreview();
         }
-        this.locations.set(res.data);
-        if (res.data.length === 1) {
-          this.bannerBranchId.set(res.data[0].id);
-        } else if (!this.bannerBranchId() && res.data.length > 0) {
-          this.bannerBranchId.set(res.data[0].id);
+      },
+    });
+  }
+
+  private loadCatalog(slug: string): void {
+    const locationId = this.bannerBranchId();
+    this.themeApi.getPublicStorefront(slug, locationId).subscribe({
+      next: (pub) => {
+        if (pub.success && pub.data) {
+          this.catalog.set({
+            ...pub.data,
+            heroImages: pub.data.heroImages ?? [],
+            aboutImageUrl: pub.data.aboutImageUrl ?? null,
+            amenities: pub.data.amenities ?? [],
+          });
         }
         this.refreshPreview();
       },
+      error: () => this.refreshPreview(),
     });
   }
 
   setBannerBranch(locationId: string): void {
     this.bannerBranchId.set(locationId);
-    this.refreshPreview();
+    const slug = this.profile()?.slug;
+    if (slug) {
+      this.loadCatalog(slug);
+    } else {
+      this.refreshPreview();
+    }
   }
 
   onAboutFileSelected(event: Event): void {
@@ -656,16 +742,26 @@ export class StorefrontDesignerComponent implements OnInit {
     const previewLocationId = this.bannerBranchId();
 
     const rooms = (catalog?.rooms ?? []).filter(
-      (r) => !previewLocationId || r.locationId === previewLocationId,
+      (r) => !previewLocationId || !r.locationId || r.locationId === previewLocationId,
     );
     const facilities = (catalog?.facilities ?? []).filter(
-      (f) => !previewLocationId || f.locationId === previewLocationId,
+      (f) => !previewLocationId || !f.locationId || f.locationId === previewLocationId,
     );
     const heroImages = this.bannerImagesForBranch().map((i) => i.url);
+    const catalogAmenities = catalog?.amenities ?? [];
+    const amenities =
+      catalogAmenities.length > 0
+        ? catalogAmenities
+        : this.businessAmenities().map((a) => ({
+            id: a.id,
+            name: a.name,
+            category: a.category,
+          }));
 
     this.previewStorefront.set({
       businessId: profile.id,
       businessName: profile.businessName,
+      businessType: profile.businessType ?? this.biz.businessType(),
       slug: profile.slug ?? 'preview',
       logoUrl: profile.logoUrl,
       theme,
@@ -673,6 +769,7 @@ export class StorefrontDesignerComponent implements OnInit {
       aboutImageUrl: this.aboutImage()?.url ?? null,
       rooms,
       facilities,
+      amenities,
       locations: catalog?.locations ?? this.locations().map((l) => ({ id: l.id, name: l.name, address: l.address ?? null })),
       requiresBranchSelection: false,
       activeLocationId: previewLocationId,

@@ -1,0 +1,35 @@
+@if (entry.loading()) {
+  <div class="state-page">Loading your stay…</div>
+} @else if (entry.notFound()) {
+  <div class="state-page">
+    <h1>Property not found</h1>
+    <p>Try one of our demo storefronts:</p>
+    <ul class="demo-links">
+      <li><a routerLink="/lekki-suites">Lekki Suites (Hotel)</a></li>
+      <li><a routerLink="/heritage-abuja">Heritage Boutique Hotel</a></li>
+      <li><a routerLink="/nomad-stays">Nomad Stays (Shortlet)</a></li>
+      <li><a routerLink="/skyline-apartments">Skyline Apartments (Shortlet)</a></li>
+    </ul>
+  </div>
+} @else if (entry.kind() === 'shortlet' && shortletCtx.shortlet(); as sl) {
+  <div class="shortlet" [style]="shortletThemeStyle()">
+    <app-shortlet-nav [shortlet]="sl" [transparent]="shortletNavTransparent()" />
+    <main>
+      <router-outlet />
+    </main>
+    <app-shortlet-footer [shortlet]="sl" />
+    @if (hotelForBooking(); as sf) {
+      <app-booking-modal [storefront]="sf" />
+      <app-showcase-gallery-modal [storefront]="sf" />
+    }
+  </div>
+} @else if (entry.kind() === 'hotel' && hotelCtx.storefront(); as sf) {
+  <div class="hotel" [style]="hotelThemeStyle()">
+    <app-hotel-nav [storefront]="sf" [solid]="navSolid()" />
+    <router-outlet />
+    @if (hotelForBooking(); as bookingSf) {
+      <app-booking-modal [storefront]="bookingSf" />
+      <app-showcase-gallery-modal [storefront]="bookingSf" />
+    }
+  </div>
+}

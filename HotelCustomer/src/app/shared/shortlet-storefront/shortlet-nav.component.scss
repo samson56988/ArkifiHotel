@@ -1,0 +1,176 @@
+@use 'shortlet-shared' as *;
+
+.sl-nav {
+  position: fixed;
+  inset: 0 0 auto;
+  z-index: 100;
+  transition: background 0.25s ease, box-shadow 0.25s ease;
+
+  &.solid {
+    background: color-mix(in srgb, var(--sl-surface) 92%, transparent);
+    backdrop-filter: blur(12px);
+    box-shadow: 0 1px 0 color-mix(in srgb, var(--sl-primary) 8%, transparent);
+  }
+
+  &__inner {
+    @include sl-container;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 1rem;
+    padding-block: 1rem;
+  }
+
+  &__brand {
+    display: flex;
+    align-items: center;
+    gap: 0.65rem;
+    text-decoration: none;
+    color: var(--sl-ink);
+    min-width: 0;
+    max-width: min(52vw, 320px);
+  }
+
+  &__logo {
+    width: 2.25rem;
+    height: 2.25rem;
+    object-fit: contain;
+    border-radius: 12px;
+    background: color-mix(in srgb, var(--sl-surface) 88%, var(--sl-accent));
+    flex-shrink: 0;
+  }
+
+  &__mark {
+    width: 2.25rem;
+    height: 2.25rem;
+    border-radius: 12px;
+    display: grid;
+    place-items: center;
+    background: var(--sl-accent);
+    color: #fff;
+    font-family: var(--font-display);
+    font-weight: 700;
+    font-size: 1.1rem;
+  }
+
+  &__name {
+    font-family: var(--font-display);
+    font-weight: 600;
+    font-size: 1.05rem;
+    letter-spacing: -0.02em;
+    display: flex;
+    flex-direction: column;
+    line-height: 1.2;
+    min-width: 0;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+
+  &__branch {
+    font-family: var(--font-body);
+    font-size: 0.72rem;
+    font-weight: 500;
+    opacity: 0.75;
+    margin-top: 0.1rem;
+  }
+
+  &__links {
+    display: flex;
+    gap: 1.75rem;
+
+    a {
+      text-decoration: none;
+      color: var(--sl-muted);
+      font-size: 0.9rem;
+      font-weight: 500;
+      transition: color 0.15s;
+
+      &:hover,
+      &.active {
+        color: var(--sl-ink);
+      }
+    }
+
+    @media (max-width: 768px) {
+      display: none;
+    }
+  }
+
+  &__actions {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+  }
+
+  &__book {
+    @include sl-btn-primary;
+    padding: 0.6rem 1.15rem;
+    font-size: 0.85rem;
+
+    @media (max-width: 768px) {
+      display: none;
+    }
+  }
+
+  &__toggle {
+    display: none;
+    flex-direction: column;
+    gap: 5px;
+    padding: 0.5rem;
+    border: none;
+    background: transparent;
+    cursor: pointer;
+
+    span {
+      display: block;
+      width: 22px;
+      height: 2px;
+      background: var(--sl-ink);
+      border-radius: 2px;
+    }
+
+    @media (max-width: 768px) {
+      display: flex;
+    }
+  }
+
+  &__mobile {
+    @include sl-container;
+    display: flex;
+    flex-direction: column;
+    gap: 0.75rem;
+    padding-bottom: 1.25rem;
+
+    a,
+    button {
+      text-align: left;
+      padding: 0.65rem 0;
+      border: none;
+      background: none;
+      font-family: var(--font-body);
+      font-size: 1rem;
+      color: var(--sl-ink);
+      text-decoration: none;
+      cursor: pointer;
+    }
+
+    button {
+      @include sl-btn-primary;
+      margin-top: 0.5rem;
+      width: 100%;
+    }
+  }
+}
+
+:not(.solid) .sl-nav__name,
+:not(.solid) .sl-nav__links a,
+:not(.solid) .sl-nav__toggle span {
+  color: #fff;
+}
+
+:not(.solid) .sl-nav__links a:hover,
+:not(.solid) .sl-nav__links a.active {
+  color: #fff;
+  opacity: 0.85;
+}

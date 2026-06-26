@@ -4,7 +4,7 @@
       <p class="eyebrow">Property</p>
       <h1>Room amenities</h1>
       <p class="lead">
-        Build your amenity list here — Wi‑Fi, parking, pool access, and anything else guests should know. When you add or edit a room, you pick from this list.
+        Standard room amenities are ready to use on every room. Add your own below if you need something that is not in the list.
       </p>
     </div>
     <a routerLink="/rooms/new" class="btn btn--ghost">Add room</a>
@@ -12,18 +12,19 @@
 
   <div class="layout">
     <section class="panel">
-      <h2>{{ isEditing ? 'Edit amenity' : 'Add amenity' }}</h2>
+      <h2>{{ isEditing ? 'Edit custom amenity' : 'Add custom amenity' }}</h2>
+      <p class="hint">Only add items missing from the standard list — e.g. rooftop lounge, butler service.</p>
       <form [formGroup]="form" (ngSubmit)="onSubmit()" novalidate>
         <div class="field">
           <label for="name">Name</label>
-          <input id="name" class="input" type="text" formControlName="name" placeholder="e.g. Wi-Fi" />
+          <input id="name" class="input" type="text" formControlName="name" placeholder="e.g. Butler service" />
           @if (form.controls.name.touched && form.controls.name.invalid) {
             <p class="field-error">Enter a name (2–128 characters).</p>
           }
         </div>
         <div class="field">
           <label for="category">Category (optional)</label>
-          <input id="category" class="input" type="text" formControlName="category" placeholder="e.g. Connectivity" />
+          <input id="category" class="input" type="text" formControlName="category" placeholder="e.g. Services" />
         </div>
         <div class="form-actions">
           <button type="submit" class="btn btn--primary" [disabled]="saving()">
@@ -36,41 +37,67 @@
       </form>
     </section>
 
-    <section class="panel panel--table">
-      <h2>Your amenities</h2>
+    <div class="stack">
+      <section class="panel">
+        <h2>Standard amenities</h2>
+        <p class="hint">Built-in options for Wi‑Fi, climate, bathroom, kitchen, views, and more. Select these when you create or edit a room.</p>
 
-      @if (loading()) {
-        <p class="muted">Loading amenities…</p>
-      } @else if (loadFailed()) {
-        <p class="muted">We could not load your amenities.</p>
-        <button type="button" class="btn btn--ghost" (click)="load()">Try again</button>
-      } @else if (initialLoadDone() && amenities().length === 0) {
-        <p class="muted">No amenities yet. Add your first one using the form — then assign them when you create rooms.</p>
-      } @else if (initialLoadDone()) {
-        <div class="table-wrap">
-          <table>
-            <thead>
-              <tr>
-                <th>Name</th>
-                <th>Category</th>
-                <th></th>
-              </tr>
-            </thead>
-            <tbody>
-              @for (a of amenities(); track a.id) {
-                <tr [class.row--editing]="editingId() === a.id">
-                  <td>{{ a.name }}</td>
-                  <td>{{ categoryLabel(a) }}</td>
-                  <td class="actions">
-                    <button type="button" class="link" (click)="startEdit(a)" [disabled]="saving()">Edit</button>
-                    <button type="button" class="link danger" (click)="deleteAmenity(a)" [disabled]="saving()">Delete</button>
-                  </td>
+        @if (loading()) {
+          <p class="muted">Loading amenities…</p>
+        } @else if (loadFailed()) {
+          <p class="muted">We could not load amenities.</p>
+          <button type="button" class="btn btn--ghost" (click)="load()">Try again</button>
+        } @else if (initialLoadDone() && catalogAmenities().length === 0) {
+          <p class="muted">No standard amenities are available.</p>
+        } @else if (initialLoadDone()) {
+          @for (group of groupedCatalogAmenities(); track group.category) {
+            <div class="catalog-group">
+              <h3>{{ group.category }}</h3>
+              <div class="catalog-chips">
+                @for (a of group.items; track a.id) {
+                  <span class="catalog-chip">{{ a.name }}</span>
+                }
+              </div>
+            </div>
+          }
+        }
+      </section>
+
+      <section class="panel panel--table">
+        <h2>Your custom amenities</h2>
+
+        @if (loading()) {
+          <p class="muted">Loading…</p>
+        } @else if (loadFailed()) {
+          <p class="muted">We could not load your custom amenities.</p>
+        } @else if (initialLoadDone() && customAmenities().length === 0) {
+          <p class="muted">No custom amenities yet. Use the form to add anything not covered by the standard list.</p>
+        } @else if (initialLoadDone()) {
+          <div class="table-wrap">
+            <table>
+              <thead>
+                <tr>
+                  <th>Name</th>
+                  <th>Category</th>
+                  <th></th>
                 </tr>
-              }
-            </tbody>
-          </table>
-        </div>
-      }
-    </section>
+              </thead>
+              <tbody>
+                @for (a of customAmenities(); track a.id) {
+                  <tr [class.row--editing]="editingId() === a.id">
+                    <td>{{ a.name }}</td>
+                    <td>{{ categoryLabel(a) }}</td>
+                    <td class="actions">
+                      <button type="button" class="link" (click)="startEdit(a)" [disabled]="saving()">Edit</button>
+                      <button type="button" class="link danger" (click)="deleteAmenity(a)" [disabled]="saving()">Delete</button>
+                    </td>
+                  </tr>
+                }
+              </tbody>
+            </table>
+          </div>
+        }
+      </section>
+    </div>
   </div>
 </app-business-workspace>

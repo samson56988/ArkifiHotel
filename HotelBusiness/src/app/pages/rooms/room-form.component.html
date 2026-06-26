@@ -4,13 +4,17 @@
 
     <div>
 
-      <p class="eyebrow">Rooms</p>
+      <p class="eyebrow">{{ isShortlet() ? 'Listings' : 'Rooms' }}</p>
 
-      <h1>{{ isCreateMode ? 'Add room' : 'Edit room' }}</h1>
+      <h1>{{ isCreateMode ? (isShortlet() ? 'Add apartment' : 'Add room') : (isShortlet() ? 'Edit apartment' : 'Edit room') }}</h1>
 
       <p class="lead">
 
-        Select amenities from your property list and attach photos. On create, photos upload right after the room is saved.
+        @if (isShortlet()) {
+          Set up a furnished apartment listing with title, tagline, bed/bath counts, highlight amenities, and photos — as shown on your guest storefront.
+        } @else {
+          Select amenities from your property list and attach photos. On create, photos upload right after the room is saved — then you return to the rooms list.
+        }
 
       </p>
 
@@ -46,9 +50,9 @@
 
         <div class="field">
 
-          <label for="name">Room name</label>
+          <label for="name">{{ isShortlet() ? 'Listing title' : 'Room name' }}</label>
 
-          <input id="name" class="input" type="text" formControlName="name" placeholder="e.g. Deluxe King" />
+          <input id="name" class="input" type="text" formControlName="name" [placeholder]="isShortlet() ? 'e.g. The Oniru Loft' : 'e.g. Deluxe King'" />
 
           @if (form.controls.name.touched && form.controls.name.invalid) {
 
@@ -58,11 +62,22 @@
 
         </div>
 
+        @if (isShortlet()) {
+          <div class="field">
+            <label for="tagline">Tagline</label>
+            <input id="tagline" class="input" type="text" formControlName="tagline" placeholder="e.g. Floor-to-ceiling windows &amp; city skyline" />
+            @if (form.controls.tagline.touched && form.controls.tagline.invalid) {
+              <p class="field-error">Enter a short tagline (5–300 characters).</p>
+            }
+            <p class="hint">Shown under the listing title on your storefront cards.</p>
+          </div>
+        }
+
         <div class="field">
 
-          <label for="desc">Description</label>
+          <label for="desc">{{ isShortlet() ? 'Full description' : 'Description' }}</label>
 
-          <textarea id="desc" class="input input--area" rows="3" formControlName="description" placeholder="What makes this room special?"></textarea>
+          <textarea id="desc" class="input input--area" rows="3" formControlName="description" [placeholder]="isShortlet() ? 'Tell guests what makes this apartment special…' : 'What makes this room special?'"></textarea>
 
         </div>
 
@@ -90,6 +105,24 @@
 
         <div class="field-row">
 
+          @if (isShortlet()) {
+            <div class="field">
+              <label for="beds">Bedrooms</label>
+              <input id="beds" class="input" type="number" formControlName="bedroomCount" min="1" max="20" />
+              @if (form.controls.bedroomCount.touched && form.controls.bedroomCount.invalid) {
+                <p class="field-error">Enter bedrooms (1–20).</p>
+              }
+            </div>
+
+            <div class="field">
+              <label for="baths">Bathrooms</label>
+              <input id="baths" class="input" type="number" formControlName="bathroomCount" min="1" max="20" />
+              @if (form.controls.bathroomCount.touched && form.controls.bathroomCount.invalid) {
+                <p class="field-error">Enter bathrooms (1–20).</p>
+              }
+            </div>
+          }
+
           <div class="field">
 
             <label for="occ">Max guests</label>
@@ -106,27 +139,36 @@
 
           </div>
 
-          <div class="field">
+          @if (!isShortlet()) {
+            <div class="field">
 
-            <label for="qty">Room quantity</label>
+              <label for="qty">Room quantity</label>
 
-            <input id="qty" class="input" type="number" formControlName="quantity" min="1" max="500" />
+              <input id="qty" class="input" type="number" formControlName="quantity" min="1" max="500" />
 
-            <p class="hint">How many identical rooms of this type you have (e.g. 4 Executive rooms).</p>
+              <p class="hint">How many identical rooms of this type you have (e.g. 4 Executive rooms).</p>
 
-            @if (form.controls.quantity.touched && form.controls.quantity.invalid) {
+              @if (form.controls.quantity.touched && form.controls.quantity.invalid) {
 
-              <p class="field-error">Enter a quantity between 1 and 500.</p>
+                <p class="field-error">Enter a quantity between 1 and 500.</p>
 
-            }
+              }
 
-          </div>
+            </div>
+          }
 
         </div>
 
+        @if (isShortlet()) {
+          <label class="check-inline">
+            <input type="checkbox" formControlName="isGuestFavorite" />
+            <span>Mark as guest favorite (shows badge on storefront)</span>
+          </label>
+        }
+
         <button type="submit" class="btn btn--primary" [disabled]="saving() || locations().length === 0">
 
-          {{ saving() ? 'Saving…' : isCreateMode ? 'Create room' : 'Save changes' }}
+          {{ saving() ? 'Saving…' : isCreateMode ? (isShortlet() ? 'Create listing' : 'Create room') : 'Save changes' }}
 
         </button>
 
@@ -160,9 +202,11 @@
 
         <p class="hint">
 
-          Choose everything that applies to this room.
+          Choose everything that applies to this room. Standard amenities are included automatically — add custom ones under
 
-          <a routerLink="/amenities">Manage your amenity list</a>
+          <a routerLink="/amenities">Room amenities</a>
+
+          if needed.
 
         </p>
 
@@ -176,11 +220,7 @@
 
           <p class="muted">
 
-            You have not added any amenities yet.
-
-            <a routerLink="/amenities">Set up amenities</a>
-
-            first, then come back to assign them to this room.
+            Amenities could not be loaded. You can still save the room and assign amenities later.
 
           </p>
 

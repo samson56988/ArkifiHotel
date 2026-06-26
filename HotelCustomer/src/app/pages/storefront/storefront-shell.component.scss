@@ -1,0 +1,26 @@
+.shortlet,
+.hotel {
+  min-height: 100vh;
+}
+
+.shortlet main {
+  min-height: 60vh;
+}
+
+.state-page {
+  min-height: 100vh;
+  display: grid;
+  place-content: center;
+  text-align: center;
+  padding: 2rem;
+  font-family: 'DM Sans', system-ui, sans-serif;
+
+  ul {
+    list-style: none;
+    padding: 0;
+
+    a {
+      color: #e07a5f;
+    }
+  }
+}

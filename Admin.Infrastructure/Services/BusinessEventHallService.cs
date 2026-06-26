@@ -1,6 +1,7 @@
 using Admin.Data;
 using Admin.Data.Entities;
 using Admin.Data.Enums;
+using Admin.Infrastructure.Helpers;
 using Admin.Services.Abstractions;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.EntityFrameworkCore;
@@ -12,11 +13,13 @@ public sealed class BusinessEventHallService : IBusinessEventHallService
 {
     private readonly AdminDbContext _db;
     private readonly IWebHostEnvironment _env;
+    private readonly IOrganizationUserContext _actor;
 
-    public BusinessEventHallService(AdminDbContext db, IWebHostEnvironment env)
+    public BusinessEventHallService(AdminDbContext db, IWebHostEnvironment env, IOrganizationUserContext actor)
     {
         _db = db;
         _env = env;
+        _actor = actor;
     }
 
     public async Task<IReadOnlyList<EventHallSummaryDto>> ListAsync(
@@ -29,6 +32,8 @@ public sealed class BusinessEventHallService : IBusinessEventHallService
             .Include(h => h.Images)
             .Include(h => h.Location)
             .Where(h => h.BusinessRegistrationId == businessId);
+
+        query = OrganizationQueryScope.ApplyEventHallScope(query, _actor);
 
         if (!includeArchived)
         {
@@ -281,6 +286,7 @@ public sealed class BusinessEventHallService : IBusinessEventHallService
                 GuestPhone = r.GuestPhone,
                 EventDate = r.EventDate,
                 EventEndDate = r.EventEndDate,
+                EventPurpose = r.EventPurpose,
                 Status = StatusLabel(r.Status),
                 LocationName = r.Location?.Name,
                 CreatedAt = r.CreatedAt,
@@ -451,6 +457,7 @@ public sealed class BusinessEventHallService : IBusinessEventHallService
             GuestPhone = r.GuestPhone,
             EventDate = r.EventDate,
             EventEndDate = r.EventEndDate,
+            EventPurpose = r.EventPurpose,
             Notes = r.Notes,
             Status = StatusLabel(r.Status),
             LocationName = r.Location?.Name,

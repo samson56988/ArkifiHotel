@@ -115,6 +115,7 @@ public sealed class BusinessProfileService : IBusinessProfileService
             Status = entity.Status == BusinessRegistrationStatus.Active ? "Active" : "Inactive",
             CreatedAt = entity.CreatedAt,
             UpdatedAt = entity.UpdatedAt,
+            BusinessType = entity.BusinessType == BusinessType.Shortlet ? "Shortlet" : "Hotel",
         };
 
     private async Task<bool> SlugTakenAsync(string slug, Guid? excludeBusinessId, CancellationToken cancellationToken)

@@ -1,0 +1,68 @@
+@if (listing(); as l) {
+  <div class="detail">
+    <a class="back" [routerLink]="ctx.path('listings')">← All listings</a>
+
+    <div class="gallery">
+      <button type="button" class="gallery__main" (click)="openGallery(activeImage())">
+        <img [src]="l.images[activeImage()]" [alt]="l.title" />
+      </button>
+      <div class="gallery__thumbs">
+        @for (img of l.images; track img; let i = $index) {
+          <button type="button" [class.active]="activeImage() === i" (click)="selectImage(i)">
+            <img [src]="img" [alt]="l.title + ' photo ' + (i + 1)" />
+          </button>
+        }
+      </div>
+    </div>
+
+    <div class="detail__layout">
+      <div class="detail__main">
+        <p class="meta">{{ l.beds }} bed · {{ l.baths }} bath · up to {{ l.guests }} guests</p>
+        <h1>{{ l.title }}</h1>
+        <p class="tagline">{{ l.tagline }}</p>
+        <p class="desc">{{ l.description }}</p>
+
+        <section class="block">
+          <h2>What this place offers</h2>
+          <ul class="amenity-list">
+            @for (a of l.highlightAmenities; track a) {
+              <li>{{ a }}</li>
+            }
+          </ul>
+        </section>
+
+        @if (shortlet(); as sl) {
+          <section class="block">
+            <h2>House rules</h2>
+            <ul class="rules">
+              @for (rule of sl.houseRules; track rule) {
+                <li>{{ rule }}</li>
+              }
+            </ul>
+          </section>
+
+          <section class="block">
+            <app-shortlet-host-card [host]="sl.host" [compact]="true" />
+          </section>
+        }
+      </div>
+
+      <aside class="book-panel">
+        <div class="book-panel__inner">
+          <div class="price">
+            <strong>{{ formatPrice(l.nightlyPrice) }}</strong>
+            <span>/ night</span>
+          </div>
+          <p class="note">Min. {{ shortlet()?.minNights }} nights · Check-in {{ shortlet()?.checkIn }}</p>
+          <button type="button" class="btn-primary" (click)="book()">Reserve</button>
+          <p class="fine">You won’t be charged yet</p>
+        </div>
+      </aside>
+    </div>
+  </div>
+} @else {
+  <div class="missing">
+    <h1>Listing not found</h1>
+    <a [routerLink]="ctx.path('listings')">Back to listings</a>
+  </div>
+}

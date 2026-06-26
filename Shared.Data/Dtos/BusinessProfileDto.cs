@@ -27,4 +27,7 @@ public sealed class BusinessProfileDto
     public DateTimeOffset CreatedAt { get; set; }
 
     public DateTimeOffset? UpdatedAt { get; set; }
+
+    /// <summary>Hotel or Shortlet.</summary>
+    public string BusinessType { get; set; } = "Hotel";
 }

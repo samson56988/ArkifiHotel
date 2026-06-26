@@ -1,0 +1,80 @@
+<app-business-workspace>
+  <header class="page-head">
+    <div>
+      <p class="eyebrow">Audit</p>
+      <h1>Activity log</h1>
+      <p class="lead">Track who changed rooms, payments, menus, event halls, and team settings. Super admin only.</p>
+    </div>
+  </header>
+
+  <section class="panel filters">
+    <form class="filter-row" [formGroup]="filters" (ngSubmit)="applyFilters()">
+      <div class="field">
+        <label for="locationId">Branch</label>
+        <select id="locationId" class="input" formControlName="locationId">
+          <option value="">All branches</option>
+          @for (loc of locations(); track loc.id) {
+            <option [value]="loc.id">{{ loc.name }}</option>
+          }
+        </select>
+      </div>
+      <div class="field">
+        <label for="entityType">Entity</label>
+        <select id="entityType" class="input" formControlName="entityType">
+          <option value="">All types</option>
+          <option value="room">Rooms</option>
+          <option value="booking_payment">Booking payments</option>
+          <option value="event_hall">Event halls</option>
+          <option value="restaurant_menu_item">Menu items</option>
+          <option value="team_member">Team</option>
+        </select>
+      </div>
+      <div class="field">
+        <label for="action">Action</label>
+        <select id="action" class="input" formControlName="action">
+          <option value="">All actions</option>
+          <option value="create">Create</option>
+          <option value="update">Update</option>
+          <option value="status_change">Status change</option>
+        </select>
+      </div>
+      <button type="submit" class="btn btn--primary">Filter</button>
+    </form>
+  </section>
+
+  @if (loading()) {
+    <p class="muted">Loading audit log…</p>
+  } @else if (logs().length === 0) {
+    <p class="muted">No audit entries yet.</p>
+  } @else {
+    <section class="panel">
+      <table class="data-table">
+        <thead>
+          <tr>
+            <th>When</th>
+            <th>User</th>
+            <th>Branch</th>
+            <th>Action</th>
+            <th>Summary</th>
+          </tr>
+        </thead>
+        <tbody>
+          @for (log of logs(); track log.id) {
+            <tr>
+              <td>{{ formatDate(log.createdAt) }}</td>
+              <td>
+                {{ log.userDisplayName || 'System' }}
+                @if (log.userEmail) {
+                  <small class="sub">{{ log.userEmail }}</small>
+                }
+              </td>
+              <td>{{ log.locationName || '—' }}</td>
+              <td>{{ actionLabel(log.action) }} · {{ log.entityType }}</td>
+              <td>{{ log.summary }}</td>
+            </tr>
+          }
+        </tbody>
+      </table>
+    </section>
+  }
+</app-business-workspace>

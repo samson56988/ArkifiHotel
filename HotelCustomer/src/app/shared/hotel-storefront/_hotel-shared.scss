@@ -25,6 +25,49 @@
   box-shadow: 0 2px 20px rgba(0, 0, 0, 0.18);
 }
 
+.hotel-nav__brand {
+  display: flex;
+  align-items: center;
+  gap: 0.65rem;
+  text-decoration: none;
+  min-width: 0;
+  max-width: min(52vw, 320px);
+}
+
+.hotel-nav__brand-logo {
+  width: 2.25rem;
+  height: 2.25rem;
+  object-fit: contain;
+  border-radius: 8px;
+  background: rgba(255, 255, 255, 0.12);
+  flex-shrink: 0;
+}
+
+.hotel-nav__brand-mark {
+  width: 2.25rem;
+  height: 2.25rem;
+  border-radius: 8px;
+  display: grid;
+  place-items: center;
+  background: rgba(255, 255, 255, 0.16);
+  color: #fff;
+  font-family: var(--font-heading, 'Cormorant Garamond', serif);
+  font-weight: 700;
+  font-size: 1.1rem;
+  flex-shrink: 0;
+}
+
+.hotel-nav__brand-name {
+  font-family: var(--font-heading, 'Cormorant Garamond', serif);
+  font-size: 1.25rem;
+  font-weight: 700;
+  color: #fff;
+  letter-spacing: -0.3px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
 .hotel-nav__logo {
   font-family: var(--font-heading, 'Cormorant Garamond', serif);
   font-size: 1.55rem;

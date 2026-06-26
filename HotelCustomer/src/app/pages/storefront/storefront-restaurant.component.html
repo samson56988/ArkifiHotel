@@ -170,9 +170,15 @@
               }
 
               <label class="field">
+                <span>Email address</span>
+                <input class="field__input" type="email" [ngModel]="guestEmail()" (ngModelChange)="guestEmail.set($event)" name="guestEmail" placeholder="you@example.com" required />
+                <small>We will send your order confirmation to this address.</small>
+              </label>
+
+              <label class="field">
                 <span>Phone number</span>
                 <input class="field__input" type="tel" [ngModel]="guestPhone()" (ngModelChange)="guestPhone.set($event)" name="guestPhone" placeholder="+2348012345678 or 08012345678" required />
-                <small>We use your phone for order updates. No email is required — Paystack may show a reference address at checkout.</small>
+                <small>Used for order updates and payment checkout.</small>
               </label>
 
               @if (checkoutError()) {

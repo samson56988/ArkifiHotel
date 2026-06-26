@@ -29,6 +29,13 @@ export const routes: Routes = [
       ),
   },
   {
+    path: 'change-default-password',
+    loadComponent: () =>
+      import('./pages/change-default-password/change-default-password.component').then(
+        (m) => m.ChangeDefaultPasswordComponent,
+      ),
+  },
+  {
     path: 'forgot-password',
     loadComponent: () =>
       import('./pages/forgot-password/forgot-password.component').then((m) => m.ForgotPasswordComponent),
@@ -82,6 +89,28 @@ export const routes: Routes = [
     path: 'facilities/:facilityId',
     loadComponent: () =>
       import('./pages/facilities/facility-form.component').then((m) => m.FacilityFormComponent),
+  },
+  {
+    path: 'event-halls',
+    loadComponent: () =>
+      import('./pages/event-halls/event-halls-list.component').then((m) => m.EventHallsListComponent),
+  },
+  {
+    path: 'event-halls/new',
+    loadComponent: () =>
+      import('./pages/event-halls/event-hall-form.component').then((m) => m.EventHallFormComponent),
+  },
+  {
+    path: 'event-halls/:eventHallId',
+    loadComponent: () =>
+      import('./pages/event-halls/event-hall-form.component').then((m) => m.EventHallFormComponent),
+  },
+  {
+    path: 'event-hall-requests',
+    loadComponent: () =>
+      import('./pages/event-halls/event-hall-requests-list.component').then(
+        (m) => m.EventHallRequestsListComponent,
+      ),
   },
   {
     path: 'restaurant-menu',
@@ -160,6 +189,21 @@ export const routes: Routes = [
     path: 'social-profile',
     loadComponent: () =>
       import('./pages/social-profile/social-profile.component').then((m) => m.SocialProfileComponent),
+  },
+  {
+    path: 'team',
+    loadComponent: () =>
+      import('./pages/team/team-list.component').then((m) => m.TeamListComponent),
+  },
+  {
+    path: 'team/invites',
+    loadComponent: () =>
+      import('./pages/team/team-invites-list.component').then((m) => m.TeamInvitesListComponent),
+  },
+  {
+    path: 'audit',
+    loadComponent: () =>
+      import('./pages/audit/audit-list.component').then((m) => m.AuditListComponent),
   },
   { path: '**', redirectTo: '' },
 ];

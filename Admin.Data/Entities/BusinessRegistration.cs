@@ -58,5 +58,7 @@ public class BusinessRegistration
 
     /// <summary>When the current subscription period ends (UTC).</summary>
     public DateTimeOffset? SubscriptionExpiresAt { get; set; }
+
+    public ICollection<UserOrganization> OrganizationUsers { get; set; } = new List<UserOrganization>();
 }
 

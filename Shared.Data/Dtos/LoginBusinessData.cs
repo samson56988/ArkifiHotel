@@ -14,4 +14,6 @@ public sealed class LoginBusinessData
     public string? ChallengeId { get; set; }
 
     public DateTimeOffset? ChallengeExpiresAtUtc { get; set; }
+
+    public bool RequiresPasswordChange { get; set; }
 }

@@ -1,0 +1,117 @@
+@import '../facilities/facilities-list.component.scss';
+
+.toolbar {
+  margin-bottom: 1rem;
+}
+
+.toolbar label {
+  display: grid;
+  gap: 0.25rem;
+  font-size: 0.78rem;
+  color: var(--color-muted);
+}
+
+.toolbar select {
+  border: 1px solid var(--color-border);
+  border-radius: 0.5rem;
+  padding: 0.45rem 0.55rem;
+  background: var(--color-surface);
+}
+
+.split {
+  display: grid;
+  grid-template-columns: 1.4fr 1fr;
+  gap: 1rem;
+  align-items: start;
+}
+
+.panel {
+  background: var(--color-surface-elevated);
+  border: 1px solid var(--color-border);
+  border-radius: 0.8rem;
+  padding: 1rem;
+}
+
+.detail__head {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: 0.5rem;
+  margin-bottom: 0.75rem;
+}
+
+.detail__head h2 {
+  margin: 0;
+  font-size: 1rem;
+}
+
+.detail p {
+  margin: 0 0 0.45rem;
+  font-size: 0.88rem;
+}
+
+.detail__actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.45rem;
+  margin-top: 1rem;
+  padding-top: 1rem;
+  border-top: 1px solid var(--color-border);
+}
+
+tr.is-selected {
+  background: color-mix(in srgb, var(--color-accent) 8%, transparent);
+  cursor: pointer;
+}
+
+tbody tr {
+  cursor: pointer;
+}
+
+.status {
+  display: inline-block;
+  padding: 0.2rem 0.55rem;
+  border-radius: 999px;
+  font-size: 0.72rem;
+  font-weight: 600;
+}
+
+.status--ok {
+  background: color-mix(in srgb, #287a4b 14%, var(--color-surface));
+  color: #287a4b;
+}
+
+.status--bad {
+  background: color-mix(in srgb, #c44 14%, var(--color-surface));
+  color: #8b2e2e;
+}
+
+.status--pending {
+  background: color-mix(in srgb, #c98a2e 14%, var(--color-surface));
+  color: #8a5a12;
+}
+
+.strong {
+  display: block;
+  font-weight: 600;
+}
+
+.sub {
+  display: block;
+  font-size: 0.78rem;
+  color: var(--color-muted);
+}
+
+.link {
+  border: none;
+  background: none;
+  color: var(--color-sage);
+  font-weight: 600;
+  cursor: pointer;
+}
+
+@media (max-width: 900px) {
+  .split {
+    grid-template-columns: 1fr;
+  }
+}

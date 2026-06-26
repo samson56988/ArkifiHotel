@@ -13,6 +13,7 @@ public class RestaurantOrderConfiguration : IEntityTypeConfiguration<RestaurantO
         builder.HasKey(e => e.Id);
 
         builder.Property(e => e.GuestPhone).IsRequired().HasMaxLength(40);
+        builder.Property(e => e.GuestEmail).IsRequired().HasMaxLength(320);
         builder.Property(e => e.RoomNumber).HasMaxLength(40);
         builder.Property(e => e.OrderNumber).IsRequired().HasMaxLength(32);
         builder.Property(e => e.TotalAmount).HasPrecision(12, 2);

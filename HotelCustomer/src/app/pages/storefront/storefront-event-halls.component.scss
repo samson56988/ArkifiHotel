@@ -145,3 +145,38 @@
 .halls-unavailable {
   padding: 6rem 5vw 4rem;
 }
+
+.hall-card__media-link {
+  display: block;
+  text-decoration: none;
+}
+
+.hall-card__name a {
+  color: inherit;
+  text-decoration: none;
+}
+
+.hall-card__name a:hover {
+  color: var(--accent);
+}
+
+.hall-card__photos {
+  margin: 0;
+  font-size: 0.78rem;
+  color: color-mix(in srgb, var(--text) 50%, transparent);
+}
+
+.hall-card__actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.65rem;
+  align-items: center;
+  margin-top: 0.35rem;
+}
+
+.hall-card__link {
+  font-size: 0.86rem;
+  font-weight: 600;
+  color: var(--accent);
+  text-decoration: none;
+}

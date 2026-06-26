@@ -120,12 +120,35 @@ public sealed class BusinessEmailVerificationService : IBusinessEmailVerificatio
             .FirstOrDefaultAsync(x => x.ContactEmail == email, cancellationToken)
             .ConfigureAwait(false);
 
+        UserOrganization? orgUser = null;
         if (business is null)
         {
-            return VerifyEmailOtpResult.Fail("NotFound", "Business account not found.");
+            orgUser = await _db.UserOrganizations
+                .FirstOrDefaultAsync(u => u.Email == email, cancellationToken)
+                .ConfigureAwait(false);
+            if (orgUser is null)
+            {
+                return VerifyEmailOtpResult.Fail("NotFound", "Business account not found.");
+            }
+
+            business = await _db.BusinessRegistrations
+                .FirstOrDefaultAsync(b => b.Id == orgUser.BusinessRegistrationId, cancellationToken)
+                .ConfigureAwait(false);
+            if (business is null)
+            {
+                return VerifyEmailOtpResult.Fail("NotFound", "Business account not found.");
+            }
+        }
+        else
+        {
+            orgUser = await _db.UserOrganizations
+                .FirstOrDefaultAsync(
+                    u => u.BusinessRegistrationId == business.Id && u.Email == email,
+                    cancellationToken)
+                .ConfigureAwait(false);
         }
 
-        if (business.IsEmailVerified)
+        if (business.IsEmailVerified && (orgUser is null || orgUser.IsEmailVerified))
         {
             return VerifyEmailOtpResult.Ok();
         }
@@ -152,6 +175,12 @@ public sealed class BusinessEmailVerificationService : IBusinessEmailVerificatio
 
         business.IsEmailVerified = true;
         business.UpdatedAt = now;
+
+        if (orgUser is not null)
+        {
+            orgUser.IsEmailVerified = true;
+            orgUser.UpdatedAt = now;
+        }
 
         await _db.SaveChangesAsync(cancellationToken).ConfigureAwait(false);
         return VerifyEmailOtpResult.Ok();

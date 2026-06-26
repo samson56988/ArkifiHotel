@@ -895,6 +895,11 @@ namespace Admin.Data.Migrations
                     b.Property<Guid>("EventHallId")
                         .HasColumnType("uuid");
 
+                    b.Property<string>("EventPurpose")
+                        .IsRequired()
+                        .HasMaxLength(200)
+                        .HasColumnType("character varying(200)");
+
                     b.Property<string>("GuestEmail")
                         .IsRequired()
                         .HasMaxLength(320)
@@ -934,6 +939,69 @@ namespace Admin.Data.Migrations
                     b.HasIndex("LocationId");
 
                     b.ToTable("EventHallRequests", (string)null);
+                });
+
+            modelBuilder.Entity("Admin.Data.Entities.OrganizationAuditLog", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uuid");
+
+                    b.Property<string>("Action")
+                        .IsRequired()
+                        .HasMaxLength(64)
+                        .HasColumnType("character varying(64)");
+
+                    b.Property<Guid>("BusinessRegistrationId")
+                        .HasColumnType("uuid");
+
+                    b.Property<DateTimeOffset>("CreatedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<string>("DetailsJson")
+                        .HasColumnType("jsonb");
+
+                    b.Property<Guid?>("EntityId")
+                        .HasColumnType("uuid");
+
+                    b.Property<string>("EntityType")
+                        .IsRequired()
+                        .HasMaxLength(128)
+                        .HasColumnType("character varying(128)");
+
+                    b.Property<Guid?>("LocationId")
+                        .HasColumnType("uuid");
+
+                    b.Property<string>("LocationName")
+                        .HasMaxLength(200)
+                        .HasColumnType("character varying(200)");
+
+                    b.Property<string>("Summary")
+                        .HasMaxLength(500)
+                        .HasColumnType("character varying(500)");
+
+                    b.Property<string>("UserDisplayName")
+                        .HasMaxLength(200)
+                        .HasColumnType("character varying(200)");
+
+                    b.Property<string>("UserEmail")
+                        .HasMaxLength(320)
+                        .HasColumnType("character varying(320)");
+
+                    b.Property<Guid?>("UserOrganizationId")
+                        .HasColumnType("uuid");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("LocationId");
+
+                    b.HasIndex("UserOrganizationId");
+
+                    b.HasIndex("BusinessRegistrationId", "CreatedAt");
+
+                    b.HasIndex("EntityType", "EntityId");
+
+                    b.ToTable("OrganizationAuditLogs", (string)null);
                 });
 
             modelBuilder.Entity("Admin.Data.Entities.PaymentConfiguration", b =>
@@ -1235,6 +1303,11 @@ namespace Admin.Data.Migrations
                         .HasMaxLength(8)
                         .HasColumnType("character varying(8)");
 
+                    b.Property<string>("GuestEmail")
+                        .IsRequired()
+                        .HasMaxLength(320)
+                        .HasColumnType("character varying(320)");
+
                     b.Property<string>("GuestPhone")
                         .IsRequired()
                         .HasMaxLength(40)
@@ -1379,6 +1452,12 @@ namespace Admin.Data.Migrations
                         .HasPrecision(12, 2)
                         .HasColumnType("numeric(12,2)");
 
+                    b.Property<int?>("BathroomCount")
+                        .HasColumnType("integer");
+
+                    b.Property<int?>("BedroomCount")
+                        .HasColumnType("integer");
+
                     b.Property<Guid>("BusinessRegistrationId")
                         .HasColumnType("uuid");
 
@@ -1390,6 +1469,11 @@ namespace Admin.Data.Migrations
                         .HasColumnType("character varying(4000)");
 
                     b.Property<bool>("IsArchived")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("boolean")
+                        .HasDefaultValue(false);
+
+                    b.Property<bool>("IsGuestFavorite")
                         .ValueGeneratedOnAdd()
                         .HasColumnType("boolean")
                         .HasDefaultValue(false);
@@ -1409,6 +1493,10 @@ namespace Admin.Data.Migrations
                         .ValueGeneratedOnAdd()
                         .HasColumnType("integer")
                         .HasDefaultValue(1);
+
+                    b.Property<string>("Tagline")
+                        .HasMaxLength(300)
+                        .HasColumnType("character varying(300)");
 
                     b.Property<DateTimeOffset?>("UpdatedAt")
                         .HasColumnType("timestamp with time zone");
@@ -1639,6 +1727,144 @@ namespace Admin.Data.Migrations
                         });
                 });
 
+            modelBuilder.Entity("Admin.Data.Entities.UserOrganization", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uuid");
+
+                    b.Property<Guid>("BusinessRegistrationId")
+                        .HasColumnType("uuid");
+
+                    b.Property<DateTimeOffset>("CreatedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<Guid?>("DefaultLocationId")
+                        .HasColumnType("uuid");
+
+                    b.Property<string>("Email")
+                        .IsRequired()
+                        .HasMaxLength(320)
+                        .HasColumnType("character varying(320)");
+
+                    b.Property<string>("FirstName")
+                        .IsRequired()
+                        .HasMaxLength(100)
+                        .HasColumnType("character varying(100)");
+
+                    b.Property<bool>("HasAllLocationAccess")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("boolean")
+                        .HasDefaultValue(false);
+
+                    b.Property<bool>("HasAllModuleAccess")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("boolean")
+                        .HasDefaultValue(false);
+
+                    b.Property<string>("HashedPassword")
+                        .IsRequired()
+                        .HasMaxLength(512)
+                        .HasColumnType("character varying(512)");
+
+                    b.Property<bool>("IsActive")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("boolean")
+                        .HasDefaultValue(true);
+
+                    b.Property<bool>("IsDefaultPassword")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("boolean")
+                        .HasDefaultValue(false);
+
+                    b.Property<bool>("IsEmailVerified")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("boolean")
+                        .HasDefaultValue(false);
+
+                    b.Property<bool>("IsSuperAdmin")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("boolean")
+                        .HasDefaultValue(false);
+
+                    b.Property<string>("LastName")
+                        .IsRequired()
+                        .HasMaxLength(100)
+                        .HasColumnType("character varying(100)");
+
+                    b.Property<DateTimeOffset?>("LastInviteSentAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<DateTimeOffset?>("UpdatedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<string>("Username")
+                        .HasMaxLength(64)
+                        .HasColumnType("character varying(64)");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("BusinessRegistrationId")
+                        .IsUnique()
+                        .HasDatabaseName("IX_UserOrganizations_BusinessRegistrationId_SuperAdmin")
+                        .HasFilter("\"IsSuperAdmin\" = true");
+
+                    b.HasIndex("DefaultLocationId");
+
+                    b.HasIndex("BusinessRegistrationId", "Email")
+                        .IsUnique();
+
+                    b.HasIndex("BusinessRegistrationId", "Username")
+                        .IsUnique()
+                        .HasFilter("\"Username\" IS NOT NULL");
+
+                    b.ToTable("UserOrganizations", (string)null);
+                });
+
+            modelBuilder.Entity("Admin.Data.Entities.UserOrganizationLocationPermission", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uuid");
+
+                    b.Property<Guid>("BusinessLocationId")
+                        .HasColumnType("uuid");
+
+                    b.Property<Guid>("UserOrganizationId")
+                        .HasColumnType("uuid");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("BusinessLocationId");
+
+                    b.HasIndex("UserOrganizationId", "BusinessLocationId")
+                        .IsUnique();
+
+                    b.ToTable("UserOrganizationLocationPermissions", (string)null);
+                });
+
+            modelBuilder.Entity("Admin.Data.Entities.UserOrganizationModulePermission", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uuid");
+
+                    b.Property<string>("ModuleCode")
+                        .IsRequired()
+                        .HasMaxLength(64)
+                        .HasColumnType("character varying(64)");
+
+                    b.Property<Guid>("UserOrganizationId")
+                        .HasColumnType("uuid");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("UserOrganizationId", "ModuleCode")
+                        .IsUnique();
+
+                    b.ToTable("UserOrganizationModulePermissions", (string)null);
+                });
+
             modelBuilder.Entity("Admin.Data.Entities.Amenity", b =>
                 {
                     b.HasOne("Admin.Data.Entities.BusinessRegistration", "BusinessRegistration")
@@ -1845,6 +2071,17 @@ namespace Admin.Data.Migrations
                     b.Navigation("EventHall");
 
                     b.Navigation("Location");
+                });
+
+            modelBuilder.Entity("Admin.Data.Entities.OrganizationAuditLog", b =>
+                {
+                    b.HasOne("Admin.Data.Entities.BusinessRegistration", "BusinessRegistration")
+                        .WithMany()
+                        .HasForeignKey("BusinessRegistrationId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("BusinessRegistration");
                 });
 
             modelBuilder.Entity("Admin.Data.Entities.PaymentConfiguration", b =>
@@ -2061,6 +2298,54 @@ namespace Admin.Data.Migrations
                     b.Navigation("Location");
                 });
 
+            modelBuilder.Entity("Admin.Data.Entities.UserOrganization", b =>
+                {
+                    b.HasOne("Admin.Data.Entities.BusinessRegistration", "BusinessRegistration")
+                        .WithMany("OrganizationUsers")
+                        .HasForeignKey("BusinessRegistrationId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.HasOne("Admin.Data.Entities.BusinessLocation", "DefaultLocation")
+                        .WithMany()
+                        .HasForeignKey("DefaultLocationId")
+                        .OnDelete(DeleteBehavior.SetNull);
+
+                    b.Navigation("BusinessRegistration");
+
+                    b.Navigation("DefaultLocation");
+                });
+
+            modelBuilder.Entity("Admin.Data.Entities.UserOrganizationLocationPermission", b =>
+                {
+                    b.HasOne("Admin.Data.Entities.BusinessLocation", "BusinessLocation")
+                        .WithMany()
+                        .HasForeignKey("BusinessLocationId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.HasOne("Admin.Data.Entities.UserOrganization", "UserOrganization")
+                        .WithMany("LocationPermissions")
+                        .HasForeignKey("UserOrganizationId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("BusinessLocation");
+
+                    b.Navigation("UserOrganization");
+                });
+
+            modelBuilder.Entity("Admin.Data.Entities.UserOrganizationModulePermission", b =>
+                {
+                    b.HasOne("Admin.Data.Entities.UserOrganization", "UserOrganization")
+                        .WithMany("ModulePermissions")
+                        .HasForeignKey("UserOrganizationId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("UserOrganization");
+                });
+
             modelBuilder.Entity("Admin.Data.Entities.Amenity", b =>
                 {
                     b.Navigation("RoomAmenities");
@@ -2071,6 +2356,11 @@ namespace Admin.Data.Migrations
                     b.Navigation("PropertyFacilities");
 
                     b.Navigation("Rooms");
+                });
+
+            modelBuilder.Entity("Admin.Data.Entities.BusinessRegistration", b =>
+                {
+                    b.Navigation("OrganizationUsers");
                 });
 
             modelBuilder.Entity("Admin.Data.Entities.EventHall", b =>
@@ -2100,6 +2390,13 @@ namespace Admin.Data.Migrations
                     b.Navigation("Images");
 
                     b.Navigation("RoomAmenities");
+                });
+
+            modelBuilder.Entity("Admin.Data.Entities.UserOrganization", b =>
+                {
+                    b.Navigation("LocationPermissions");
+
+                    b.Navigation("ModulePermissions");
                 });
 #pragma warning restore 612, 618
         }

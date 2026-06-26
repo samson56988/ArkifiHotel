@@ -1,0 +1,117 @@
+<app-business-workspace>
+  <header class="page-head">
+    <div>
+      <p class="eyebrow">Property</p>
+      <h1>{{ isCreateMode ? 'Add event hall' : 'Edit event hall' }}</h1>
+      <p class="lead">
+        Set rental price, capacity, and branch. Guests see halls on your storefront and submit requests — you confirm offline.
+      </p>
+    </div>
+    <a routerLink="/event-halls" class="btn btn--ghost">Back to list</a>
+  </header>
+
+  @if (loading()) {
+    <p class="muted">Loading…</p>
+  } @else {
+    <form class="layout" [formGroup]="form" (ngSubmit)="onSubmit()" novalidate>
+      <section class="panel">
+        <h2>Details</h2>
+        @if (!isCreateMode && isArchived()) {
+          <p class="archived-banner">
+            This hall is archived and hidden from guests. Restore it to show on your storefront again.
+          </p>
+        }
+        <div class="field">
+          <label for="name">Name</label>
+          <input id="name" class="input" type="text" formControlName="name" placeholder="e.g. Grand Ballroom" />
+          @if (form.controls.name.touched && form.controls.name.invalid) {
+            <p class="field-error">Enter a name (2–200 characters).</p>
+          }
+        </div>
+        <div class="field">
+          <label for="description">Description</label>
+          <textarea id="description" class="input input--area" rows="4" formControlName="description" placeholder="Layout options, AV equipment, catering notes…"></textarea>
+        </div>
+        <div class="field-row">
+          <div class="field">
+            <label for="rentalPrice">Rental price (NGN)</label>
+            <input id="rentalPrice" class="input" type="number" min="0" step="1" formControlName="rentalPrice" />
+            @if (form.controls.rentalPrice.touched && form.controls.rentalPrice.invalid) {
+              <p class="field-error">Enter a valid rental price.</p>
+            }
+          </div>
+          <div class="field">
+            <label for="maxCapacity">Max capacity (optional)</label>
+            <input id="maxCapacity" class="input" type="number" min="1" step="1" formControlName="maxCapacity" placeholder="e.g. 250" />
+          </div>
+        </div>
+        <div class="field">
+          <label for="locationId">Branch</label>
+          <select id="locationId" class="input" formControlName="locationId">
+            <option value="" disabled>Select a branch</option>
+            @for (loc of locations(); track loc.id) {
+              <option [value]="loc.id">{{ loc.name }}</option>
+            }
+          </select>
+          @if (form.controls.locationId.touched && form.controls.locationId.invalid) {
+            <p class="field-error">Select the branch where this hall is located.</p>
+          }
+          @if (locationsLoading()) {
+            <p class="hint">Loading branches…</p>
+          } @else if (locations().length === 0) {
+            <p class="field-error">Add a branch under <a routerLink="/locations">Locations</a> first.</p>
+          }
+        </div>
+        <button type="submit" class="btn btn--primary" [disabled]="saving() || locations().length === 0">
+          {{ saving() ? 'Saving…' : isCreateMode ? 'Create event hall' : 'Save changes' }}
+        </button>
+        @if (!isCreateMode) {
+          <div class="form-actions-row">
+            @if (isArchived()) {
+              <button type="button" class="btn btn--ghost" (click)="restoreHall()" [disabled]="saving()">Restore</button>
+            } @else {
+              <button type="button" class="btn btn--ghost" (click)="archiveHall()" [disabled]="saving()">Archive</button>
+            }
+            <button type="button" class="btn btn--danger" (click)="deleteHall()" [disabled]="saving()">Delete permanently</button>
+          </div>
+        }
+      </section>
+
+      <section class="panel">
+        <h2>Photos</h2>
+        <p class="hint">JPEG or PNG, up to 8MB each. First image is shown as the cover on your storefront.</p>
+        @if (isCreateMode) {
+          <label class="file-label">
+            <input type="file" [accept]="imageAccept" multiple (change)="onPendingPhotosSelected($event)" [disabled]="saving()" />
+            <span>Choose images to upload after create</span>
+          </label>
+          @if (pendingPhotoFiles().length > 0) {
+            <ul class="pending-files">
+              @for (f of pendingPhotoFiles(); track $index) {
+                <li>
+                  <span>{{ f.name }}</span>
+                  <button type="button" class="link danger" (click)="removePendingPhoto($index)" [disabled]="saving()">Remove</button>
+                </li>
+              }
+            </ul>
+          }
+        } @else {
+          <label class="file-label">
+            <input type="file" [accept]="imageAccept" multiple (change)="onFilesSelected($event)" [disabled]="saving()" />
+            <span>Upload images</span>
+          </label>
+          <div class="gallery">
+            @for (img of images(); track img.id) {
+              <figure class="photo">
+                <img [src]="imageUrl(img)" [alt]="img.originalFileName ?? 'Event hall photo'" />
+                <figcaption>
+                  <button type="button" class="link danger" (click)="removeImage(img)" [disabled]="saving()">Remove</button>
+                </figcaption>
+              </figure>
+            }
+          </div>
+        }
+      </section>
+    </form>
+  }
+</app-business-workspace>

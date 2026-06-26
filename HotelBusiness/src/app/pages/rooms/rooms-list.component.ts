@@ -2,6 +2,7 @@ import { DecimalPipe } from '@angular/common';
 import { Component, inject, OnInit, signal } from '@angular/core';
 import { RouterLink } from '@angular/router';
 import { BusinessRoomsApiService } from '../../core/services/business-rooms-api.service';
+import { BusinessContextService } from '../../core/services/business-context.service';
 import { ToastService } from '../../core/services/toast.service';
 import { BusinessWorkspaceComponent } from '../../layouts/business-workspace/business-workspace.component';
 import type { ApiResult } from '../../core/models/api-result.model';
@@ -16,7 +17,10 @@ import type { BusinessRoomSummaryDto } from '../../core/models/rooms.models';
 })
 export class RoomsListComponent implements OnInit {
   private readonly api = inject(BusinessRoomsApiService);
+  private readonly businessContext = inject(BusinessContextService);
   private readonly toast = inject(ToastService);
+
+  readonly isShortlet = this.businessContext.isShortlet.bind(this.businessContext);
 
   readonly rooms = signal<BusinessRoomSummaryDto[]>([]);
   readonly initialLoadDone = signal(false);
@@ -26,6 +30,7 @@ export class RoomsListComponent implements OnInit {
   showArchived = false;
 
   ngOnInit(): void {
+    this.businessContext.ensureLoaded();
     this.scheduleLoad();
   }
 

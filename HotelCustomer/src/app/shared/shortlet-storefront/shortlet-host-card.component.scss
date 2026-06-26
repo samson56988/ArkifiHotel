@@ -1,0 +1,117 @@
+@use 'shortlet-shared' as *;
+
+.host-card {
+  @include sl-card;
+  display: flex;
+  gap: 1.25rem;
+  padding: 1.5rem;
+
+  &.compact {
+    padding: 1rem;
+    gap: 1rem;
+
+    .host-card__avatar img {
+      width: 56px;
+      height: 56px;
+    }
+
+    h3 {
+      font-size: 1.05rem;
+    }
+  }
+
+  &__avatar {
+    position: relative;
+    flex-shrink: 0;
+
+    img {
+      width: 80px;
+      height: 80px;
+      border-radius: 50%;
+      object-fit: cover;
+      border: 3px solid var(--sl-accent-soft);
+    }
+  }
+
+  &__verified {
+    position: absolute;
+    bottom: 0;
+    right: 0;
+    width: 1.5rem;
+    height: 1.5rem;
+    border-radius: 50%;
+    background: var(--sl-accent);
+    color: #fff;
+    font-size: 0.7rem;
+    display: grid;
+    place-items: center;
+    border: 2px solid var(--sl-surface);
+  }
+
+  &__eyebrow {
+    margin: 0;
+    font-size: 0.75rem;
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+    color: var(--sl-muted);
+  }
+
+  h3 {
+    @include sl-display;
+    margin: 0.15rem 0 0;
+    font-size: 1.35rem;
+  }
+
+  &__role {
+    margin: 0.25rem 0 0.5rem;
+    font-size: 0.85rem;
+    color: var(--sl-muted);
+  }
+
+  &__stats {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.75rem;
+    font-size: 0.82rem;
+    font-weight: 600;
+    color: var(--sl-ink);
+
+    span:not(:last-child)::after {
+      content: '·';
+      margin-left: 0.75rem;
+      color: var(--sl-muted);
+      font-weight: 400;
+    }
+  }
+
+  &__bio {
+    @include sl-body;
+    margin: 1rem 0 0;
+    font-size: 0.92rem;
+  }
+
+  &__langs {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.4rem;
+    margin-top: 0.75rem;
+
+    span {
+      @include sl-pill;
+      font-size: 0.72rem;
+    }
+  }
+
+  &__link {
+    display: inline-block;
+    margin-top: 1rem;
+    color: var(--sl-accent);
+    font-weight: 600;
+    font-size: 0.9rem;
+    text-decoration: none;
+
+    &:hover {
+      text-decoration: underline;
+    }
+  }
+}

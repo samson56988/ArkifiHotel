@@ -1,0 +1,24 @@
+@if (ctx.loading()) {
+  <div class="sl-state">Loading your stay…</div>
+} @else if (ctx.notFound()) {
+  <div class="sl-state">
+    <h1>Shortlet not found</h1>
+    <p>Try one of our demo shortlet storefronts:</p>
+    <ul>
+      <li><a routerLink="/nomad-stays">Nomad Stays — Victoria Island</a></li>
+      <li><a routerLink="/skyline-apartments">Skyline Apartments — Abuja</a></li>
+    </ul>
+  </div>
+} @else if (ctx.shortlet(); as sl) {
+  <div class="shortlet" [style]="themeStyle()">
+    <app-shortlet-nav [shortlet]="sl" [transparent]="navTransparent() ?? true" />
+    <main>
+      <router-outlet />
+    </main>
+    <app-shortlet-footer [shortlet]="sl" />
+    @if (hotelForBooking(); as sf) {
+      <app-booking-modal [storefront]="sf" />
+      <app-showcase-gallery-modal [storefront]="sf" />
+    }
+  </div>
+}

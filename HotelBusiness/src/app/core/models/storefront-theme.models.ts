@@ -142,12 +142,24 @@ export interface StorefrontTheme {
 export interface PublicStorefrontRoom {
   id: string;
   name: string;
+  tagline?: string | null;
+  description?: string | null;
   basePricePerNight: number;
   maxOccupancy: number;
+  bedroomCount?: number | null;
+  bathroomCount?: number | null;
+  isGuestFavorite?: boolean;
   primaryImageUrl: string | null;
   imageUrls?: string[];
+  amenityNames?: string[];
   locationId?: string | null;
   locationName: string | null;
+}
+
+export interface PublicStorefrontAmenity {
+  id: string;
+  name: string;
+  category: string | null;
 }
 
 export interface PublicStorefrontFacility {
@@ -168,6 +180,7 @@ export interface PublicStorefrontLocation {
 export interface PublicStorefront {
   businessId: string;
   businessName: string;
+  businessType?: string;
   slug: string;
   logoUrl: string | null;
   theme: StorefrontTheme;
@@ -176,6 +189,7 @@ export interface PublicStorefront {
   activeLocationId?: string | null;
   rooms: PublicStorefrontRoom[];
   facilities: PublicStorefrontFacility[];
+  amenities?: PublicStorefrontAmenity[];
   social: BusinessSocialProfileDto;
   heroImages: string[];
   aboutImageUrl: string | null;

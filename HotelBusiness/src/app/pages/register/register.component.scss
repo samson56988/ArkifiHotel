@@ -40,6 +40,62 @@
   margin: -0.5rem 0 0;
 }
 
+.auth-label-optional {
+  font-weight: 500;
+  color: var(--color-muted, #6b7280);
+}
+
+.logo-upload {
+  display: grid;
+  gap: 0.75rem;
+}
+
+.logo-upload__preview {
+  display: grid;
+  place-items: center;
+  min-height: 88px;
+  border: 1px dashed color-mix(in srgb, var(--color-sage) 35%, #ccc);
+  border-radius: 12px;
+  background: #fff;
+  padding: 0.75rem;
+}
+
+.logo-upload__preview img {
+  max-height: 72px;
+  max-width: 220px;
+  object-fit: contain;
+}
+
+.logo-upload__preview--empty span {
+  color: var(--color-muted, #6b7280);
+  font-size: 0.9rem;
+}
+
+.logo-upload__actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.65rem;
+}
+
+.file-btn {
+  cursor: pointer;
+  margin: 0;
+}
+
+.auth-btn-ghost {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0.55rem 0.9rem;
+  border-radius: 10px;
+  border: 1px solid color-mix(in srgb, var(--color-sage) 30%, #ccc);
+  background: #fff;
+  color: var(--color-ink, #1f2a1f);
+  font-size: 0.9rem;
+  font-weight: 600;
+  cursor: pointer;
+}
+
 .auth-hint {
   margin: 0.45rem 0 0;
   font-size: 0.84rem;

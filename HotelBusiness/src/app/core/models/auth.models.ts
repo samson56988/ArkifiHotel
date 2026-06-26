@@ -31,7 +31,7 @@ export interface BusinessRegistrationDto {
 export type RegisterApiResponse = ApiResult<BusinessRegistrationDto>;
 
 export interface LoginBusinessRequest {
-  email: string;
+  login: string;
   password: string;
   rememberMe: boolean;
 }
@@ -42,6 +42,18 @@ export interface BusinessAccountDto {
   contactEmail: string;
   isEmailVerified: boolean;
   status: string;
+  userId?: string | null;
+  firstName?: string | null;
+  lastName?: string | null;
+  isSuperAdmin?: boolean;
+  username?: string | null;
+  hasAllModuleAccess?: boolean;
+  requiresPasswordChange?: boolean;
+  twoFactorEmail?: string | null;
+  moduleCodes?: string[];
+  hasAllLocationAccess?: boolean;
+  defaultLocationId?: string | null;
+  locationIds?: string[];
 }
 
 export interface LoginBusinessData {
@@ -51,6 +63,7 @@ export interface LoginBusinessData {
   requiresTwoFactor: boolean;
   challengeId: string | null;
   challengeExpiresAtUtc: string | null;
+  requiresPasswordChange?: boolean;
 }
 
 export type LoginApiResponse = ApiResult<LoginBusinessData>;
@@ -90,3 +103,5 @@ export interface ResetPasswordRequest {
 }
 
 export type ResetPasswordResponse = ApiResult<null>;
+
+export type { ChangeDefaultPasswordRequest, ChangeDefaultPasswordResponse } from './team.models';

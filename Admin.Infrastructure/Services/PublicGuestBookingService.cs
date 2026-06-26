@@ -20,19 +20,22 @@ public sealed class PublicGuestBookingService : IPublicGuestBookingService
     private readonly IBusinessPaymentConfigurationService _paymentConfig;
     private readonly PaymentGatewayRouter _gatewayRouter;
     private readonly CustomerAppOptions _customerApp;
+    private readonly ICustomerConfirmationEmailService _confirmationEmails;
 
     public PublicGuestBookingService(
         AdminDbContext db,
         IBusinessBookingService bookings,
         IBusinessPaymentConfigurationService paymentConfig,
         PaymentGatewayRouter gatewayRouter,
-        IOptions<CustomerAppOptions> customerApp)
+        IOptions<CustomerAppOptions> customerApp,
+        ICustomerConfirmationEmailService confirmationEmails)
     {
         _db = db;
         _bookings = bookings;
         _paymentConfig = paymentConfig;
         _gatewayRouter = gatewayRouter;
         _customerApp = customerApp.Value;
+        _confirmationEmails = confirmationEmails;
     }
 
     public async Task<(GuestBookingCheckoutDto? Data, PublicGuestBookingError? Error, string? Message)> CreateCheckoutAsync(
@@ -648,6 +651,8 @@ public sealed class PublicGuestBookingService : IPublicGuestBookingService
             .ConfigureAwait(false);
 
         await _db.SaveChangesAsync(cancellationToken).ConfigureAwait(false);
+
+        await _confirmationEmails.SendBookingConfirmationAsync(booking.Id, cancellationToken).ConfigureAwait(false);
 
         return BuildVerifySuccess(booking, business.BusinessName);
     }

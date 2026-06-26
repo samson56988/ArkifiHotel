@@ -18,6 +18,10 @@ import { SubscriptionApiService } from '../../core/services/subscription-api.ser
 import { ToastService } from '../../core/services/toast.service';
 import { showAuthRequestError } from '../../core/utils/auth-request-error';
 import {
+  filterAllowedImageFiles,
+  ALLOWED_IMAGE_ACCEPT,
+} from '../../core/utils/image-upload';
+import {
   isValidBusinessSlug,
   normalizeBusinessSlug,
   suggestSlugFromBusinessName,
@@ -79,6 +83,10 @@ export class RegisterComponent implements OnInit {
   slugChecking = false;
   slugAvailable: boolean | null = null;
   slugTouched = false;
+
+  readonly allowedLogoAccept = ALLOWED_IMAGE_ACCEPT;
+  readonly logoPreviewUrl = signal<string | null>(null);
+  private pendingLogoFile: File | null = null;
 
   constructor() {
     this.form.controls.propertyName.valueChanges.pipe(takeUntilDestroyed(this.destroyRef)).subscribe((name) => {
@@ -156,6 +164,36 @@ export class RegisterComponent implements OnInit {
     this.form.controls.proBilling.setValue(interval);
   }
 
+  onLogoSelected(event: Event): void {
+    const input = event.target as HTMLInputElement;
+    const picked = input.files ? Array.from(input.files) : [];
+    input.value = '';
+    if (picked.length === 0) {
+      return;
+    }
+
+    const { accepted, skipped } = filterAllowedImageFiles(picked);
+    if (skipped.length > 0) {
+      this.toast.warning(`Skipped: ${skipped.join('; ')}.`, 'Logo');
+    }
+
+    const file = accepted[0];
+    if (!file) {
+      return;
+    }
+
+    this.pendingLogoFile = file;
+    const reader = new FileReader();
+    reader.onload = () =>
+      this.logoPreviewUrl.set(typeof reader.result === 'string' ? reader.result : null);
+    reader.readAsDataURL(file);
+  }
+
+  clearLogo(): void {
+    this.pendingLogoFile = null;
+    this.logoPreviewUrl.set(null);
+  }
+
   private selectedPlanCode(): string {
     const tier = this.form.controls.planTier.value;
     if (tier === 'free') {
@@ -186,18 +224,21 @@ export class RegisterComponent implements OnInit {
     const raw = this.form.getRawValue();
     this.loading = true;
     this.authApi
-      .register({
-        businessName: raw.propertyName.trim(),
-        slug,
-        firstName: raw.firstName.trim(),
-        lastName: raw.lastName.trim(),
-        email: raw.email.trim(),
-        phoneNumber: raw.phoneNumber.trim(),
-        password: raw.password,
-        acceptTerms: raw.acceptTerms,
-        businessType: raw.businessType,
-        planCode: this.selectedPlanCode(),
-      })
+      .register(
+        {
+          businessName: raw.propertyName.trim(),
+          slug,
+          firstName: raw.firstName.trim(),
+          lastName: raw.lastName.trim(),
+          email: raw.email.trim(),
+          phoneNumber: raw.phoneNumber.trim(),
+          password: raw.password,
+          acceptTerms: raw.acceptTerms,
+          businessType: raw.businessType,
+          planCode: this.selectedPlanCode(),
+        },
+        this.pendingLogoFile,
+      )
       .pipe(finalize(() => (this.loading = false)))
       .subscribe({
         next: (result) => {
@@ -218,6 +259,7 @@ export class RegisterComponent implements OnInit {
               acceptTerms: false,
             });
             this.submitted = false;
+            this.clearLogo();
             setTimeout(() => {
               const email = encodeURIComponent(raw.email.trim());
               void this.router.navigateByUrl(`/verify-email?email=${email}`);

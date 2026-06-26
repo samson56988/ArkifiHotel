@@ -1,0 +1,83 @@
+<section class="hero">
+  <div class="hero__bg">
+    <img [src]="shortlet().heroImage" [alt]="shortlet().businessName" />
+    <div class="hero__shade"></div>
+  </div>
+  <div class="hero__content">
+    <p class="hero__loc">{{ shortlet().neighborhood }}</p>
+    <h1>{{ shortlet().tagline }}</h1>
+    <p class="hero__sub">Fully furnished apartments · Self check-in · {{ shortlet().listings.length }} units available</p>
+    <div class="hero__actions">
+      <a class="btn-primary" [routerLink]="ctx.path('listings')">Browse listings</a>
+      <button type="button" class="btn-ghost" (click)="openBooking()">Check availability</button>
+    </div>
+  </div>
+  <div class="hero__card">
+    <div class="hero__card-row">
+      <div>
+        <span class="label">Check-in</span>
+        <strong>{{ shortlet().checkIn }}</strong>
+      </div>
+      <div>
+        <span class="label">Check-out</span>
+        <strong>{{ shortlet().checkOut }}</strong>
+      </div>
+      <div>
+        <span class="label">Min. stay</span>
+        <strong>{{ shortlet().minNights }} nights</strong>
+      </div>
+    </div>
+    <button type="button" class="btn-primary full" (click)="openBooking()">Reserve your stay</button>
+  </div>
+</section>
+
+<section class="featured">
+  <div class="section-head">
+    <div>
+      <p class="eyebrow">Our apartments</p>
+      <h2>Pick your home for the week</h2>
+    </div>
+    <a [routerLink]="ctx.path('listings')">View all {{ shortlet().listings.length }} listings →</a>
+  </div>
+  <div class="featured__grid">
+    @for (listing of featured(); track listing.id) {
+      <app-shortlet-listing-card [listing]="listing" />
+    }
+  </div>
+</section>
+
+<section class="amenities-preview">
+  <div class="amenities-preview__copy">
+    <p class="eyebrow">What’s included</p>
+    <h2>Everything you need to settle in</h2>
+    <p>From fast Wi‑Fi to backup power — every unit comes stocked and ready for week-long stays.</p>
+    <a class="link" [routerLink]="ctx.path('amenities')">See full amenities list</a>
+  </div>
+  <div class="amenities-preview__grid">
+    @for (a of topAmenities(); track a.id) {
+      <div class="amenity-chip">
+        <span class="icon">{{ a.icon }}</span>
+        <span>{{ a.label }}</span>
+      </div>
+    }
+  </div>
+</section>
+
+<section class="host-preview">
+  <div class="host-preview__visual">
+    <div class="mosaic">
+      @for (img of shortlet().galleryImages.slice(0, 4); track img; let i = $index) {
+        <img [src]="img" [alt]="'Gallery ' + (i + 1)" loading="lazy" />
+      }
+    </div>
+  </div>
+  <div class="host-preview__card">
+    <app-shortlet-host-card [host]="shortlet().host" />
+  </div>
+</section>
+
+<section class="cta-band">
+  <h2>Ready to book?</h2>
+  <p>Choose an apartment, pick your dates, and get instant confirmation.</p>
+  <a class="btn-primary" [routerLink]="ctx.path('listings')">Explore listings</a>
+</section>

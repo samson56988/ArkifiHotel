@@ -16,11 +16,22 @@ public class RoomConfiguration : IEntityTypeConfiguration<Room>
             .IsRequired()
             .HasMaxLength(200);
 
+        builder.Property(e => e.Tagline)
+            .HasMaxLength(300);
+
         builder.Property(e => e.Description)
             .HasMaxLength(4000);
 
         builder.Property(e => e.MaxOccupancy)
             .IsRequired();
+
+        builder.Property(e => e.BedroomCount);
+
+        builder.Property(e => e.BathroomCount);
+
+        builder.Property(e => e.IsGuestFavorite)
+            .IsRequired()
+            .HasDefaultValue(false);
 
         builder.Property(e => e.BasePricePerNight)
             .HasPrecision(12, 2)

@@ -32,10 +32,22 @@ export class StorefrontEventHallsComponent {
   readonly guestPhone = signal('');
   readonly eventDate = signal('');
   readonly eventEndDate = signal('');
+  readonly eventPurpose = signal('');
+  readonly eventPurposeOther = signal('');
   readonly notes = signal('');
   readonly formError = signal<string | null>(null);
   readonly submitting = signal(false);
   readonly successMessage = signal<string | null>(null);
+
+  readonly eventPurposeOptions = [
+    'Wedding',
+    'Conference / Meeting',
+    'Birthday party',
+    'Corporate event',
+    'Religious ceremony',
+    'Social gathering',
+    'Other',
+  ] as const;
 
   openRequest(hall: ShowcaseEventHall): void {
     this.selectedHall.set(hall);
@@ -84,6 +96,12 @@ export class StorefrontEventHallsComponent {
       return;
     }
 
+    const purpose = this.resolveEventPurpose();
+    if (!purpose) {
+      this.formError.set('Select or describe the purpose of your event.');
+      return;
+    }
+
     const end = this.eventEndDate().trim();
     if (end && end < start) {
       this.formError.set('End date cannot be before start date.');
@@ -104,6 +122,8 @@ export class StorefrontEventHallsComponent {
         this.guestPhone.set('');
         this.eventDate.set('');
         this.eventEndDate.set('');
+        this.eventPurpose.set('');
+        this.eventPurposeOther.set('');
         this.notes.set('');
       }, 600);
       return;
@@ -118,6 +138,7 @@ export class StorefrontEventHallsComponent {
         guestPhone: phone,
         eventDate: start,
         eventEndDate: end || null,
+        eventPurpose: purpose,
         notes: this.notes().trim() || null,
       })
       .subscribe({
@@ -148,6 +169,17 @@ export class StorefrontEventHallsComponent {
       return 'Capacity on request';
     }
     return `Up to ${hall.maxCapacity} guests`;
+  }
+
+  resolveEventPurpose(): string {
+    const selected = this.eventPurpose().trim();
+    if (!selected) {
+      return '';
+    }
+    if (selected === 'Other') {
+      return this.eventPurposeOther().trim();
+    }
+    return selected;
   }
 
   private normalizePhone(raw: string): string | null {

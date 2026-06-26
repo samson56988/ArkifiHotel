@@ -95,6 +95,8 @@ public sealed class EventHallRequestListItemDto
 
     public DateOnly? EventEndDate { get; set; }
 
+    public string EventPurpose { get; set; } = string.Empty;
+
     public string Status { get; set; } = string.Empty;
 
     public string? LocationName { get; set; }
@@ -119,6 +121,8 @@ public sealed class EventHallRequestDetailDto
     public DateOnly EventDate { get; set; }
 
     public DateOnly? EventEndDate { get; set; }
+
+    public string EventPurpose { get; set; } = string.Empty;
 
     public string? Notes { get; set; }
 
@@ -149,6 +153,8 @@ public sealed class GuestCreateEventHallRequest
     public DateOnly EventDate { get; set; }
 
     public DateOnly? EventEndDate { get; set; }
+
+    public string EventPurpose { get; set; } = string.Empty;
 
     public string? Notes { get; set; }
 }

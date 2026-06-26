@@ -76,9 +76,15 @@ public static class DependencyInjection
         services.AddScoped<IBusinessPaymentConfigurationService, BusinessPaymentConfigurationService>();
         services.AddScoped<IBusinessCustomerService, BusinessCustomerService>();
         services.AddScoped<IBusinessBookingPaymentService, BusinessBookingPaymentService>();
+        services.AddScoped<ICustomerConfirmationEmailService, CustomerConfirmationEmailService>();
         services.AddScoped<ISubscriptionPlanService, SubscriptionPlanService>();
         services.AddScoped<IBusinessSubscriptionService, BusinessSubscriptionService>();
         services.AddScoped<IBusinessDashboardService, BusinessDashboardService>();
+        services.AddHttpContextAccessor();
+        services.AddScoped<IOrganizationUserContext, OrganizationUserContext>();
+        services.AddScoped<IOrganizationAuditService, OrganizationAuditService>();
+        services.AddScoped<IOrganizationAuditQueryService, OrganizationAuditQueryService>();
+        services.AddScoped<IBusinessTeamService, BusinessTeamService>();
         services.AddScoped<BusinessSubscriptionSeedService>();
 
         return services;

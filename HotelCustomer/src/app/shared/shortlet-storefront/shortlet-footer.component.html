@@ -1,0 +1,40 @@
+<footer class="sl-footer">
+  <div class="sl-footer__grid">
+    <div class="sl-footer__brand">
+      <h3>{{ shortlet().businessName }}</h3>
+      <p>{{ shortlet().theme.footer.tagline }}</p>
+      <p class="sl-footer__loc">{{ shortlet().neighborhood }}</p>
+    </div>
+
+    <div>
+      <h4>Explore</h4>
+      <ul>
+        <li><a [routerLink]="ctx.path('listings')">All listings</a></li>
+        <li><a [routerLink]="ctx.path('amenities')">Amenities</a></li>
+        <li><a [routerLink]="ctx.path('host')">Meet your host</a></li>
+      </ul>
+    </div>
+
+    <div>
+      <h4>Stay details</h4>
+      <ul>
+        <li>Check-in {{ shortlet().checkIn }}</li>
+        <li>Check-out {{ shortlet().checkOut }}</li>
+        <li>Min. {{ shortlet().minNights }} night{{ shortlet().minNights === 1 ? '' : 's' }}</li>
+      </ul>
+    </div>
+
+    <div class="sl-footer__host">
+      <img [src]="shortlet().host.photoUrl" [alt]="shortlet().host.name" width="48" height="48" />
+      <div>
+        <strong>{{ shortlet().host.name }}</strong>
+        <span>{{ shortlet().host.role }}</span>
+      </div>
+    </div>
+  </div>
+
+  <div class="sl-footer__bottom">
+    <span>© {{ currentYear }} {{ shortlet().businessName }}</span>
+    <a routerLink="/lookup">Find my booking</a>
+  </div>
+</footer>

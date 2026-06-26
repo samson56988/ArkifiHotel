@@ -1,0 +1,186 @@
+<app-business-workspace>
+  <header class="page-head">
+    <div>
+      <p class="eyebrow">Team</p>
+      <h1>Staff & access</h1>
+      <p class="lead">
+        Invite staff, edit permissions, or block users from signing in. Staff use <strong>business-slug/username</strong> to sign in.
+      </p>
+    </div>
+    <div class="page-head__actions">
+      <a routerLink="/team/invites" class="btn btn--ghost">Sent invites</a>
+      <button type="button" class="btn btn--primary" (click)="startCreate()">Invite member</button>
+    </div>
+  </header>
+
+  @if (loading()) {
+    <p class="muted">Loading team…</p>
+  } @else {
+    <div class="team-grid">
+      <section class="panel">
+        <h2>{{ isEditing ? 'Edit member' : 'Invite member' }}</h2>
+        <form [formGroup]="form" class="team-form" (ngSubmit)="save()" novalidate>
+          <div class="field-row">
+            <div class="field">
+              <label for="firstName">First name</label>
+              <input id="firstName" class="input" formControlName="firstName" />
+            </div>
+            <div class="field">
+              <label for="lastName">Last name</label>
+              <input id="lastName" class="input" formControlName="lastName" />
+            </div>
+          </div>
+
+          <div class="field">
+            <label for="email">Email</label>
+            <input id="email" class="input" type="email" formControlName="email" />
+            <small class="hint">Used for invite and login verification codes — not for sign-in ID.</small>
+          </div>
+
+          @if (!isEditing) {
+            <div class="field">
+              <label for="username">Username</label>
+              <input id="username" class="input" formControlName="username" placeholder="frontdesk" />
+              <small class="hint">Unique within your business. Staff sign in as <em>your-slug/username</em>.</small>
+            </div>
+          }
+
+          <div class="field">
+            <label class="check">
+              <input type="checkbox" formControlName="hasAllModuleAccess" (change)="toggleAllModules($any($event.target).checked)" />
+              <span>All modules (full access except super-admin settings)</span>
+            </label>
+          </div>
+
+          @if (!form.controls.hasAllModuleAccess.value) {
+            <div class="module-grid">
+              @for (mod of modules(); track mod.code) {
+                <label class="check module-chip">
+                  <input
+                    type="checkbox"
+                    [checked]="isModuleSelected(mod.code)"
+                    (change)="toggleModule(mod.code, $any($event.target).checked)"
+                  />
+                  <span>{{ mod.label }}</span>
+                </label>
+              }
+            </div>
+          }
+
+          <div class="field">
+            <label class="field-label">Branches</label>
+            <p class="hint">Staff only see data and branch pickers for assigned locations.</p>
+            <div class="module-grid">
+              @for (loc of locations(); track loc.id) {
+                <label class="check module-chip">
+                  <input
+                    type="checkbox"
+                    [checked]="isLocationSelected(loc.id)"
+                    (change)="toggleLocation(loc.id, $any($event.target).checked)"
+                  />
+                  <span>{{ loc.name }}</span>
+                </label>
+              }
+            </div>
+          </div>
+
+          @if (isEditing) {
+            <div class="field">
+              <label class="check">
+                <input type="checkbox" formControlName="isActive" />
+                <span>Allow sign-in (uncheck to block this user)</span>
+              </label>
+            </div>
+          }
+
+          <div class="form-actions">
+            <button type="submit" class="btn btn--primary" [disabled]="saving()">
+              {{ saving() ? 'Saving…' : isEditing ? 'Save changes' : 'Send invite' }}
+            </button>
+            @if (isEditing) {
+              <button type="button" class="btn btn--ghost" (click)="cancelEdit()">Cancel</button>
+            }
+          </div>
+        </form>
+      </section>
+
+      <section class="panel">
+        <h2>Team members</h2>
+        @if (members().length === 0) {
+          <p class="muted">No team members yet.</p>
+        } @else {
+          <table class="data-table">
+            <thead>
+              <tr>
+                <th>Name</th>
+                <th>Sign-in</th>
+                <th>Email</th>
+                <th>Access</th>
+                <th>Branches</th>
+                <th>Status</th>
+                <th>Actions</th>
+              </tr>
+            </thead>
+            <tbody>
+              @for (m of members(); track m.id) {
+                <tr [class.row--blocked]="!m.isActive">
+                  <td>
+                    {{ m.firstName }} {{ m.lastName }}
+                    @if (m.isSuperAdmin) {
+                      <span class="badge">Super admin</span>
+                    }
+                  </td>
+                  <td>{{ m.isSuperAdmin ? 'Email' : m.username }}</td>
+                  <td>{{ m.email }}</td>
+                  <td>{{ m.hasAllModuleAccess ? 'All modules' : m.moduleCodes.length + ' modules' }}</td>
+                  <td>
+                    @if (m.isSuperAdmin) {
+                      All branches
+                    } @else if (m.hasAllLocationAccess) {
+                      All branches
+                    } @else {
+                      {{ m.locationIds.length }} branch{{ m.locationIds.length === 1 ? '' : 'es' }}
+                    }
+                  </td>
+                  <td>
+                    @if (!m.isActive) {
+                      <span class="status status--blocked">Blocked</span>
+                    } @else if (m.isDefaultPassword) {
+                      <span class="status status--pending">Pending password</span>
+                    } @else {
+                      <span class="status status--active">Active</span>
+                    }
+                  </td>
+                  <td class="actions-cell">
+                    @if (!m.isSuperAdmin) {
+                      <button type="button" class="link-btn" (click)="startEdit(m)">Edit</button>
+                      @if (m.isActive) {
+                        <button
+                          type="button"
+                          class="link-btn link-btn--danger"
+                          [disabled]="isStatusUpdating(m.id)"
+                          (click)="blockMember(m)"
+                        >
+                          {{ isStatusUpdating(m.id) ? 'Blocking…' : 'Block' }}
+                        </button>
+                      } @else {
+                        <button
+                          type="button"
+                          class="link-btn link-btn--success"
+                          [disabled]="isStatusUpdating(m.id)"
+                          (click)="unblockMember(m)"
+                        >
+                          {{ isStatusUpdating(m.id) ? 'Unblocking…' : 'Unblock' }}
+                        </button>
+                      }
+                    }
+                  </td>
+                </tr>
+              }
+            </tbody>
+          </table>
+        }
+      </section>
+    </div>
+  }
+</app-business-workspace>

@@ -2,15 +2,21 @@
   <header class="page-head">
     <div>
       <p class="eyebrow">Inventory</p>
-      <h1>Rooms</h1>
-      <p class="lead">Create rooms, upload photos, and assign amenities from your property list.</p>
+      <h1>{{ isShortlet() ? 'Apartment listings' : 'Rooms' }}</h1>
+      <p class="lead">
+        @if (isShortlet()) {
+          Manage furnished apartments guests see on your shortlet storefront.
+        } @else {
+          Create rooms, upload photos, and assign amenities from your property list.
+        }
+      </p>
     </div>
     <div class="page-head__actions">
       <label class="check-inline">
         <input type="checkbox" [checked]="showArchived" (change)="onShowArchivedChange($event)" />
         <span>Show archived</span>
       </label>
-      <a routerLink="/rooms/new" class="btn btn--primary">Add room</a>
+      <a routerLink="/rooms/new" class="btn btn--primary">{{ isShortlet() ? 'Add listing' : 'Add room' }}</a>
     </div>
   </header>
 
@@ -32,9 +38,14 @@
       <table>
         <thead>
           <tr>
-            <th>Room</th>
+            <th>{{ isShortlet() ? 'Listing' : 'Room' }}</th>
             <th>Location</th>
-            <th>Qty</th>
+            @if (isShortlet()) {
+              <th>Beds</th>
+              <th>Baths</th>
+            } @else {
+              <th>Qty</th>
+            }
             <th>Guests</th>
             <th>Price / night</th>
             <th>Amenities</th>
@@ -53,6 +64,9 @@
                   }
                   <div class="room-cell__text">
                     <span class="room-name">{{ r.name }}</span>
+                    @if (isShortlet() && r.isGuestFavorite) {
+                      <span class="badge-favorite">Guest favorite</span>
+                    }
                     @if (r.isArchived) {
                       <span class="badge-archived">Archived</span>
                     }
@@ -60,7 +74,12 @@
                 </div>
               </td>
               <td>{{ r.locationName || '—' }}</td>
-              <td>{{ r.quantity ?? 1 }}</td>
+              @if (isShortlet()) {
+                <td>{{ r.bedroomCount ?? '—' }}</td>
+                <td>{{ r.bathroomCount ?? '—' }}</td>
+              } @else {
+                <td>{{ r.quantity ?? 1 }}</td>
+              }
               <td>{{ r.maxOccupancy }}</td>
               <td>{{ r.basePricePerNight | number: '1.2-2' }}</td>
               <td>{{ r.amenityCount }}</td>

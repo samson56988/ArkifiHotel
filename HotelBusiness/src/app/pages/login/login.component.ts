@@ -21,7 +21,7 @@ export class LoginComponent {
   private readonly toast = inject(ToastService);
 
   readonly form = this.fb.nonNullable.group({
-    email: ['', [Validators.required, Validators.email]],
+    login: ['', [Validators.required, Validators.minLength(3)]],
     password: ['', [Validators.required, Validators.minLength(8)]],
     rememberMe: [false],
   });
@@ -44,9 +44,22 @@ export class LoginComponent {
       .subscribe({
         next: (result) => {
           if (result.success) {
+            const loginId = this.form.controls.login.value.trim();
+
+            if (result.data?.requiresPasswordChange) {
+              this.toast.info('Set a new password to finish signing in.', 'Temporary password');
+              void this.router.navigateByUrl(
+                `/change-default-password?login=${encodeURIComponent(loginId)}`,
+              );
+              return;
+            }
+
             if (result.data?.requiresTwoFactor && result.data.challengeId) {
+              const otpEmail =
+                result.data.account?.twoFactorEmail?.trim() ||
+                (loginId.includes('@') ? loginId : '');
               this.toast.info('Enter the 6-digit code we sent to your email to finish signing in.', 'Check your inbox');
-              const email = encodeURIComponent(this.form.controls.email.value.trim());
+              const email = encodeURIComponent(otpEmail);
               const challenge = encodeURIComponent(result.data.challengeId);
               const rememberMe = this.form.controls.rememberMe.value ? '1' : '0';
               void this.router.navigateByUrl(
@@ -62,8 +75,16 @@ export class LoginComponent {
 
           if (result.code === 'EmailNotVerified') {
             this.toast.warning('Verify your email before signing in.', 'Email not verified');
-            const email = encodeURIComponent(this.form.controls.email.value.trim());
+            const email = encodeURIComponent(this.form.controls.login.value.trim());
             void this.router.navigateByUrl(`/verify-email?email=${email}`);
+            return;
+          }
+
+          if (result.code === 'AccountBlocked') {
+            this.toast.error(
+              getApiResultMessage(result, 'Your account has been blocked. Contact your business administrator.'),
+              'Account blocked',
+            );
             return;
           }
 
@@ -82,13 +103,19 @@ export class LoginComponent {
                 );
                 void this.router.navigateByUrl(`/verify-email?email=${encodeURIComponent(email)}`);
               },
+              AccountBlocked: (res) => {
+                this.toast.error(
+                  getApiResultMessage(res, 'Your account has been blocked. Contact your business administrator.'),
+                  'Account blocked',
+                );
+              },
             },
-            { email: this.form.controls.email.value.trim() },
+            { email: this.form.controls.login.value.trim() },
           ),
       });
   }
 
-  showError(field: 'email' | 'password'): boolean {
+  showError(field: 'login' | 'password'): boolean {
     const c = this.form.controls[field];
     return (c.touched || this.submitted) && c.invalid;
   }

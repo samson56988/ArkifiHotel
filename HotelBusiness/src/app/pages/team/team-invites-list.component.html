@@ -1,0 +1,75 @@
+<app-business-workspace>
+  <header class="page-head">
+    <div>
+      <p class="eyebrow">Team</p>
+      <h1>Sent invites</h1>
+      <p class="lead">
+        Staff who were invited but have not signed in yet can receive the invite email again with a fresh temporary password.
+      </p>
+    </div>
+    <div class="page-head__actions">
+      <a routerLink="/team" class="btn btn--ghost">Back to team</a>
+      <a routerLink="/team" class="btn btn--primary">Invite member</a>
+    </div>
+  </header>
+
+  @if (loading()) {
+    <p class="muted">Loading invites…</p>
+  } @else if (invites().length === 0) {
+    <section class="panel">
+      <p class="muted">No staff invites yet. Use <a routerLink="/team">Team</a> to invite your first member.</p>
+    </section>
+  } @else {
+    <section class="panel">
+      <table class="data-table">
+        <thead>
+          <tr>
+            <th>Name</th>
+            <th>Sign-in ID</th>
+            <th>Email</th>
+            <th>First invited</th>
+            <th>Last sent</th>
+            <th>Status</th>
+            <th></th>
+          </tr>
+        </thead>
+        <tbody>
+          @for (invite of invites(); track invite.id) {
+            <tr [class.row--blocked]="!invite.isActive">
+              <td>{{ invite.firstName }} {{ invite.lastName }}</td>
+              <td><code>{{ invite.staffLoginId }}</code></td>
+              <td>{{ invite.email }}</td>
+              <td>{{ invite.invitedAt | date: 'medium' }}</td>
+              <td>{{ invite.lastInviteSentAt | date: 'medium' }}</td>
+              <td>
+                @if (!invite.isActive) {
+                  <span class="status status--blocked">Blocked</span>
+                } @else if (invite.isPending) {
+                  <span class="status status--pending">Pending sign-in</span>
+                } @else {
+                  <span class="status status--active">Joined</span>
+                }
+              </td>
+              <td class="actions-cell">
+                @if (canResend(invite)) {
+                  <button
+                    type="button"
+                    class="link-btn"
+                    [disabled]="isResending(invite.id)"
+                    (click)="resendInvite(invite)"
+                  >
+                    {{ isResending(invite.id) ? 'Sending…' : 'Resend invite' }}
+                  </button>
+                } @else if (!invite.isActive) {
+                  <span class="hint-inline">Unblock on team page</span>
+                } @else {
+                  <span class="hint-inline">Already joined</span>
+                }
+              </td>
+            </tr>
+          }
+        </tbody>
+      </table>
+    </section>
+  }
+</app-business-workspace>

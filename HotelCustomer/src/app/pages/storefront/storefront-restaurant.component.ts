@@ -40,6 +40,7 @@ export class StorefrontRestaurantComponent {
   readonly guestType = signal<GuestType>('inRestaurant');
   readonly roomNumber = signal('');
   readonly guestPhone = signal('');
+  readonly guestEmail = signal('');
   readonly checkoutError = signal<string | null>(null);
   readonly submitting = signal(false);
 
@@ -145,6 +146,12 @@ export class StorefrontRestaurantComponent {
       return;
     }
 
+    const email = this.guestEmail().trim().toLowerCase();
+    if (!email || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
+      this.checkoutError.set('Enter a valid email address for your order confirmation.');
+      return;
+    }
+
     if (this.guestType() === 'roomGuest' && !this.roomNumber().trim()) {
       this.checkoutError.set('Enter your room number.');
       return;
@@ -159,6 +166,7 @@ export class StorefrontRestaurantComponent {
         guestType: this.guestType(),
         roomNumber: this.guestType() === 'roomGuest' ? this.roomNumber().trim() : null,
         guestPhone: phone,
+        guestEmail: email,
         items: this.cartLines().map((line) => ({
           menuItemId: line.itemId,
           quantity: line.quantity,

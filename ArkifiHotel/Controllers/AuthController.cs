@@ -44,6 +44,7 @@ public class AuthController : ControllerBase
         {
             "InvalidCredentials" => Unauthorized(api),
             "EmailNotVerified" => Unauthorized(api),
+            "AccountBlocked" => StatusCode(StatusCodes.Status403Forbidden, api),
             _ => BadRequest(api),
         };
     }
@@ -70,6 +71,7 @@ public class AuthController : ControllerBase
         return code switch
         {
             "InvalidOtp" => Unauthorized(api),
+            "AccountBlocked" => StatusCode(StatusCodes.Status403Forbidden, api),
             _ => BadRequest(api),
         };
     }
@@ -140,6 +142,31 @@ public class AuthController : ControllerBase
         {
             "InvalidOtp" => Unauthorized(resetApi),
             _ => BadRequest(resetApi),
+        };
+    }
+
+    /// <summary>Replace a temporary staff password after first sign-in.</summary>
+    [HttpPost("change-default-password")]
+    [AllowAnonymous]
+    [ProducesResponseType(typeof(ApiResult), StatusCodes.Status200OK)]
+    [ProducesResponseType(typeof(ApiResult), StatusCodes.Status400BadRequest)]
+    [ProducesResponseType(typeof(ApiResult), StatusCodes.Status401Unauthorized)]
+    public async Task<IActionResult> ChangeDefaultPassword(
+        [FromBody] ChangeDefaultPasswordRequest request,
+        CancellationToken cancellationToken)
+    {
+        var result = await _authService.ChangeDefaultPasswordAsync(request, cancellationToken);
+        if (result.Success)
+        {
+            return Ok(ApiResult.Ok("Password updated. You can sign in with your new password."));
+        }
+
+        var api = ApiResult.Fail(result.ErrorCode ?? "Error", result.Message ?? "Could not update password.");
+        return (result.ErrorCode ?? string.Empty) switch
+        {
+            "InvalidCredentials" => Unauthorized(api),
+            "AccountBlocked" => StatusCode(StatusCodes.Status403Forbidden, api),
+            _ => BadRequest(api),
         };
     }
 }

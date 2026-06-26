@@ -1,0 +1,20 @@
+<section class="page-hero">
+  <p class="eyebrow">{{ shortlet().neighborhood }}</p>
+  <h1>All listings</h1>
+  <p>{{ shortlet().listings.length }} furnished apartments — each with full kitchen, Wi‑Fi, and self check-in.</p>
+</section>
+
+<div class="filters">
+  <button type="button" [class.active]="filter() === 'all'" (click)="setFilter('all')">All</button>
+  <button type="button" [class.active]="filter() === '1'" (click)="setFilter('1')">1 bedroom</button>
+  <button type="button" [class.active]="filter() === '2'" (click)="setFilter('2')">2 bedrooms</button>
+  <button type="button" [class.active]="filter() === '3+'" (click)="setFilter('3+')">3+ bedrooms</button>
+</div>
+
+<div class="grid">
+  @for (listing of filtered(); track listing.id) {
+    <app-shortlet-listing-card [listing]="listing" />
+  } @empty {
+    <p class="empty">No listings match this filter.</p>
+  }
+</div>

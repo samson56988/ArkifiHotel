@@ -20,6 +20,8 @@ public class RestaurantOrder
 
     public string GuestPhone { get; set; } = null!;
 
+    public string GuestEmail { get; set; } = null!;
+
     public string OrderNumber { get; set; } = null!;
 
     public RestaurantOrderStatus Status { get; set; }

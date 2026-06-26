@@ -1,4 +1,5 @@
 using Admin.Data;
+using Admin.Data.Constants;
 using Admin.Data.Entities;
 using Admin.Data.Enums;
 using Admin.Infrastructure.Helpers;
@@ -13,10 +14,17 @@ public sealed class BusinessBookingService : IBusinessBookingService
     private const string DefaultCurrency = "NGN";
 
     private readonly AdminDbContext _db;
+    private readonly IOrganizationUserContext _actor;
+    private readonly ICustomerConfirmationEmailService _confirmationEmails;
 
-    public BusinessBookingService(AdminDbContext db)
+    public BusinessBookingService(
+        AdminDbContext db,
+        IOrganizationUserContext actor,
+        ICustomerConfirmationEmailService confirmationEmails)
     {
         _db = db;
+        _actor = actor;
+        _confirmationEmails = confirmationEmails;
     }
 
     public async Task<PagedResultDto<BookingSummaryDto>> ListAsync(
@@ -36,6 +44,8 @@ public sealed class BusinessBookingService : IBusinessBookingService
         var bookings = _db.Bookings
             .AsNoTracking()
             .Where(b => b.BusinessRegistrationId == businessId);
+
+        bookings = OrganizationQueryScope.ApplyBookingScope(bookings, _actor);
 
         if (TryParseStayPhase(query.StayPhase, out var stayPhase))
         {
@@ -290,6 +300,8 @@ public sealed class BusinessBookingService : IBusinessBookingService
             .ConfigureAwait(false);
 
         await _db.SaveChangesAsync(cancellationToken).ConfigureAwait(false);
+
+        await _confirmationEmails.SendBookingConfirmationAsync(entity.Id, cancellationToken).ConfigureAwait(false);
 
         return await GetAsync(businessId, entity.Id, cancellationToken).ConfigureAwait(false);
     }

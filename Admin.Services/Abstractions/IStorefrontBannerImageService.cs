@@ -4,7 +4,7 @@ namespace Admin.Services.Abstractions;
 
 public interface IStorefrontBannerImageService
 {
-    const int MaxImages = 3;
+    const int MaxImages = 10;
 
     Task<IReadOnlyList<StorefrontBannerImageDto>> GetAsync(
         Guid businessId,

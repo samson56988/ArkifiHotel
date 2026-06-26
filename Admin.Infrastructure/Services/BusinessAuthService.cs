@@ -3,8 +3,10 @@ using System.Security.Claims;
 using System.Security.Cryptography;
 using System.Text;
 using Admin.Data;
+using Admin.Data.Constants;
 using Admin.Data.Entities;
 using Admin.Data.Enums;
+using Admin.Infrastructure.Helpers;
 using Admin.Infrastructure.Options;
 using Admin.Services.Abstractions;
 using Microsoft.AspNetCore.Identity;
@@ -30,6 +32,7 @@ public sealed class BusinessAuthService : IBusinessAuthService
     private readonly IEmailTemplateRenderer _templateRenderer;
     private readonly ILogger<BusinessAuthService> _logger;
     private readonly PasswordHasher<BusinessRegistration> _passwordHasher = new();
+    private readonly PasswordHasher<UserOrganization> _userPasswordHasher = new();
 
     public BusinessAuthService(
         AdminDbContext db,
@@ -51,44 +54,55 @@ public sealed class BusinessAuthService : IBusinessAuthService
         LoginBusinessRequest request,
         CancellationToken cancellationToken = default)
     {
-        var email = request.Email?.Trim().ToLowerInvariant() ?? string.Empty;
-        if (string.IsNullOrEmpty(email) || string.IsNullOrEmpty(request.Password))
+        var login = (request.Login ?? request.Email)?.Trim() ?? string.Empty;
+        if (string.IsNullOrEmpty(login) || string.IsNullOrEmpty(request.Password))
         {
-            return LoginBusinessResult.Fail("Validation", "Email and password are required.");
+            return LoginBusinessResult.Fail("Validation", "Sign-in ID and password are required.");
         }
 
-        var entity = await _db.BusinessRegistrations
-            .AsNoTracking()
-            .FirstOrDefaultAsync(r => r.ContactEmail == email, cancellationToken)
-            .ConfigureAwait(false);
+        var (orgUser, entity) = await ResolveLoginAccountAsync(login, cancellationToken).ConfigureAwait(false);
 
         if (entity is null)
         {
-            return LoginBusinessResult.Fail("InvalidCredentials", "Invalid email or password.");
+            return LoginBusinessResult.Fail("InvalidCredentials", "Invalid sign-in ID or password.");
         }
 
-        var verify = _passwordHasher.VerifyHashedPassword(entity, entity.HashedPassword, request.Password);
-        if (verify == PasswordVerificationResult.Failed)
+        if (orgUser is not null && !orgUser.IsActive)
         {
-            return LoginBusinessResult.Fail("InvalidCredentials", "Invalid email or password.");
+            return LoginBusinessResult.Fail(
+                "AccountBlocked",
+                "Your account has been blocked. Contact your business administrator.");
         }
 
-        if (verify == PasswordVerificationResult.SuccessRehashNeeded)
+        if (!VerifyLoginPassword(orgUser, entity, request.Password))
         {
-            // Optional: schedule rehash on next authenticated request; login still succeeds.
+            return LoginBusinessResult.Fail("InvalidCredentials", "Invalid sign-in ID or password.");
         }
 
-        if (!entity.IsEmailVerified)
+        var account = await BuildAccountDtoAsync(entity, orgUser, cancellationToken).ConfigureAwait(false);
+
+        if (orgUser is not null && orgUser.IsDefaultPassword)
         {
+            return LoginBusinessResult.Ok(new LoginBusinessData
+            {
+                RequiresPasswordChange = true,
+                Account = account,
+            });
+        }
+
+        var isEmailVerified = orgUser?.IsEmailVerified ?? entity.IsEmailVerified;
+        if (!isEmailVerified)
+        {
+            var verificationEmail = orgUser?.Email ?? entity.ContactEmail;
             try
             {
                 await _emailVerificationService
-                    .SendOtpAsync(entity.Id, entity.BusinessName, entity.ContactEmail, cancellationToken)
+                    .SendOtpAsync(entity.Id, entity.BusinessName, verificationEmail, cancellationToken)
                     .ConfigureAwait(false);
             }
             catch (Exception ex)
             {
-                _logger.LogWarning(ex, "Failed sending re-verification OTP to {Email}", entity.ContactEmail);
+                _logger.LogWarning(ex, "Failed sending re-verification OTP to {Email}", verificationEmail);
             }
 
             return LoginBusinessResult.Fail(
@@ -96,13 +110,16 @@ public sealed class BusinessAuthService : IBusinessAuthService
                 "Email not verified. A new OTP has been sent to your inbox.");
         }
 
-        var challenge = await CreateAndSendLoginOtpChallengeAsync(entity, cancellationToken).ConfigureAwait(false);
+        var challenge = await CreateAndSendLoginOtpChallengeAsync(entity, orgUser, cancellationToken)
+            .ConfigureAwait(false);
+        var twoFactorEmail = orgUser?.Email ?? entity.ContactEmail;
 
         return LoginBusinessResult.Ok(new LoginBusinessData
         {
             RequiresTwoFactor = true,
             ChallengeId = challenge.Id.ToString(),
             ChallengeExpiresAtUtc = challenge.ExpiresAt,
+            Account = account,
         });
     }
 
@@ -127,12 +144,18 @@ public sealed class BusinessAuthService : IBusinessAuthService
             return LoginBusinessResult.Fail("Validation", "Invalid challenge.");
         }
 
-        var entity = await _db.BusinessRegistrations
-            .FirstOrDefaultAsync(r => r.ContactEmail == email, cancellationToken)
+        var (orgUser, entity) = await ResolveLoginAccountAsync(email, cancellationToken, tracked: true)
             .ConfigureAwait(false);
         if (entity is null)
         {
             return LoginBusinessResult.Fail("InvalidCredentials", "Invalid verification request.");
+        }
+
+        if (orgUser is not null && !orgUser.IsActive)
+        {
+            return LoginBusinessResult.Fail(
+                "AccountBlocked",
+                "Your account has been blocked. Contact your business administrator.");
         }
 
         var now = DateTimeOffset.UtcNow;
@@ -155,17 +178,10 @@ public sealed class BusinessAuthService : IBusinessAuthService
         challenge.UsedAt = now;
         await _db.SaveChangesAsync(cancellationToken).ConfigureAwait(false);
 
-        var account = new BusinessAccountDto
-        {
-            Id = entity.Id,
-            BusinessName = entity.BusinessName,
-            ContactEmail = entity.ContactEmail,
-            IsEmailVerified = entity.IsEmailVerified,
-            Status = entity.Status == BusinessRegistrationStatus.Active ? "Active" : "Inactive",
-        };
+        var account = await BuildAccountDtoAsync(entity, orgUser, cancellationToken).ConfigureAwait(false);
 
         var expires = GetExpiryUtc(request.RememberMe);
-        var token = CreateJwt(entity, expires);
+        var token = CreateJwt(entity, orgUser, account.ModuleCodes, account.LocationIds, account.HasAllLocationAccess, expires);
 
         return LoginBusinessResult.Ok(new LoginBusinessData
         {
@@ -176,8 +192,196 @@ public sealed class BusinessAuthService : IBusinessAuthService
         });
     }
 
+    public async Task<ChangeDefaultPasswordResult> ChangeDefaultPasswordAsync(
+        ChangeDefaultPasswordRequest request,
+        CancellationToken cancellationToken = default)
+    {
+        var login = request.Login?.Trim() ?? string.Empty;
+        if (string.IsNullOrEmpty(login) || string.IsNullOrEmpty(request.CurrentPassword) || string.IsNullOrEmpty(request.NewPassword))
+        {
+            return ChangeDefaultPasswordResult.Fail("Validation", "Sign-in ID, current password, and new password are required.");
+        }
+
+        if (request.NewPassword.Length < 8)
+        {
+            return ChangeDefaultPasswordResult.Fail("Validation", "New password must be at least 8 characters.");
+        }
+
+        var (orgUser, entity) = await ResolveLoginAccountAsync(login, cancellationToken, tracked: true)
+            .ConfigureAwait(false);
+        if (entity is null || orgUser is null)
+        {
+            return ChangeDefaultPasswordResult.Fail("InvalidCredentials", "Invalid sign-in ID or password.");
+        }
+
+        if (!orgUser.IsActive)
+        {
+            return ChangeDefaultPasswordResult.Fail(
+                "AccountBlocked",
+                "Your account has been blocked. Contact your business administrator.");
+        }
+
+        if (!orgUser.IsDefaultPassword)
+        {
+            return ChangeDefaultPasswordResult.Fail("Validation", "This account is not using a temporary password.");
+        }
+
+        if (!VerifyLoginPassword(orgUser, entity, request.CurrentPassword))
+        {
+            return ChangeDefaultPasswordResult.Fail("InvalidCredentials", "Invalid sign-in ID or password.");
+        }
+
+        orgUser.HashedPassword = _userPasswordHasher.HashPassword(orgUser, request.NewPassword);
+        orgUser.IsDefaultPassword = false;
+        orgUser.UpdatedAt = DateTimeOffset.UtcNow;
+
+        await _db.SaveChangesAsync(cancellationToken).ConfigureAwait(false);
+        return ChangeDefaultPasswordResult.Ok();
+    }
+
+    private async Task<(UserOrganization? User, BusinessRegistration? Business)> ResolveLoginAccountAsync(
+        string loginIdentifier,
+        CancellationToken cancellationToken,
+        bool tracked = false)
+    {
+        var trimmed = loginIdentifier.Trim();
+
+        if (trimmed.Contains('@', StringComparison.Ordinal) && !trimmed.Contains('/'))
+        {
+            return await ResolveByEmailAsync(trimmed.ToLowerInvariant(), cancellationToken, tracked)
+                .ConfigureAwait(false);
+        }
+
+        if (OrganizationUsernameHelper.TryParseStaffLogin(trimmed, out var slug, out var username, out _))
+        {
+            return await ResolveByStaffLoginAsync(slug, username, cancellationToken, tracked).ConfigureAwait(false);
+        }
+
+        return (null, null);
+    }
+
+    private async Task<(UserOrganization? User, BusinessRegistration? Business)> ResolveByEmailAsync(
+        string normalizedEmail,
+        CancellationToken cancellationToken,
+        bool tracked)
+    {
+        IQueryable<UserOrganization> userQuery = tracked ? _db.UserOrganizations : _db.UserOrganizations.AsNoTracking();
+        var orgUser = await userQuery
+            .Include(u => u.ModulePermissions)
+            .FirstOrDefaultAsync(u => u.Email == normalizedEmail, cancellationToken)
+            .ConfigureAwait(false);
+
+        if (orgUser is not null)
+        {
+            IQueryable<BusinessRegistration> businessQuery = tracked
+                ? _db.BusinessRegistrations
+                : _db.BusinessRegistrations.AsNoTracking();
+            var business = await businessQuery
+                .FirstOrDefaultAsync(b => b.Id == orgUser.BusinessRegistrationId, cancellationToken)
+                .ConfigureAwait(false);
+            return (orgUser, business);
+        }
+
+        IQueryable<BusinessRegistration> legacyQuery = tracked
+            ? _db.BusinessRegistrations
+            : _db.BusinessRegistrations.AsNoTracking();
+        var legacy = await legacyQuery
+            .FirstOrDefaultAsync(r => r.ContactEmail == normalizedEmail, cancellationToken)
+            .ConfigureAwait(false);
+        return (null, legacy);
+    }
+
+    private async Task<(UserOrganization? User, BusinessRegistration? Business)> ResolveByStaffLoginAsync(
+        string businessSlug,
+        string username,
+        CancellationToken cancellationToken,
+        bool tracked)
+    {
+        IQueryable<UserOrganization> userQuery = tracked ? _db.UserOrganizations : _db.UserOrganizations.AsNoTracking();
+        var orgUser = await userQuery
+            .Include(u => u.ModulePermissions)
+            .Include(u => u.BusinessRegistration)
+            .FirstOrDefaultAsync(
+                u => u.Username == username
+                    && !u.IsSuperAdmin
+                    && u.BusinessRegistration.Slug == businessSlug,
+                cancellationToken)
+            .ConfigureAwait(false);
+
+        return (orgUser, orgUser?.BusinessRegistration);
+    }
+
+    private bool VerifyLoginPassword(UserOrganization? orgUser, BusinessRegistration business, string password)
+    {
+        if (orgUser is not null)
+        {
+            var verify = _userPasswordHasher.VerifyHashedPassword(orgUser, orgUser.HashedPassword, password);
+            return verify != PasswordVerificationResult.Failed;
+        }
+
+        var legacyVerify = _passwordHasher.VerifyHashedPassword(business, business.HashedPassword, password);
+        return legacyVerify != PasswordVerificationResult.Failed;
+    }
+
+    private async Task<BusinessAccountDto> BuildAccountDtoAsync(
+        BusinessRegistration entity,
+        UserOrganization? orgUser,
+        CancellationToken cancellationToken)
+    {
+        if (orgUser is not null && !orgUser.ModulePermissions.Any())
+        {
+            await _db.Entry(orgUser)
+                .Collection(u => u.ModulePermissions)
+                .LoadAsync(cancellationToken)
+                .ConfigureAwait(false);
+        }
+
+        if (orgUser is not null && !orgUser.LocationPermissions.Any())
+        {
+            await _db.Entry(orgUser)
+                .Collection(u => u.LocationPermissions)
+                .LoadAsync(cancellationToken)
+                .ConfigureAwait(false);
+        }
+
+        var isShortlet = entity.BusinessType == BusinessType.Shortlet;
+        var modules = orgUser is null
+            ? OrganizationModuleCodes.ForBusinessType(isShortlet)
+                .Append(OrganizationModuleCodes.Team)
+                .Append(OrganizationModuleCodes.Audit)
+                .ToList()
+            : OrganizationAccessHelper.ResolveModuleCodes(orgUser, isShortlet);
+
+        var hasAllLocations = orgUser is null || OrganizationLocationHelper.HasAllLocationAccess(orgUser);
+        var locationIds = orgUser is null
+            ? Array.Empty<Guid>()
+            : OrganizationLocationHelper.ResolveLocationIds(orgUser);
+
+        return new BusinessAccountDto
+        {
+            Id = entity.Id,
+            BusinessName = entity.BusinessName,
+            ContactEmail = orgUser?.Email ?? entity.ContactEmail,
+            IsEmailVerified = orgUser?.IsEmailVerified ?? entity.IsEmailVerified,
+            Status = entity.Status == BusinessRegistrationStatus.Active ? "Active" : "Inactive",
+            UserId = orgUser?.Id,
+            FirstName = orgUser?.FirstName ?? entity.FirstName,
+            LastName = orgUser?.LastName ?? entity.LastName,
+            IsSuperAdmin = orgUser?.IsSuperAdmin ?? true,
+            Username = orgUser?.Username,
+            HasAllModuleAccess = orgUser?.IsSuperAdmin == true || orgUser?.HasAllModuleAccess == true,
+            HasAllLocationAccess = hasAllLocations,
+            DefaultLocationId = orgUser?.DefaultLocationId,
+            RequiresPasswordChange = orgUser?.IsDefaultPassword == true,
+            TwoFactorEmail = orgUser?.Email ?? entity.ContactEmail,
+            ModuleCodes = modules,
+            LocationIds = locationIds,
+        };
+    }
+
     private async Task<BusinessLoginOtpChallenge> CreateAndSendLoginOtpChallengeAsync(
         BusinessRegistration entity,
+        UserOrganization? orgUser,
         CancellationToken cancellationToken)
     {
         var now = DateTimeOffset.UtcNow;
@@ -207,10 +411,13 @@ public sealed class BusinessAuthService : IBusinessAuthService
                 ["Year"] = DateTime.UtcNow.Year.ToString(),
             });
 
+        var recipientEmail = orgUser?.Email ?? entity.ContactEmail;
+        var recipientName = orgUser is null ? entity.BusinessName : $"{orgUser.FirstName} {orgUser.LastName}";
+
         var email = new EmailMessage
         {
-            ToEmail = entity.ContactEmail,
-            ToName = entity.BusinessName,
+            ToEmail = recipientEmail,
+            ToName = recipientName,
             Subject = "ArkifiHub login verification code",
             HtmlBody = html,
             TextBody = $"Your ArkifiHub login code is {otpCode}. It expires in {LoginOtpExpiryMinutes} minutes.",
@@ -230,7 +437,13 @@ public sealed class BusinessAuthService : IBusinessAuthService
         return DateTimeOffset.UtcNow.AddMinutes(Math.Max(5, _jwt.AccessTokenMinutes));
     }
 
-    private string CreateJwt(BusinessRegistration entity, DateTimeOffset expiresUtc)
+    private string CreateJwt(
+        BusinessRegistration entity,
+        UserOrganization? orgUser,
+        IReadOnlyList<string> moduleCodes,
+        IReadOnlyList<Guid> locationIds,
+        bool hasAllLocationAccess,
+        DateTimeOffset expiresUtc)
     {
         if (string.IsNullOrWhiteSpace(_jwt.Secret) || _jwt.Secret.Length < 32)
         {
@@ -240,15 +453,44 @@ public sealed class BusinessAuthService : IBusinessAuthService
 
         var key = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(_jwt.Secret));
         var creds = new SigningCredentials(key, SecurityAlgorithms.HmacSha256);
+        var email = orgUser?.Email ?? entity.ContactEmail;
+        var isSuperAdmin = orgUser?.IsSuperAdmin ?? true;
         var claims = new List<Claim>
         {
             new(JwtRegisteredClaimNames.Sub, entity.Id.ToString()),
-            new(JwtRegisteredClaimNames.Email, entity.ContactEmail),
+            new("business_id", entity.Id.ToString()),
+            new(JwtRegisteredClaimNames.Email, email),
             new(JwtRegisteredClaimNames.Jti, Guid.NewGuid().ToString()),
             new("business_name", entity.BusinessName),
             new(ClaimTypes.Role, "Business"),
             new("status", entity.Status == BusinessRegistrationStatus.Active ? "Active" : "Inactive"),
+            new("is_super_admin", isSuperAdmin ? "true" : "false"),
         };
+
+        if (orgUser is not null)
+        {
+            claims.Add(new Claim("user_id", orgUser.Id.ToString()));
+            claims.Add(new Claim("given_name", orgUser.FirstName));
+            claims.Add(new Claim("family_name", orgUser.LastName));
+            if (!string.IsNullOrWhiteSpace(orgUser.Username))
+            {
+                claims.Add(new Claim("username", orgUser.Username));
+            }
+        }
+
+        if (moduleCodes.Count > 0)
+        {
+            claims.Add(new Claim("modules", string.Join(',', moduleCodes)));
+        }
+
+        if (hasAllLocationAccess)
+        {
+            claims.Add(new Claim("all_locations", "true"));
+        }
+        else if (locationIds.Count > 0)
+        {
+            claims.Add(new Claim("location_ids", string.Join(',', locationIds)));
+        }
 
         var token = new JwtSecurityToken(
             issuer: _jwt.Issuer,

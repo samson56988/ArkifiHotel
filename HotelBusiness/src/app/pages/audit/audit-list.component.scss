@@ -1,0 +1,18 @@
+@import '../team/team-list.component.scss';
+
+.filters {
+  margin-bottom: 1rem;
+}
+
+.filter-row {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
+  gap: 0.75rem;
+  align-items: end;
+}
+
+.sub {
+  display: block;
+  color: var(--muted, #6b7280);
+  font-size: 0.75rem;
+}

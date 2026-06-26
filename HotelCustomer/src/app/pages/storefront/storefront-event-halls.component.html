@@ -29,20 +29,30 @@
           @for (hall of halls(); track hall.id) {
             <article class="hall-card">
               @if (hall.primaryImageUrl) {
-                <div class="hall-card__media" [style.background-image]="'url(' + hall.primaryImageUrl + ')'"></div>
+                <a class="hall-card__media-link" [routerLink]="ctx.path('event-halls', hall.id)">
+                  <div class="hall-card__media" [style.background-image]="'url(' + hall.primaryImageUrl + ')'"></div>
+                </a>
               } @else {
                 <div class="hall-card__media hall-card__media--placeholder" aria-hidden="true">🎪</div>
               }
               <div class="hall-card__body">
                 <div class="hall-card__head">
-                  <h3 class="hall-card__name">{{ hall.name }}</h3>
+                  <h3 class="hall-card__name">
+                    <a [routerLink]="ctx.path('event-halls', hall.id)">{{ hall.name }}</a>
+                  </h3>
                   <span class="hall-card__price">From {{ formatNaira(hall.rentalPrice) }}</span>
                 </div>
                 <p class="hall-card__meta">{{ capacityLabel(hall) }}</p>
+                @if (hall.imageUrls.length > 1) {
+                  <p class="hall-card__photos">{{ hall.imageUrls.length }} photos</p>
+                }
                 @if (hall.description) {
                   <p class="hall-card__desc">{{ hall.description }}</p>
                 }
-                <button type="button" class="hall-card__btn" (click)="openRequest(hall)">Request this space</button>
+                <div class="hall-card__actions">
+                  <a class="hall-card__link" [routerLink]="ctx.path('event-halls', hall.id)">View details</a>
+                  <button type="button" class="hall-card__btn" (click)="openRequest(hall)">Request this space</button>
+                </div>
               </div>
             </article>
           }
@@ -121,6 +131,37 @@
                     />
                   </label>
 
+                  <label class="field">
+                    <span>Event purpose</span>
+                    <select
+                      class="field__input"
+                      [ngModel]="eventPurpose()"
+                      (ngModelChange)="eventPurpose.set($event)"
+                      name="eventPurpose"
+                      required
+                    >
+                      <option value="" disabled>Select event type</option>
+                      @for (option of eventPurposeOptions; track option) {
+                        <option [value]="option">{{ option }}</option>
+                      }
+                    </select>
+                  </label>
+
+                  @if (eventPurpose() === 'Other') {
+                    <label class="field">
+                      <span>Describe your event</span>
+                      <input
+                        class="field__input"
+                        type="text"
+                        [ngModel]="eventPurposeOther()"
+                        (ngModelChange)="eventPurposeOther.set($event)"
+                        name="eventPurposeOther"
+                        placeholder="e.g. Product launch, reunion dinner"
+                        required
+                      />
+                    </label>
+                  }
+
                   <div class="field-row">
                     <label class="field">
                       <span>Event date</span>
@@ -146,7 +187,7 @@
                   </div>
 
                   <label class="field">
-                    <span>Notes (optional)</span>
+                    <span>Additional notes (optional)</span>
                     <textarea
                       class="field__input field__input--area"
                       rows="3"

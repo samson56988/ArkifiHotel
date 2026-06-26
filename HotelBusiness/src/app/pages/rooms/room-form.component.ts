@@ -1,4 +1,4 @@
-import { Component, DestroyRef, inject, OnInit, signal } from '@angular/core';
+import { Component, DestroyRef, effect, inject, OnInit, signal } from '@angular/core';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { FormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
 import { ActivatedRoute, Router, RouterLink } from '@angular/router';
@@ -13,6 +13,7 @@ import type {
   RoomImageDto,
 } from '../../core/models/rooms.models';
 import { BusinessAmenitiesApiService } from '../../core/services/business-amenities-api.service';
+import { BusinessContextService } from '../../core/services/business-context.service';
 import { BusinessLocationsApiService } from '../../core/services/business-locations-api.service';
 import { BusinessRoomsApiService } from '../../core/services/business-rooms-api.service';
 import { ToastService } from '../../core/services/toast.service';
@@ -31,6 +32,7 @@ export class RoomFormComponent implements OnInit {
   private readonly api = inject(BusinessRoomsApiService);
   private readonly amenitiesApi = inject(BusinessAmenitiesApiService);
   private readonly locationsApi = inject(BusinessLocationsApiService);
+  private readonly businessContext = inject(BusinessContextService);
   private readonly route = inject(ActivatedRoute);
   private readonly router = inject(Router);
   private readonly toast = inject(ToastService);
@@ -38,12 +40,26 @@ export class RoomFormComponent implements OnInit {
 
   readonly form = this.fb.nonNullable.group({
     name: ['', [Validators.required, Validators.minLength(2), Validators.maxLength(200)]],
+    tagline: [''],
     description: [''],
     maxOccupancy: [2, [Validators.required, Validators.min(1), Validators.max(50)]],
+    bedroomCount: [1, [Validators.min(1), Validators.max(20)]],
+    bathroomCount: [1, [Validators.min(1), Validators.max(20)]],
+    isGuestFavorite: [false],
     quantity: [1, [Validators.required, Validators.min(1), Validators.max(500)]],
     basePricePerNight: [0, [Validators.required, Validators.min(0)]],
     locationId: ['', Validators.required],
   });
+
+  readonly isShortlet = this.businessContext.isShortlet.bind(this.businessContext);
+
+  constructor() {
+    effect(() => {
+      if (this.businessContext.loaded()) {
+        this.applyBusinessTypeValidators();
+      }
+    });
+  }
 
   readonly amenities = signal<AmenityDto[]>([]);
   readonly locations = signal<BusinessLocationDto[]>([]);
@@ -67,9 +83,33 @@ export class RoomFormComponent implements OnInit {
   }
 
   ngOnInit(): void {
+    this.businessContext.ensureLoaded();
+    this.applyBusinessTypeValidators();
     this.route.paramMap.pipe(takeUntilDestroyed(this.destroyRef)).subscribe((params) => {
       this.initFromRoute(params.get('roomId'));
     });
+  }
+
+  private applyBusinessTypeValidators(): void {
+    const shortlet = this.businessContext.isShortlet();
+    const tagline = this.form.controls.tagline;
+    const bedroom = this.form.controls.bedroomCount;
+    const bathroom = this.form.controls.bathroomCount;
+
+    if (shortlet) {
+      tagline.setValidators([Validators.required, Validators.minLength(5), Validators.maxLength(300)]);
+      bedroom.setValidators([Validators.required, Validators.min(1), Validators.max(20)]);
+      bathroom.setValidators([Validators.required, Validators.min(1), Validators.max(20)]);
+      this.form.controls.quantity.setValue(1);
+    } else {
+      tagline.clearValidators();
+      bedroom.clearValidators();
+      bathroom.clearValidators();
+    }
+
+    tagline.updateValueAndValidity();
+    bedroom.updateValueAndValidity();
+    bathroom.updateValueAndValidity();
   }
 
   private initFromRoute(paramId: string | null): void {
@@ -88,8 +128,12 @@ export class RoomFormComponent implements OnInit {
   private resetFormState(): void {
     this.form.reset({
       name: '',
+      tagline: '',
       description: '',
       maxOccupancy: 2,
+      bedroomCount: 1,
+      bathroomCount: 1,
+      isGuestFavorite: false,
       quantity: 1,
       basePricePerNight: 0,
       locationId: '',
@@ -198,7 +242,7 @@ export class RoomFormComponent implements OnInit {
             success: false,
             data: null,
             message:
-              'Could not reach the API to load amenities. Add amenities under Room amenities in the sidebar, then try again.',
+              'Could not reach the API to load amenities. Standard amenities should appear automatically — refresh or try again.',
             code: 'NetworkOrTimeout',
             validationErrors: null,
           }),
@@ -258,11 +302,16 @@ export class RoomFormComponent implements OnInit {
     }
 
     const raw = this.form.getRawValue();
+    const shortlet = this.businessContext.isShortlet();
     const body = {
       name: raw.name.trim(),
+      tagline: raw.tagline.trim() || null,
       description: raw.description.trim() || null,
       maxOccupancy: raw.maxOccupancy,
-      quantity: raw.quantity,
+      bedroomCount: shortlet ? raw.bedroomCount : null,
+      bathroomCount: shortlet ? raw.bathroomCount : null,
+      isGuestFavorite: shortlet ? raw.isGuestFavorite : false,
+      quantity: shortlet ? 1 : raw.quantity,
       basePricePerNight: raw.basePricePerNight,
       locationId: raw.locationId.trim(),
       amenityIds: [...this.selectedAmenityIds()],
@@ -283,8 +332,8 @@ export class RoomFormComponent implements OnInit {
 
         if (!this.isCreateMode) {
           this.saving.set(false);
-          this.patchFromRoom(res.data);
           this.toast.success('Room details saved.', 'Saved');
+          void this.router.navigate(['/rooms'], { replaceUrl: true });
           return;
         }
 
@@ -294,7 +343,7 @@ export class RoomFormComponent implements OnInit {
           this.pendingPhotoFiles.set([]);
           this.saving.set(false);
           this.toast.success('Room created.', 'Done');
-          void this.router.navigate(['/rooms', newId], { replaceUrl: true });
+          void this.router.navigate(['/rooms'], { replaceUrl: true });
           return;
         }
 
@@ -318,14 +367,14 @@ export class RoomFormComponent implements OnInit {
                 this.toast.success('Room created and photos uploaded.', 'Done');
               }
 
-              void this.router.navigate(['/rooms', newId], { replaceUrl: true });
+              void this.router.navigate(['/rooms'], { replaceUrl: true });
             },
             error: () => {
               this.toast.warning(
-                'Room was created, but photos did not upload. You can add them on the next screen.',
+                'Room was created, but photos did not upload. You can add them from the rooms list.',
                 'Photos',
               );
-              void this.router.navigate(['/rooms', newId], { replaceUrl: true });
+              void this.router.navigate(['/rooms'], { replaceUrl: true });
             },
           });
       },
@@ -516,8 +565,12 @@ export class RoomFormComponent implements OnInit {
     this.isArchived.set(room.isArchived ?? false);
     this.form.patchValue({
       name: room.name,
+      tagline: room.tagline ?? '',
       description: room.description ?? '',
       maxOccupancy: room.maxOccupancy,
+      bedroomCount: room.bedroomCount ?? 1,
+      bathroomCount: room.bathroomCount ?? 1,
+      isGuestFavorite: room.isGuestFavorite ?? false,
       quantity: room.quantity ?? 1,
       basePricePerNight: room.basePricePerNight,
       locationId: room.locationId ?? '',

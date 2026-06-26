@@ -1,8 +1,10 @@
 using System.Text;
+using Admin.Data;
 using Admin.Infrastructure;
 using Admin.Infrastructure.Options;
 using Admin.Infrastructure.Seeding;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
+using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
 using Shared.Services;
 
@@ -39,6 +41,31 @@ builder.Services.AddAuthentication(options =>
         IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(jwt.Secret)),
         ValidateLifetime = true,
         ClockSkew = TimeSpan.FromMinutes(2),
+    };
+
+    options.Events = new JwtBearerEvents
+    {
+        OnTokenValidated = async context =>
+        {
+            var userIdValue = context.Principal?.FindFirst("user_id")?.Value;
+            if (!Guid.TryParse(userIdValue, out var userId))
+            {
+                return;
+            }
+
+            var db = context.HttpContext.RequestServices.GetRequiredService<AdminDbContext>();
+            var isActive = await db.UserOrganizations
+                .AsNoTracking()
+                .Where(u => u.Id == userId)
+                .Select(u => u.IsActive)
+                .FirstOrDefaultAsync(context.HttpContext.RequestAborted)
+                .ConfigureAwait(false);
+
+            if (!isActive)
+            {
+                context.Fail("Account blocked.");
+            }
+        },
     };
 });
 builder.Services.AddAuthorization();

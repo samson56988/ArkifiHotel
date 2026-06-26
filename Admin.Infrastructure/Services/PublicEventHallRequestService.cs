@@ -90,6 +90,11 @@ public sealed class PublicEventHallRequestService : IPublicEventHallRequestServi
             return (null, "Event hall not found.");
         }
 
+        if (!ValidateEventPurpose(request.EventPurpose, out var eventPurpose))
+        {
+            return (null, "Describe the purpose of your event (e.g. wedding, conference).");
+        }
+
         var notes = string.IsNullOrWhiteSpace(request.Notes) ? null : request.Notes.Trim();
         if (notes?.Length > 2000)
         {
@@ -107,6 +112,7 @@ public sealed class PublicEventHallRequestService : IPublicEventHallRequestServi
             GuestPhone = guestPhone,
             EventDate = request.EventDate,
             EventEndDate = request.EventEndDate,
+            EventPurpose = eventPurpose,
             Notes = notes,
             Status = EventHallRequestStatus.Pending,
             CreatedAt = DateTimeOffset.UtcNow,
@@ -149,5 +155,11 @@ public sealed class PublicEventHallRequestService : IPublicEventHallRequestServi
         trimmed = phone?.Trim() ?? string.Empty;
         var digits = trimmed.Count(char.IsDigit);
         return digits >= 7 && trimmed.Length <= 30;
+    }
+
+    private static bool ValidateEventPurpose(string? purpose, out string trimmed)
+    {
+        trimmed = purpose?.Trim() ?? string.Empty;
+        return trimmed.Length is >= 3 and <= 200;
     }
 }

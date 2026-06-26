@@ -15,4 +15,8 @@ public interface IBusinessAuthService
     Task<LoginBusinessResult> VerifyLoginOtpAsync(
         VerifyLoginOtpRequest request,
         CancellationToken cancellationToken = default);
+
+    Task<ChangeDefaultPasswordResult> ChangeDefaultPasswordAsync(
+        ChangeDefaultPasswordRequest request,
+        CancellationToken cancellationToken = default);
 }

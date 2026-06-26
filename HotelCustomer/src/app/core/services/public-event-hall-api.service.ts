@@ -14,6 +14,7 @@ export interface GuestCreateEventHallRequest {
   guestPhone: string;
   eventDate: string;
   eventEndDate?: string | null;
+  eventPurpose: string;
   notes?: string | null;
 }
 

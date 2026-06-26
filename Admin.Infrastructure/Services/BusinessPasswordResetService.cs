@@ -26,6 +26,7 @@ public sealed class BusinessPasswordResetService : IBusinessPasswordResetService
     private readonly IEmailTemplateRenderer _templateRenderer;
     private readonly ILogger<BusinessPasswordResetService> _logger;
     private readonly PasswordHasher<BusinessRegistration> _passwordHasher = new();
+    private readonly PasswordHasher<UserOrganization> _userPasswordHasher = new();
 
     public BusinessPasswordResetService(
         AdminDbContext db,
@@ -49,10 +50,7 @@ public sealed class BusinessPasswordResetService : IBusinessPasswordResetService
             return RequestPasswordResetResult.Fail("Validation", "A valid email is required.");
         }
 
-        var entity = await _db.BusinessRegistrations
-            .AsNoTracking()
-            .FirstOrDefaultAsync(r => r.ContactEmail == email, cancellationToken)
-            .ConfigureAwait(false);
+        var (orgUser, entity) = await ResolveAccountByEmailAsync(email, cancellationToken).ConfigureAwait(false);
 
         if (entity is null)
         {
@@ -103,7 +101,7 @@ public sealed class BusinessPasswordResetService : IBusinessPasswordResetService
 
             var emailMessage = new EmailMessage
             {
-                ToEmail = entity.ContactEmail,
+                ToEmail = orgUser?.Email ?? entity.ContactEmail,
                 ToName = entity.BusinessName,
                 Subject = "Reset your ArkifiHub password",
                 HtmlBody = html,
@@ -153,8 +151,7 @@ public sealed class BusinessPasswordResetService : IBusinessPasswordResetService
             return ResetPasswordResult.Fail("Validation", "Invalid reset challenge.");
         }
 
-        var entity = await _db.BusinessRegistrations
-            .FirstOrDefaultAsync(r => r.ContactEmail == email, cancellationToken)
+        var (orgUser, entity) = await ResolveAccountByEmailAsync(email, cancellationToken, tracked: true)
             .ConfigureAwait(false);
 
         if (entity is null)
@@ -183,8 +180,40 @@ public sealed class BusinessPasswordResetService : IBusinessPasswordResetService
         entity.HashedPassword = _passwordHasher.HashPassword(entity, newPassword);
         entity.UpdatedAt = now;
 
+        if (orgUser is not null)
+        {
+            orgUser.HashedPassword = _userPasswordHasher.HashPassword(orgUser, newPassword);
+            orgUser.UpdatedAt = now;
+        }
+
         await _db.SaveChangesAsync(cancellationToken).ConfigureAwait(false);
         return ResetPasswordResult.Ok();
+    }
+
+    private async Task<(UserOrganization? User, BusinessRegistration? Business)> ResolveAccountByEmailAsync(
+        string normalizedEmail,
+        CancellationToken cancellationToken,
+        bool tracked = false)
+    {
+        var userQuery = tracked ? _db.UserOrganizations : _db.UserOrganizations.AsNoTracking();
+        var orgUser = await userQuery
+            .FirstOrDefaultAsync(u => u.Email == normalizedEmail && u.IsActive, cancellationToken)
+            .ConfigureAwait(false);
+
+        if (orgUser is not null)
+        {
+            var businessQuery = tracked ? _db.BusinessRegistrations : _db.BusinessRegistrations.AsNoTracking();
+            var business = await businessQuery
+                .FirstOrDefaultAsync(b => b.Id == orgUser.BusinessRegistrationId, cancellationToken)
+                .ConfigureAwait(false);
+            return (orgUser, business);
+        }
+
+        var legacyQuery = tracked ? _db.BusinessRegistrations : _db.BusinessRegistrations.AsNoTracking();
+        var legacy = await legacyQuery
+            .FirstOrDefaultAsync(r => r.ContactEmail == normalizedEmail, cancellationToken)
+            .ConfigureAwait(false);
+        return (null, legacy);
     }
 
     private static string GenerateOtpCode(int digits)

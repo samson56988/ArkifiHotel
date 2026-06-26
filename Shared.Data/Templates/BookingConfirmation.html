@@ -1,0 +1,57 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Booking confirmed</title>
+</head>
+<body style="margin:0;padding:0;background:#f2ede4;font-family:Arial,Helvetica,sans-serif;color:#1f2a36;">
+  <table role="presentation" cellspacing="0" cellpadding="0" border="0" width="100%" style="background:#f2ede4;padding:24px 12px;">
+    <tr>
+      <td align="center">
+        <table role="presentation" cellspacing="0" cellpadding="0" border="0" width="100%" style="max-width:620px;background:#fffdf9;border:1px solid #d9cfbf;border-radius:14px;overflow:hidden;">
+          <tr>
+            <td style="padding:22px 26px;background:linear-gradient(120deg,#131c28,#30465c);color:#f6e6ce;">
+              <p style="margin:0;font-size:20px;font-weight:700;">{{PropertyName}}</p>
+            </td>
+          </tr>
+          <tr>
+            <td style="padding:28px 26px 18px 26px;">
+              <p style="margin:0 0 8px 0;font-size:13px;letter-spacing:1.2px;text-transform:uppercase;color:#5a6d5f;font-weight:700;">Booking confirmed</p>
+              <h1 style="margin:0 0 14px 0;font-size:28px;line-height:1.2;color:#1c2530;">Hi {{GuestName}}, your stay is booked.</h1>
+              <p style="margin:0 0 18px 0;font-size:16px;line-height:1.6;color:#3f4a58;">
+                Payment has been received and your reservation is confirmed. Keep your confirmation code for check-in and booking lookup.
+              </p>
+              <table role="presentation" cellspacing="0" cellpadding="0" border="0" width="100%" style="background:#f7f2ea;border:1px solid #e0d6c8;border-radius:10px;margin-bottom:20px;">
+                <tr>
+                  <td style="padding:16px 16px 12px 16px;">
+                    <p style="margin:0 0 10px 0;font-size:14px;color:#1f2a36;font-weight:700;">Confirmation code</p>
+                    <p style="margin:0 0 16px 0;font-size:24px;font-weight:700;letter-spacing:1px;color:#30465c;">{{ConfirmationCode}}</p>
+                    <table role="presentation" cellspacing="0" cellpadding="0" border="0" width="100%" style="font-size:14px;line-height:1.7;color:#4a5461;">
+                      <tr><td style="padding:4px 0;"><strong>Room:</strong> {{RoomName}}</td></tr>
+                      {{LocationRow}}
+                      <tr><td style="padding:4px 0;"><strong>Check-in:</strong> {{CheckInDate}}</td></tr>
+                      <tr><td style="padding:4px 0;"><strong>Check-out:</strong> {{CheckOutDate}}</td></tr>
+                      <tr><td style="padding:4px 0;"><strong>Nights:</strong> {{Nights}}</td></tr>
+                      <tr><td style="padding:4px 0;"><strong>Total paid:</strong> {{TotalAmount}}</td></tr>
+                    </table>
+                  </td>
+                </tr>
+              </table>
+              <p style="margin:0;font-size:15px;line-height:1.6;color:#3f4a58;">
+                We look forward to welcoming you. If you have questions about your stay, contact us at
+                <a href="mailto:{{SupportEmail}}" style="color:#3b4f66;">{{SupportEmail}}</a>.
+              </p>
+            </td>
+          </tr>
+          <tr>
+            <td style="padding:18px 26px 24px 26px;border-top:1px solid #ece3d7;background:#fffaf4;">
+              <p style="margin:0;font-size:12px;color:#8f98a3;">&copy; {{Year}} {{PropertyName}} · Powered by ArkifiStay</p>
+            </td>
+          </tr>
+        </table>
+      </td>
+    </tr>
+  </table>
+</body>
+</html>

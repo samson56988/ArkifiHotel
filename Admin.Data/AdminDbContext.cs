@@ -41,6 +41,12 @@ public class AdminDbContext : DbContext
     public DbSet<EventHallRequest> EventHallRequests => Set<EventHallRequest>();
     public DbSet<SubscriptionPlan> SubscriptionPlans => Set<SubscriptionPlan>();
     public DbSet<BusinessSubscriptionPayment> BusinessSubscriptionPayments => Set<BusinessSubscriptionPayment>();
+    public DbSet<UserOrganization> UserOrganizations => Set<UserOrganization>();
+    public DbSet<UserOrganizationModulePermission> UserOrganizationModulePermissions =>
+        Set<UserOrganizationModulePermission>();
+    public DbSet<UserOrganizationLocationPermission> UserOrganizationLocationPermissions =>
+        Set<UserOrganizationLocationPermission>();
+    public DbSet<OrganizationAuditLog> OrganizationAuditLogs => Set<OrganizationAuditLog>();
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
@@ -74,6 +80,10 @@ public class AdminDbContext : DbContext
         modelBuilder.ApplyConfiguration(new EventHallRequestConfiguration());
         modelBuilder.ApplyConfiguration(new SubscriptionPlanConfiguration());
         modelBuilder.ApplyConfiguration(new BusinessSubscriptionPaymentConfiguration());
+        modelBuilder.ApplyConfiguration(new UserOrganizationConfiguration());
+        modelBuilder.ApplyConfiguration(new UserOrganizationModulePermissionConfiguration());
+        modelBuilder.ApplyConfiguration(new UserOrganizationLocationPermissionConfiguration());
+        modelBuilder.ApplyConfiguration(new OrganizationAuditLogConfiguration());
         DefaultAmenitySeed.Apply(modelBuilder);
         SubscriptionPlanSeed.Apply(modelBuilder);
     }

@@ -199,17 +199,38 @@ public sealed class PublicStorefrontRoomDto
 
     public string Name { get; set; } = string.Empty;
 
+    public string? Tagline { get; set; }
+
+    public string? Description { get; set; }
+
     public decimal BasePricePerNight { get; set; }
 
     public int MaxOccupancy { get; set; }
+
+    public int? BedroomCount { get; set; }
+
+    public int? BathroomCount { get; set; }
+
+    public bool IsGuestFavorite { get; set; }
 
     public string? PrimaryImageUrl { get; set; }
 
     public IReadOnlyList<string> ImageUrls { get; set; } = Array.Empty<string>();
 
+    public IReadOnlyList<string> AmenityNames { get; set; } = Array.Empty<string>();
+
     public Guid? LocationId { get; set; }
 
     public string? LocationName { get; set; }
+}
+
+public sealed class PublicStorefrontAmenityDto
+{
+    public Guid Id { get; set; }
+
+    public string Name { get; set; } = string.Empty;
+
+    public string? Category { get; set; }
 }
 
 public sealed class PublicStorefrontFacilityDto
@@ -233,6 +254,9 @@ public sealed class PublicStorefrontDto
 
     public string BusinessName { get; set; } = string.Empty;
 
+    /// <summary>Hotel or Shortlet — drives guest storefront layout.</summary>
+    public string BusinessType { get; set; } = "Hotel";
+
     public string Slug { get; set; } = string.Empty;
 
     public string? LogoUrl { get; set; }
@@ -250,9 +274,11 @@ public sealed class PublicStorefrontDto
 
     public IReadOnlyList<PublicStorefrontFacilityDto> Facilities { get; set; } = Array.Empty<PublicStorefrontFacilityDto>();
 
+    public IReadOnlyList<PublicStorefrontAmenityDto> Amenities { get; set; } = Array.Empty<PublicStorefrontAmenityDto>();
+
     public BusinessSocialProfileDto Social { get; set; } = new();
 
-    /// <summary>Hero banner images in carousel order (max 3). One image = static hero; two or more = carousel.</summary>
+    /// <summary>Hero banner images in carousel order (max 10). One image = static hero; two or more = carousel.</summary>
     public IReadOnlyList<string> HeroImages { get; set; } = Array.Empty<string>();
 
     /// <summary>Dedicated “Who we are” section photo (not used in hero banner).</summary>

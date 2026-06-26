@@ -1,6 +1,13 @@
 @let sf = storefront();
 <nav class="hotel-nav" [class.hotel-nav--scrolled]="isSolid()">
-  <a [routerLink]="ctx.path()" class="hotel-nav__logo">{{ sf.businessName }}</a>
+  <a [routerLink]="ctx.path()" class="hotel-nav__brand">
+    @if (sf.logoUrl) {
+      <img class="hotel-nav__brand-logo" [src]="sf.logoUrl" [alt]="sf.businessName + ' logo'" />
+    } @else {
+      <span class="hotel-nav__brand-mark" aria-hidden="true">{{ sf.businessName.charAt(0) }}</span>
+    }
+    <span class="hotel-nav__brand-name">{{ sf.businessName }}</span>
+  </a>
   <ul class="hotel-nav__links">
     @if (sf.branchName) {
       <li class="hotel-nav__branch">{{ sf.branchName }}</li>

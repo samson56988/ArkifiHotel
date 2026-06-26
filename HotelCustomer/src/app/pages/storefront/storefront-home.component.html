@@ -1,10 +1,18 @@
-@if (ctx.storefront(); as sf) {
+  @if (ctx.storefront(); as sf) {
   <section class="hero" id="home">
-    <div
-      class="hero__bg"
-      [class.hero__bg--photo]="!!heroBg()"
-      [style.background-image]="heroBg() ? 'url(' + heroBg() + ')' : null"
-    ></div>
+    <div class="hero__slides" aria-hidden="true">
+      @if (storefront().heroImages.length > 0) {
+        @for (img of storefront().heroImages; track img; let i = $index) {
+          <div
+            class="hero__bg hero__bg--photo hero__slide"
+            [class.hero__slide--active]="heroIndex() === i"
+            [style.background-image]="'url(' + img + ')'"
+          ></div>
+        }
+      } @else {
+        <div class="hero__bg"></div>
+      }
+    </div>
     <div class="hero__content">
       @if (sf.theme.banner.badgeText) {
         <div class="hero-tag">
@@ -104,6 +112,41 @@
             Browse through {{ roomsRemaining() }} more room{{ roomsRemaining() === 1 ? '' : 's' }} to unlock the full list
           </p>
         }
+      </div>
+    </section>
+  }
+
+  @if (hasEventHalls()) {
+    <section class="section-wrap section-wrap--alt" id="event-halls-preview">
+      <div class="section-header">
+        <div class="sec-eyebrow">{{ storefront().eventHallsPage?.heroEyebrow || 'Meetings & celebrations' }}</div>
+        <h2 class="sec-title">{{ storefront().eventHallsPage?.heroTitle || 'Event spaces' }}</h2>
+        <p class="sec-sub">
+          {{ storefront().eventHallsPage?.heroSubtitle || 'Host weddings, conferences, and celebrations. Request a quote — no online payment required.' }}
+        </p>
+      </div>
+
+      <div class="halls-preview-grid">
+        @for (hall of featuredHalls(); track hall.id) {
+          <article class="halls-preview-card">
+            @if (hall.primaryImageUrl) {
+              <a [routerLink]="ctx.path('event-halls', hall.id)" class="halls-preview-card__media" [style.background-image]="'url(' + hall.primaryImageUrl + ')'"></a>
+            } @else {
+              <div class="halls-preview-card__media halls-preview-card__media--placeholder">🎪</div>
+            }
+            <div class="halls-preview-card__body">
+              <h3><a [routerLink]="ctx.path('event-halls', hall.id)">{{ hall.name }}</a></h3>
+              <p class="halls-preview-card__price">From {{ formatNaira(hall.rentalPrice) }}</p>
+              @if (hall.maxCapacity) {
+                <p class="halls-preview-card__meta">Up to {{ hall.maxCapacity }} guests</p>
+              }
+            </div>
+          </article>
+        }
+      </div>
+
+      <div class="halls-preview-footer">
+        <a [routerLink]="ctx.path('event-halls')" class="btn-accent">Explore event spaces →</a>
       </div>
     </section>
   }
