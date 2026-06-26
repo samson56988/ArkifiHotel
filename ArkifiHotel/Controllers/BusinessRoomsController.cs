@@ -45,21 +45,7 @@ public sealed class BusinessRoomsController : ControllerBase
         }
 
         var list = await _rooms.ListAsync(businessId.Value, includeArchived, cancellationToken).ConfigureAwait(false);
-        var mapped = list
-            .Select(r => new BusinessRoomSummaryDto
-            {
-                Id = r.Id,
-                Name = r.Name,
-                MaxOccupancy = r.MaxOccupancy,
-                BasePricePerNight = r.BasePricePerNight,
-                Quantity = r.Quantity,
-                LocationId = r.LocationId,
-                LocationName = r.LocationName,
-                PrimaryImageUrl = string.IsNullOrWhiteSpace(r.PrimaryImageUrl) ? null : ToAbsoluteUrl(r.PrimaryImageUrl),
-                AmenityCount = r.AmenityCount,
-                IsArchived = r.IsArchived,
-            })
-            .ToList();
+        var mapped = list.Select(MapSummary).ToList();
         return Ok(ApiResult<IReadOnlyList<BusinessRoomSummaryDto>>.Ok(mapped));
     }
 
@@ -312,13 +298,36 @@ public sealed class BusinessRoomsController : ControllerBase
         return $"{Request.Scheme}://{Request.Host}{path}";
     }
 
+    private BusinessRoomSummaryDto MapSummary(BusinessRoomSummaryDto room) =>
+        new()
+        {
+            Id = room.Id,
+            Name = room.Name,
+            Tagline = room.Tagline,
+            MaxOccupancy = room.MaxOccupancy,
+            BedroomCount = room.BedroomCount,
+            BathroomCount = room.BathroomCount,
+            IsGuestFavorite = room.IsGuestFavorite,
+            BasePricePerNight = room.BasePricePerNight,
+            Quantity = room.Quantity,
+            LocationId = room.LocationId,
+            LocationName = room.LocationName,
+            PrimaryImageUrl = string.IsNullOrWhiteSpace(room.PrimaryImageUrl) ? null : ToAbsoluteUrl(room.PrimaryImageUrl),
+            AmenityCount = room.AmenityCount,
+            IsArchived = room.IsArchived,
+        };
+
     private BusinessRoomDetailDto MapRoom(BusinessRoomDetailDto room) =>
         new()
         {
             Id = room.Id,
             Name = room.Name,
+            Tagline = room.Tagline,
             Description = room.Description,
             MaxOccupancy = room.MaxOccupancy,
+            BedroomCount = room.BedroomCount,
+            BathroomCount = room.BathroomCount,
+            IsGuestFavorite = room.IsGuestFavorite,
             BasePricePerNight = room.BasePricePerNight,
             Quantity = room.Quantity,
             LocationId = room.LocationId,

@@ -70,6 +70,19 @@
               <p class="field-error">Enter a short tagline (5–300 characters).</p>
             }
             <p class="hint">Shown under the listing title on your storefront cards.</p>
+            <p class="hint tagline-presets__label">Or pick a starter tagline:</p>
+            <div class="chips tagline-presets">
+              @for (preset of taglinePresets; track preset) {
+                <button
+                  type="button"
+                  class="chip tagline-preset"
+                  [class.chip--on]="isTaglinePresetSelected(preset)"
+                  (click)="applyTaglinePreset(preset)"
+                >
+                  {{ preset }}
+                </button>
+              }
+            </div>
           </div>
         }
 
@@ -166,7 +179,7 @@
           </label>
         }
 
-        <button type="submit" class="btn btn--primary" [disabled]="saving() || locations().length === 0">
+        <button type="submit" class="btn btn--primary" [disabled]="saving() || (isCreateMode && locations().length === 0)">
 
           {{ saving() ? 'Saving…' : isCreateMode ? (isShortlet() ? 'Create listing' : 'Create room') : 'Save changes' }}
 

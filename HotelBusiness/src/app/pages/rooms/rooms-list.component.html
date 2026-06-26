@@ -75,8 +75,8 @@
               </td>
               <td>{{ r.locationName || '—' }}</td>
               @if (isShortlet()) {
-                <td>{{ r.bedroomCount ?? '—' }}</td>
-                <td>{{ r.bathroomCount ?? '—' }}</td>
+                <td>{{ formatRoomCount(r.bedroomCount) }}</td>
+                <td>{{ formatRoomCount(r.bathroomCount) }}</td>
               } @else {
                 <td>{{ r.quantity ?? 1 }}</td>
               }

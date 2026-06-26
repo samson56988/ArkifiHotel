@@ -1,10 +1,12 @@
 import { Injectable, inject, signal } from '@angular/core';
+import { BusinessProfileApiService } from './business-profile-api.service';
 import { SubscriptionApiService } from './subscription-api.service';
 import type { BusinessTypeOption } from '../models/subscription.models';
 
 @Injectable({ providedIn: 'root' })
 export class BusinessContextService {
   private readonly subscriptionApi = inject(SubscriptionApiService);
+  private readonly profileApi = inject(BusinessProfileApiService);
 
   readonly businessType = signal<BusinessTypeOption>('Hotel');
   readonly loaded = signal(false);
@@ -16,6 +18,15 @@ export class BusinessContextService {
       return;
     }
     this.loadStarted = true;
+
+    this.profileApi.getProfile().subscribe({
+      next: (res) => {
+        if (res.success && res.data?.businessType) {
+          this.businessType.set(res.data.businessType);
+        }
+      },
+    });
+
     this.subscriptionApi.getCurrent().subscribe({
       next: (res) => {
         if (res.success && res.data?.businessType) {

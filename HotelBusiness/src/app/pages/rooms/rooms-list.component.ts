@@ -89,4 +89,8 @@ export class RoomsListComponent implements OnInit {
 
     return this.api.resolveImageUrl(path);
   }
+
+  formatRoomCount(value: number | null | undefined): string {
+    return value != null && Number.isFinite(value) ? String(value) : '—';
+  }
 }

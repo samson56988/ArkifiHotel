@@ -78,6 +78,20 @@ export class RoomFormComponent implements OnInit {
 
   readonly imageAccept = ALLOWED_IMAGE_ACCEPT;
 
+  /** Starter taglines for shortlet listings (UI-only; not from API). */
+  readonly taglinePresets: readonly string[] = [
+    'Floor-to-ceiling windows & city skyline',
+    'Walk to restaurants, nightlife & the beach',
+    'Peaceful retreat with lagoon views',
+    'Fully furnished & move-in ready',
+    'Perfect for remote work & weekend stays',
+    'Sun-filled living with private balcony',
+    'Premium linens, fast Wi-Fi & 24/7 power',
+    'Stylish studio in the heart of the city',
+    'Spacious layout ideal for families',
+    'Quiet neighbourhood, minutes from downtown',
+  ];
+
   get isCreateMode(): boolean {
     return this.roomId() === null;
   }
@@ -95,21 +109,37 @@ export class RoomFormComponent implements OnInit {
     const tagline = this.form.controls.tagline;
     const bedroom = this.form.controls.bedroomCount;
     const bathroom = this.form.controls.bathroomCount;
+    const quantity = this.form.controls.quantity;
 
     if (shortlet) {
       tagline.setValidators([Validators.required, Validators.minLength(5), Validators.maxLength(300)]);
       bedroom.setValidators([Validators.required, Validators.min(1), Validators.max(20)]);
       bathroom.setValidators([Validators.required, Validators.min(1), Validators.max(20)]);
-      this.form.controls.quantity.setValue(1);
+      quantity.clearValidators();
+      quantity.setValue(1, { emitEvent: false });
     } else {
       tagline.clearValidators();
       bedroom.clearValidators();
       bathroom.clearValidators();
+      quantity.setValidators([Validators.required, Validators.min(1), Validators.max(500)]);
     }
 
-    tagline.updateValueAndValidity();
-    bedroom.updateValueAndValidity();
-    bathroom.updateValueAndValidity();
+    tagline.updateValueAndValidity({ emitEvent: false });
+    bedroom.updateValueAndValidity({ emitEvent: false });
+    bathroom.updateValueAndValidity({ emitEvent: false });
+    quantity.updateValueAndValidity({ emitEvent: false });
+  }
+
+  private isShortletListing(): boolean {
+    return this.businessContext.businessType() === 'Shortlet';
+  }
+
+  private coerceRoomCount(value: number): number {
+    if (!Number.isFinite(value) || value < 1) {
+      return 1;
+    }
+
+    return Math.min(20, Math.floor(value));
   }
 
   private initFromRoute(paramId: string | null): void {
@@ -295,21 +325,35 @@ export class RoomFormComponent implements OnInit {
     return this.selectedAmenityIds().includes(id);
   }
 
+  applyTaglinePreset(preset: string): void {
+    this.form.controls.tagline.setValue(preset);
+    this.form.controls.tagline.markAsTouched();
+    this.form.controls.tagline.updateValueAndValidity();
+  }
+
+  isTaglinePresetSelected(preset: string): boolean {
+    return this.form.controls.tagline.value.trim() === preset;
+  }
+
   onSubmit(): void {
+    this.applyBusinessTypeValidators();
+
     if (this.form.invalid) {
       this.form.markAllAsTouched();
+      const label = this.businessContext.isShortlet() ? 'apartment listing' : 'room';
+      this.toast.warning(`Please fix the highlighted fields before saving this ${label}.`, 'Form');
       return;
     }
 
     const raw = this.form.getRawValue();
-    const shortlet = this.businessContext.isShortlet();
+    const shortlet = this.isShortletListing();
     const body = {
       name: raw.name.trim(),
-      tagline: raw.tagline.trim() || null,
+      tagline: shortlet ? raw.tagline.trim() : raw.tagline.trim() || null,
       description: raw.description.trim() || null,
       maxOccupancy: raw.maxOccupancy,
-      bedroomCount: shortlet ? raw.bedroomCount : null,
-      bathroomCount: shortlet ? raw.bathroomCount : null,
+      bedroomCount: shortlet ? this.coerceRoomCount(raw.bedroomCount) : null,
+      bathroomCount: shortlet ? this.coerceRoomCount(raw.bathroomCount) : null,
       isGuestFavorite: shortlet ? raw.isGuestFavorite : false,
       quantity: shortlet ? 1 : raw.quantity,
       basePricePerNight: raw.basePricePerNight,
@@ -332,7 +376,10 @@ export class RoomFormComponent implements OnInit {
 
         if (!this.isCreateMode) {
           this.saving.set(false);
-          this.toast.success('Room details saved.', 'Saved');
+          this.toast.success(
+            this.businessContext.isShortlet() ? 'Apartment listing saved.' : 'Room details saved.',
+            'Saved',
+          );
           void this.router.navigate(['/rooms'], { replaceUrl: true });
           return;
         }
@@ -596,5 +643,8 @@ export class RoomFormComponent implements OnInit {
         'Amenities',
       );
     }
+
+    this.applyBusinessTypeValidators();
+    this.form.updateValueAndValidity();
   }
 }

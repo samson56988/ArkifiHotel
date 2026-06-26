@@ -110,6 +110,22 @@ label {
   font-size: 0.88rem;
 }
 
+.tagline-presets__label {
+  margin: 0.35rem 0 0.5rem;
+}
+
+.tagline-presets {
+  margin-bottom: 0;
+}
+
+.tagline-preset {
+  font-family: inherit;
+  color: inherit;
+  text-align: left;
+  line-height: 1.35;
+  white-space: normal;
+}
+
 .amenity-group {
   margin-bottom: 1rem;
 }
