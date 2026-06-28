@@ -11,6 +11,7 @@ import { PublicGuestBookingApiService } from '../../core/services/public-guest-b
 import type { HotelShowcase } from '../../core/models/hotel-showcase.models';
 
 import { formatNaira } from '../../core/utils/hotel-theme';
+import { calculateStayTotal, hasWeeklyRate } from '../../core/utils/room-pricing';
 
 import type { ApiResult } from '../../core/models/api-result.model';
 
@@ -201,7 +202,14 @@ export class BookingModalComponent {
 
     const room = this.ui.selectedRoom();
 
-    return room ? `Starting from ${formatNaira(room.basePricePerNight)} per night` : null;
+    if (!room) {
+      return null;
+    }
+    const nightly = `From ${formatNaira(room.basePricePerNight)} / night`;
+    if (hasWeeklyRate(room.basePricePerWeek)) {
+      return `${nightly} · ${formatNaira(room.basePricePerWeek)} / week`;
+    }
+    return nightly;
 
   }
 
@@ -223,13 +231,16 @@ export class BookingModalComponent {
 
 
 
-  roomOptionLabel(roomId: string, name: string, price: number): string {
+  roomOptionLabel(roomId: string, name: string, price: number, weekly?: number | null): string {
 
     const row = this.availability.availabilityFor(roomId);
+    const priceLabel = hasWeeklyRate(weekly)
+      ? `${formatNaira(price)}/night · ${formatNaira(weekly)}/week`
+      : `${formatNaira(price)}/night`;
 
     if (!row) {
 
-      return `${name} — ${formatNaira(price)}/night`;
+      return `${name} — ${priceLabel}`;
 
     }
 
@@ -243,7 +254,7 @@ export class BookingModalComponent {
 
       row.totalQuantity > 1 ? ` (${row.availableUnits} of ${row.totalQuantity} free)` : '';
 
-    return `${name}${qty} — ${formatNaira(price)}/night`;
+    return `${name}${qty} — ${priceLabel}`;
 
   }
 
@@ -257,7 +268,7 @@ export class BookingModalComponent {
 
       selectable: !this.availability.hasResult() || this.availability.isRoomAvailable(r.id),
 
-      label: this.roomOptionLabel(r.id, r.name, r.basePricePerNight),
+      label: this.roomOptionLabel(r.id, r.name, r.basePricePerNight, r.basePricePerWeek),
 
     }));
 
@@ -289,7 +300,11 @@ export class BookingModalComponent {
 
     );
 
-    return `${formatNaira(room.basePricePerNight * nights)} (${nights} night${nights > 1 ? 's' : ''})`;
+    const total = calculateStayTotal(room.basePricePerNight, room.basePricePerWeek, nights);
+    const weeklyNote =
+      nights >= 7 && hasWeeklyRate(room.basePricePerWeek) ? ' (weekly rate applied)' : '';
+
+    return `${formatNaira(total)} (${nights} night${nights > 1 ? 's' : ''}${weeklyNote})`;
 
   }
 

@@ -52,6 +52,9 @@
           <div class="price">
             <strong>{{ formatPrice(l.nightlyPrice) }}</strong>
             <span>/ night</span>
+            @if (l.weeklyPrice) {
+              <p class="price-weekly">{{ formatPrice(l.weeklyPrice) }} / week</p>
+            }
           </div>
           <p class="note">Min. {{ shortlet()?.minNights }} nights · Check-in {{ shortlet()?.checkIn }}</p>
           <button type="button" class="btn-primary" (click)="book()">Reserve</button>

@@ -1,0 +1,128 @@
+@use 'shortlet-shared' as *;
+
+.listing-card {
+  @include sl-card;
+  display: flex;
+  flex-direction: column;
+  color: inherit;
+
+  &.compact {
+    .listing-card__media {
+      aspect-ratio: 4 / 3;
+    }
+
+    h3 {
+      font-size: 1.05rem;
+    }
+  }
+
+  &__media {
+    position: relative;
+    aspect-ratio: 5 / 4;
+    overflow: hidden;
+
+    img {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+    }
+  }
+
+  &__badge {
+    position: absolute;
+    top: 0.75rem;
+    left: 0.75rem;
+    @include sl-pill;
+    background: #fff;
+    color: var(--sl-ink);
+  }
+
+  &__gallery {
+    position: absolute;
+    bottom: 0.75rem;
+    right: 0.75rem;
+    padding: 0.4rem 0.75rem;
+    border-radius: 8px;
+    background: color-mix(in srgb, #fff 92%, transparent);
+    backdrop-filter: blur(6px);
+    font-size: 0.75rem;
+    font-weight: 600;
+  }
+
+  &__body {
+    padding: 1.15rem 1.25rem 1.25rem;
+    display: flex;
+    flex-direction: column;
+    gap: 0.35rem;
+    flex: 1;
+  }
+
+  &__meta {
+    font-size: 0.78rem;
+    color: var(--sl-muted);
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+  }
+
+  h3 {
+    @include sl-display;
+    margin: 0;
+    font-size: 1.2rem;
+  }
+
+  &__tagline {
+    @include sl-body;
+    margin: 0;
+    font-size: 0.88rem;
+  }
+
+  &__amenities {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.35rem;
+    margin-top: 0.35rem;
+
+    span {
+      font-size: 0.72rem;
+      padding: 0.2rem 0.5rem;
+      border-radius: 6px;
+      background: color-mix(in srgb, var(--sl-primary) 6%, transparent);
+      color: var(--sl-muted);
+    }
+  }
+
+  &__footer {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-top: auto;
+    padding-top: 0.85rem;
+  }
+
+  &__price {
+    strong {
+      font-size: 1.05rem;
+      color: var(--sl-ink);
+    }
+
+    span {
+      font-size: 0.8rem;
+      color: var(--sl-muted);
+    }
+  }
+
+  &__weekly {
+    display: block;
+    margin-top: 0.15rem;
+    font-size: 0.78rem !important;
+    font-weight: 600;
+    color: var(--sl-accent) !important;
+  }
+
+  &__book {
+    @include sl-btn-ghost;
+    padding: 0.45rem 0.9rem;
+    font-size: 0.8rem;
+    pointer-events: none;
+  }
+}

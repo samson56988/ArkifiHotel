@@ -19,6 +19,7 @@ export interface BusinessRoomSummaryDto {
   bathroomCount?: number | null;
   isGuestFavorite: boolean;
   basePricePerNight: number;
+  basePricePerWeek?: number | null;
   quantity: number;
   locationId: string | null;
   locationName: string | null;
@@ -37,6 +38,7 @@ export interface BusinessRoomDetailDto {
   bathroomCount?: number | null;
   isGuestFavorite: boolean;
   basePricePerNight: number;
+  basePricePerWeek?: number | null;
   quantity: number;
   locationId: string | null;
   locationName: string | null;
@@ -54,6 +56,7 @@ export interface CreateBusinessRoomRequest {
   bathroomCount?: number | null;
   isGuestFavorite?: boolean;
   basePricePerNight: number;
+  basePricePerWeek?: number | null;
   quantity: number;
   locationId: string;
   amenityIds?: string[] | null;

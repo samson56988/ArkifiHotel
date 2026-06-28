@@ -84,6 +84,7 @@ public sealed class PublicStorefrontController : ControllerBase
                     Name = r.Name,
                     Description = r.Description,
                     BasePricePerNight = r.BasePricePerNight,
+                    BasePricePerWeek = r.BasePricePerWeek,
                     MaxOccupancy = r.MaxOccupancy,
                     PrimaryImageUrl = ToAbsoluteUrl(r.PrimaryImageUrl),
                     ImageUrls = r.ImageUrls

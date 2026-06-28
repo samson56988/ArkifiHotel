@@ -18,5 +18,6 @@ export class ShortletHostComponent {
   readonly ctx = inject(ShortletContextService);
 
   readonly shortlet = computed(() => this.ctx.shortlet()!);
+  readonly theme = computed(() => this.shortlet().theme);
   readonly reviews = MOCK_REVIEWS;
 }

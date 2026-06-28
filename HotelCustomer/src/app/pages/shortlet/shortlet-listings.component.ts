@@ -1,6 +1,7 @@
 import { ChangeDetectionStrategy, Component, computed, inject, signal } from '@angular/core';
 import { ShortletContextService } from '../../core/services/shortlet-context.service';
 import { ShortletListingCardComponent } from '../../shared/shortlet-storefront/shortlet-listing-card.component';
+import { shortletListingsSubtitle } from '../../core/utils/shortlet-theme';
 
 type BedFilter = 'all' | '1' | '2' | '3+';
 
@@ -18,6 +19,8 @@ export class ShortletListingsComponent {
   readonly filter = signal<BedFilter>('all');
 
   readonly shortlet = computed(() => this.ctx.shortlet()!);
+  readonly theme = computed(() => this.shortlet().theme);
+  readonly listingsSubtitle = computed(() => shortletListingsSubtitle(this.shortlet()));
 
   readonly filtered = computed(() => {
     const all = this.shortlet().listings;

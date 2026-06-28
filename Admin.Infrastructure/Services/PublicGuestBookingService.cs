@@ -8,6 +8,7 @@ using Admin.Services.Abstractions;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Options;
 using Shared.Data.Dtos;
+using Shared.Data.Helpers;
 
 namespace Admin.Infrastructure.Services;
 
@@ -97,7 +98,7 @@ public sealed class PublicGuestBookingService : IPublicGuestBookingService
             return (null, PublicGuestBookingError.InvalidRequest, "You already have a confirmed booking for this room and stay.");
         }
 
-        var total = decimal.Round(room.BasePricePerNight * nights, 2, MidpointRounding.AwayFromZero);
+        var total = RoomPricingHelper.CalculateStayTotal(room.BasePricePerNight, room.BasePricePerWeek, nights);
 
         var reusable = await TryGetReusablePendingCheckoutAsync(
                 business.Id,

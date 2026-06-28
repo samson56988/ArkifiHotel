@@ -67,6 +67,7 @@ public sealed class BusinessRoomService : IBusinessRoomService
                 BathroomCount = r.BathroomCount,
                 IsGuestFavorite = r.IsGuestFavorite,
                 BasePricePerNight = r.BasePricePerNight,
+                BasePricePerWeek = r.BasePricePerWeek,
                 Quantity = r.Quantity,
                 LocationId = r.LocationId,
                 LocationName = r.Location?.Name,
@@ -122,7 +123,10 @@ public sealed class BusinessRoomService : IBusinessRoomService
             return null;
         }
 
-        if (!await BusinessExistsAsync(businessId, cancellationToken).ConfigureAwait(false))
+        if (isShortlet && ValidateWeeklyRate(request.BasePricePerWeek) is not null)
+        {
+            return null;
+        }
         {
             return null;
         }
@@ -157,6 +161,7 @@ public sealed class BusinessRoomService : IBusinessRoomService
             BathroomCount = request.BathroomCount,
             IsGuestFavorite = request.IsGuestFavorite,
             BasePricePerNight = request.BasePricePerNight,
+            BasePricePerWeek = isShortlet ? NormalizeWeeklyRate(request.BasePricePerWeek) : null,
             Quantity = quantity,
             CreatedAt = now,
         };
@@ -203,6 +208,11 @@ public sealed class BusinessRoomService : IBusinessRoomService
 
         if (ValidateShortletFields(isShortlet, request.Tagline, request.BedroomCount, request.BathroomCount, quantity)
             is not null)
+        {
+            return null;
+        }
+
+        if (isShortlet && ValidateWeeklyRate(request.BasePricePerWeek) is not null)
         {
             return null;
         }
@@ -256,6 +266,7 @@ public sealed class BusinessRoomService : IBusinessRoomService
         room.BathroomCount = request.BathroomCount;
         room.IsGuestFavorite = request.IsGuestFavorite;
         room.BasePricePerNight = request.BasePricePerNight;
+        room.BasePricePerWeek = isShortlet ? NormalizeWeeklyRate(request.BasePricePerWeek) : null;
         room.Quantity = quantity;
         room.LocationId = request.LocationId;
         room.UpdatedAt = DateTimeOffset.UtcNow;
@@ -500,6 +511,31 @@ public sealed class BusinessRoomService : IBusinessRoomService
         return null;
     }
 
+    private static string? ValidateWeeklyRate(decimal? weeklyRate)
+    {
+        if (weeklyRate is null)
+        {
+            return null;
+        }
+
+        if (weeklyRate <= 0 || weeklyRate > 10_000_000)
+        {
+            return "bad";
+        }
+
+        return null;
+    }
+
+    private static decimal? NormalizeWeeklyRate(decimal? weeklyRate)
+    {
+        if (weeklyRate is null or <= 0)
+        {
+            return null;
+        }
+
+        return weeklyRate;
+    }
+
     private async Task<bool> IsShortletBusinessAsync(Guid businessId, CancellationToken cancellationToken) =>
         await _db.BusinessRegistrations
             .AsNoTracking()
@@ -620,6 +656,7 @@ public sealed class BusinessRoomService : IBusinessRoomService
             BathroomCount = r.BathroomCount,
             IsGuestFavorite = r.IsGuestFavorite,
             BasePricePerNight = r.BasePricePerNight,
+            BasePricePerWeek = r.BasePricePerWeek,
             Quantity = r.Quantity,
             LocationId = r.LocationId,
             LocationName = r.Location?.Name,

@@ -2,9 +2,10 @@
   <header class="page-head">
     <div>
       <p class="eyebrow">Reservations</p>
-      <h1>New booking</h1>
+      <h1>{{ biz.isShortlet() ? 'New apartment booking' : 'New booking' }}</h1>
       <p class="lead">
-        For walk-in and reception bookings only. Confirm cash or bank transfer payment first, then create the reservation manually.
+        For walk-in and reception bookings only. Confirm cash or bank transfer payment first, then create the
+        {{ biz.isShortlet() ? 'stay' : 'reservation' }} manually.
       </p>
     </div>
     <a routerLink="/bookings" class="btn btn--ghost">Back to bookings</a>
@@ -16,8 +17,8 @@
     <p class="muted">We could not load your rooms.</p>
     <button type="button" class="btn btn--ghost" (click)="loadRooms()">Try again</button>
   } @else if (allRooms().length === 0) {
-    <p class="muted">Add at least one active room before creating a booking.</p>
-    <a routerLink="/rooms/new" class="btn btn--primary">Add room</a>
+    <p class="muted">{{ biz.isShortlet() ? 'Add at least one apartment listing before creating a booking.' : 'Add at least one active room before creating a booking.' }}</p>
+    <a routerLink="/rooms/new" class="btn btn--primary">{{ biz.isShortlet() ? 'Add listing' : 'Add room' }}</a>
   } @else {
     <form class="grid" [formGroup]="form" (ngSubmit)="onSubmit()" novalidate>
       <section class="panel panel--wide">

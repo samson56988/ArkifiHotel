@@ -6,6 +6,7 @@ using Admin.Infrastructure.Helpers;
 using Admin.Services.Abstractions;
 using Microsoft.EntityFrameworkCore;
 using Shared.Data.Dtos;
+using Shared.Data.Helpers;
 
 namespace Admin.Infrastructure.Services;
 
@@ -188,6 +189,7 @@ public sealed class BusinessBookingService : IBusinessBookingService
                     AvailableUnits = available,
                     IsAvailable = available > 0,
                     BasePricePerNight = room.BasePricePerNight,
+                    BasePricePerWeek = room.BasePricePerWeek,
                     MaxOccupancy = room.MaxOccupancy,
                     LocationId = room.LocationId,
                     LocationName = room.Location?.Name,
@@ -257,7 +259,7 @@ public sealed class BusinessBookingService : IBusinessBookingService
 
         var code = await GenerateUniqueConfirmationCodeAsync(businessId, businessName, cancellationToken)
             .ConfigureAwait(false);
-        var total = decimal.Round(room.BasePricePerNight * nights, 2, MidpointRounding.AwayFromZero);
+        var total = RoomPricingHelper.CalculateStayTotal(room.BasePricePerNight, room.BasePricePerWeek, nights);
         var now = DateTimeOffset.UtcNow;
 
         var entity = new Booking

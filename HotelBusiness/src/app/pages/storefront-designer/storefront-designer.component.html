@@ -178,7 +178,11 @@
           @if (activeTab() === 'about') {
             <ng-container formGroupName="about">
               <p class="section-intro">
-                Your <strong>About us</strong> page lives at <strong>/about</strong> on your guest site. Customize the story, photo, layout, and stats — then use the preview or open your live storefront to check it.
+                @if (isShortletPreview()) {
+                  Powers the <strong>Your host</strong> page — eyebrow, host bio, and photo. Upload the host photo below; name comes from quote attribution or your contact email.
+                } @else {
+                  Your <strong>About us</strong> page lives at <strong>/about</strong> on your guest site. Customize the story, photo, layout, and stats — then use the preview or open your live storefront to check it.
+                }
               </p>
               <label class="check"><input type="checkbox" formControlName="enabled" /> Show About us in nav &amp; on <strong>/about</strong> page</label>
               <div class="field">
@@ -299,8 +303,14 @@
 
           @if (activeTab() === 'rooms') {
             <ng-container formGroupName="rooms">
-              <label class="check"><input type="checkbox" formControlName="enabled" /> Show rooms on home page &amp; nav</label>
-              <p class="hint section-intro">Home page carousel and the dedicated <strong>/rooms</strong> page share these titles.</p>
+              <label class="check"><input type="checkbox" formControlName="enabled" /> Show {{ isShortletPreview() ? 'listings' : 'rooms' }} on home page &amp; nav</label>
+              <p class="hint section-intro">
+                @if (isShortletPreview()) {
+                  Controls the <strong>Listings</strong> page hero, home featured grid, and booking CTA. Use <code>&#123;count&#125;</code> in the subtitle for apartment count.
+                } @else {
+                  Home page carousel and the dedicated <strong>/rooms</strong> page share these titles.
+                }
+              </p>
               <div class="field">
                 <label for="roomsEyebrow">Page eyebrow</label>
                 <input id="roomsEyebrow" class="input" type="text" formControlName="eyebrow" placeholder="Accommodations" />
@@ -334,8 +344,8 @@
               </div>
               <label class="check"><input type="checkbox" formControlName="showPrice" /> Show nightly price on cards</label>
 
-              <h3 class="designer-subsection">Rooms page — featured room</h3>
-              <label class="check"><input type="checkbox" formControlName="showFeaturedSection" /> Highlight a featured room</label>
+              <h3 class="designer-subsection">{{ isShortletPreview() ? 'Home — featured apartments' : 'Rooms page — featured room' }}</h3>
+              <label class="check"><input type="checkbox" formControlName="showFeaturedSection" /> {{ isShortletPreview() ? 'Show featured apartments on home' : 'Highlight a featured room' }}</label>
               <div class="field-row">
                 <div class="field">
                   <label for="featuredEyebrow">Featured eyebrow</label>
@@ -369,10 +379,10 @@
 
           @if (activeTab() === 'facilities') {
             <ng-container formGroupName="facilities">
-              <label class="check"><input type="checkbox" formControlName="enabled" /> Show facilities in nav &amp; on <strong>/facilities</strong> page</label>
+              <label class="check"><input type="checkbox" formControlName="enabled" /> Show {{ isShortletPreview() ? 'amenities' : 'facilities' }} in nav &amp; on <strong>{{ isShortletPreview() ? '/amenities' : '/facilities' }}</strong> page</label>
 
               <h3 class="designer-subsection">Page hero</h3>
-              <p class="hint">Large banner at the top of your facilities page.</p>
+              <p class="hint">{{ isShortletPreview() ? 'Top of your Amenities page and home amenities teaser.' : 'Large banner at the top of your facilities page.' }}</p>
               <div class="field">
                 <label for="facEyebrow">Hero eyebrow</label>
                 <input id="facEyebrow" class="input" type="text" formControlName="eyebrow" placeholder="On Property" />
@@ -518,8 +528,11 @@
                 </div>
               </div>
               <div class="field">
-                <label for="contactIntro">Contact form intro</label>
+                <label for="contactIntro">{{ isShortletPreview() ? 'Hero subtitle' : 'Contact form intro' }}</label>
                 <textarea id="contactIntro" class="input input--area" rows="3" formControlName="introText"></textarea>
+                @if (isShortletPreview()) {
+                  <p class="hint">Shown under the main headline on the home page. Falls back to Listings subtitle if empty.</p>
+                }
               </div>
             </ng-container>
           }

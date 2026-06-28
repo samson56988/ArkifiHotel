@@ -1,7 +1,7 @@
 <section class="page-hero">
-  <p class="eyebrow">{{ shortlet().neighborhood }}</p>
-  <h1>All listings</h1>
-  <p>{{ shortlet().listings.length }} furnished apartments — each with full kitchen, Wi‑Fi, and self check-in.</p>
+  <p class="eyebrow">{{ theme().rooms.eyebrow || shortlet().neighborhood }}</p>
+  <h1>{{ theme().rooms.title }}</h1>
+  <p>{{ listingsSubtitle() }}</p>
 </section>
 
 <div class="filters">

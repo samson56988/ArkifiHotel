@@ -1,0 +1,31 @@
+<article class="listing-card" [class.compact]="compact()">
+  <div class="listing-card__media">
+    <img [src]="coverImage(listing())" [alt]="listing().title" loading="lazy" />
+    @if (listing().featured) {
+      <span class="listing-card__badge">Guest favorite</span>
+    }
+    <span class="listing-card__gallery">Photos</span>
+  </div>
+  <div class="listing-card__body">
+    <div class="listing-card__meta">
+      <span>{{ listing().beds }} bed · {{ listing().baths }} bath · {{ listing().guests }} guests</span>
+    </div>
+    <h3>{{ listing().title }}</h3>
+    <p class="listing-card__tagline">{{ listing().tagline }}</p>
+    <div class="listing-card__amenities">
+      @for (a of listing().highlightAmenities.slice(0, 3); track a) {
+        <span>{{ a }}</span>
+      }
+    </div>
+    <div class="listing-card__footer">
+      <div class="listing-card__price">
+        <strong>{{ formatPrice(listing().nightlyPrice) }}</strong>
+        <span>/ night</span>
+        @if (listing().weeklyPrice) {
+          <span class="listing-card__weekly">{{ formatPrice(listing().weeklyPrice!) }} / week</span>
+        }
+      </div>
+      <span class="listing-card__book">Reserve</span>
+    </div>
+  </div>
+</article>

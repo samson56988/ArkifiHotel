@@ -1,7 +1,7 @@
 <section class="page-hero">
-  <p class="eyebrow">Amenities</p>
-  <h1>Move in, plug in, relax</h1>
-  <p>Every {{ shortlet().businessName }} apartment includes these essentials — no extra fees, no surprises.</p>
+  <p class="eyebrow">{{ theme().facilities.eyebrow }}</p>
+  <h1>{{ theme().facilities.title }}</h1>
+  <p>{{ amenitiesPageSubtitle() }}</p>
 </section>
 
 @for (group of grouped(); track group[0]) {

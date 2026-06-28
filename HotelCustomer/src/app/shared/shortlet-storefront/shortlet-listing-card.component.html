@@ -21,6 +21,9 @@
       <div class="listing-card__price">
         <strong>{{ formatPrice(listing().nightlyPrice) }}</strong>
         <span>/ night</span>
+        @if (listing().weeklyPrice) {
+          <span class="listing-card__weekly">{{ formatPrice(listing().weeklyPrice!) }} / week</span>
+        }
       </div>
       <button type="button" class="listing-card__book" (click)="book($event)">Reserve</button>
     </div>

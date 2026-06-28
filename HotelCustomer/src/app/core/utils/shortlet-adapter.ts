@@ -10,6 +10,7 @@ export function listingToShowcaseRoom(listing: ShortletListing): ShowcaseRoom {
     beds: `${listing.beds} bed${listing.beds === 1 ? '' : 's'}`,
     size: `${listing.guests} guests · ${listing.baths} bath`,
     basePricePerNight: listing.nightlyPrice,
+    basePricePerWeek: listing.weeklyPrice ?? null,
     maxOccupancy: listing.guests,
     available: true,
     description: listing.description,

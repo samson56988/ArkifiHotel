@@ -152,6 +152,14 @@
 
           </div>
 
+          @if (isShortlet()) {
+            <div class="field">
+              <label for="weeklyPrice">Weekly rate (optional)</label>
+              <input id="weeklyPrice" class="input" type="number" formControlName="basePricePerWeek" min="0" step="0.01" />
+              <p class="hint">Guests see this on listing cards. Bookings of 7+ nights bill full weeks at this rate, plus nightly for any extra days.</p>
+            </div>
+          }
+
           @if (!isShortlet()) {
             <div class="field">
 

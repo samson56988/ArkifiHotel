@@ -1,0 +1,28 @@
+<header class="sl-nav solid">
+  <div class="sl-nav__inner">
+    <div class="sl-nav__brand">
+      @if (shortlet().logoUrl) {
+        <img class="sl-nav__logo" [src]="shortlet().logoUrl!" [alt]="shortlet().businessName + ' logo'" />
+      } @else {
+        <span class="sl-nav__mark">{{ shortlet().businessName.charAt(0) }}</span>
+      }
+      <span class="sl-nav__name">
+        {{ shortlet().businessName }}
+        @if (shortlet().branchName) {
+          <small class="sl-nav__branch">{{ shortlet().branchName }}</small>
+        }
+      </span>
+    </div>
+
+    <nav class="sl-nav__links">
+      <span [class.active]="page() === 'home'">Home</span>
+      <span [class.active]="page() === 'listings'">Listings</span>
+      <span [class.active]="page() === 'amenities'">Amenities</span>
+      <span [class.active]="page() === 'host'">Your host</span>
+    </nav>
+
+    <div class="sl-nav__actions">
+      <button type="button" class="sl-nav__book">Book a stay</button>
+    </div>
+  </div>
+</header>

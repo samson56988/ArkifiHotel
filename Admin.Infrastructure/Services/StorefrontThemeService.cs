@@ -190,6 +190,7 @@ public sealed class StorefrontThemeService : IStorefrontThemeService
                     Tagline = r.Tagline,
                     Description = r.Description,
                     BasePricePerNight = r.BasePricePerNight,
+                    BasePricePerWeek = r.BasePricePerWeek,
                     MaxOccupancy = r.MaxOccupancy,
                     BedroomCount = r.BedroomCount,
                     BathroomCount = r.BathroomCount,

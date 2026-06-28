@@ -17,6 +17,8 @@ public sealed class RoomAvailabilityDto
 
     public decimal BasePricePerNight { get; set; }
 
+    public decimal? BasePricePerWeek { get; set; }
+
     public int MaxOccupancy { get; set; }
 
     public Guid? LocationId { get; set; }

@@ -37,6 +37,9 @@ public class RoomConfiguration : IEntityTypeConfiguration<Room>
             .HasPrecision(12, 2)
             .IsRequired();
 
+        builder.Property(e => e.BasePricePerWeek)
+            .HasPrecision(12, 2);
+
         builder.Property(e => e.Quantity)
             .IsRequired()
             .HasDefaultValue(1);

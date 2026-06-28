@@ -1,0 +1,84 @@
+@mixin sl-container {
+  width: min(1120px, calc(100% - 2.5rem));
+  margin-inline: auto;
+}
+
+@mixin sl-section {
+  padding-block: clamp(3rem, 6vw, 5rem);
+}
+
+@mixin sl-card {
+  background: var(--sl-surface);
+  border-radius: var(--sl-radius);
+  box-shadow: var(--sl-shadow);
+  overflow: hidden;
+}
+
+@mixin sl-pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+  padding: 0.35rem 0.75rem;
+  border-radius: 999px;
+  font-size: 0.8rem;
+  font-weight: 600;
+  background: var(--sl-accent-soft);
+  color: var(--sl-primary);
+}
+
+@mixin sl-btn-primary {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  padding: 0.85rem 1.5rem;
+  border: none;
+  border-radius: 999px;
+  background: var(--sl-accent);
+  color: #fff;
+  font-family: var(--font-body);
+  font-weight: 600;
+  font-size: 0.95rem;
+  cursor: pointer;
+  transition: transform 0.15s ease, box-shadow 0.15s ease;
+
+  &:hover {
+    transform: translateY(-1px);
+    box-shadow: 0 8px 24px color-mix(in srgb, var(--sl-accent) 35%, transparent);
+  }
+}
+
+@mixin sl-btn-ghost {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  padding: 0.75rem 1.25rem;
+  border: 1.5px solid color-mix(in srgb, var(--sl-primary) 18%, transparent);
+  border-radius: 999px;
+  background: transparent;
+  color: var(--sl-primary);
+  font-family: var(--font-body);
+  font-weight: 600;
+  font-size: 0.9rem;
+  cursor: pointer;
+  text-decoration: none;
+  transition: background 0.15s ease;
+
+  &:hover {
+    background: color-mix(in srgb, var(--sl-primary) 6%, transparent);
+  }
+}
+
+@mixin sl-display {
+  font-family: var(--font-display);
+  font-weight: 600;
+  letter-spacing: -0.02em;
+  color: var(--sl-ink);
+}
+
+@mixin sl-body {
+  font-family: var(--font-body);
+  color: var(--sl-muted);
+  line-height: 1.65;
+}

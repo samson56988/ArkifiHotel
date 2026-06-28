@@ -1,8 +1,11 @@
+using System.IdentityModel.Tokens.Jwt;
+using System.Security.Claims;
 using System.Text;
 using Admin.Data;
 using Admin.Infrastructure;
 using Admin.Infrastructure.Options;
 using Admin.Infrastructure.Seeding;
+using Admin.Services.Abstractions;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
@@ -47,6 +50,18 @@ builder.Services.AddAuthentication(options =>
     {
         OnTokenValidated = async context =>
         {
+            var jti = context.Principal?.FindFirstValue(JwtRegisteredClaimNames.Jti);
+            if (!string.IsNullOrWhiteSpace(jti))
+            {
+                var revocation = context.HttpContext.RequestServices
+                    .GetRequiredService<IBusinessTokenRevocationService>();
+                if (await revocation.IsRevokedAsync(jti, context.HttpContext.RequestAborted).ConfigureAwait(false))
+                {
+                    context.Fail("Session ended.");
+                    return;
+                }
+            }
+
             var userIdValue = context.Principal?.FindFirst("user_id")?.Value;
             if (!Guid.TryParse(userIdValue, out var userId))
             {

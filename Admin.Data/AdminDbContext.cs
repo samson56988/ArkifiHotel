@@ -15,6 +15,7 @@ public class AdminDbContext : DbContext
     public DbSet<BusinessRegistration> BusinessRegistrations => Set<BusinessRegistration>();
     public DbSet<EmailVerificationOtp> EmailVerificationOtps => Set<EmailVerificationOtp>();
     public DbSet<BusinessLoginOtpChallenge> BusinessLoginOtpChallenges => Set<BusinessLoginOtpChallenge>();
+    public DbSet<RevokedBusinessAccessToken> RevokedBusinessAccessTokens => Set<RevokedBusinessAccessToken>();
     public DbSet<BusinessPasswordResetChallenge> BusinessPasswordResetChallenges => Set<BusinessPasswordResetChallenge>();
     public DbSet<BusinessLocation> BusinessLocations => Set<BusinessLocation>();
     public DbSet<Amenity> Amenities => Set<Amenity>();
@@ -54,6 +55,7 @@ public class AdminDbContext : DbContext
         modelBuilder.ApplyConfiguration(new BusinessRegistrationConfiguration());
         modelBuilder.ApplyConfiguration(new EmailVerificationOtpConfiguration());
         modelBuilder.ApplyConfiguration(new BusinessLoginOtpChallengeConfiguration());
+        modelBuilder.ApplyConfiguration(new RevokedBusinessAccessTokenConfiguration());
         modelBuilder.ApplyConfiguration(new BusinessPasswordResetChallengeConfiguration());
         modelBuilder.ApplyConfiguration(new BusinessLocationConfiguration());
         modelBuilder.ApplyConfiguration(new AmenityConfiguration());

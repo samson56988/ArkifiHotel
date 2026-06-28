@@ -7,10 +7,12 @@ import { shortletAsHotelShowcase, listingToShowcaseRoom } from '../utils/shortle
 import { isShortletBusinessType, mapPublicToShortletShowcase } from '../utils/shortlet-mapper';
 import { apiLocationId } from '../utils/storefront-path';
 import { PublicStorefrontApiService } from './public-storefront-api.service';
+import { DocumentIconService } from './document-icon.service';
 
 @Injectable({ providedIn: 'root' })
 export class ShortletContextService {
   private readonly storefrontApi = inject(PublicStorefrontApiService);
+  private readonly documentIcon = inject(DocumentIconService);
 
   readonly shortlet = signal<ShortletShowcase | null>(null);
   readonly loading = signal(false);
@@ -58,6 +60,12 @@ export class ShortletContextService {
     this.locationRouteId.set(locationRouteId ?? data.activeLocationId ?? null);
     this.loading.set(false);
     this.notFound.set(false);
+    this.documentIcon.applyPropertyIcon({
+      logoUrl: data.logoUrl,
+      businessName: data.businessName,
+      primaryColor: data.theme.colors.primary,
+      accentColor: data.theme.colors.accent,
+    });
   }
 
   path(...segments: string[]): string[] {

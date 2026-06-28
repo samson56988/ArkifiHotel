@@ -5,10 +5,12 @@ import type { HotelShowcase, ShowcaseLocation } from '../models/hotel-showcase.m
 import { mapPublicToShowcase } from '../utils/storefront-mapper';
 import { apiLocationId } from '../utils/storefront-path';
 import { PublicStorefrontApiService } from './public-storefront-api.service';
+import { DocumentIconService } from './document-icon.service';
 
 @Injectable({ providedIn: 'root' })
 export class StorefrontContextService {
   private readonly storefrontApi = inject(PublicStorefrontApiService);
+  private readonly documentIcon = inject(DocumentIconService);
 
   readonly storefront = signal<HotelShowcase | null>(null);
   readonly loading = signal(false);
@@ -48,6 +50,12 @@ export class StorefrontContextService {
           this.locationRouteId.set(locationRouteId ?? data.activeLocationId ?? null);
           const branch = data.branchName ? ` — ${data.branchName}` : '';
           document.title = `${data.businessName}${branch} — ArkifiStay`;
+          this.documentIcon.applyPropertyIcon({
+            logoUrl: data.logoUrl,
+            businessName: data.businessName,
+            primaryColor: data.theme.colors.primary,
+            accentColor: data.theme.colors.accent,
+          });
         } else {
           this.notFound.set(true);
         }
@@ -83,5 +91,11 @@ export class StorefrontContextService {
     this.locationRouteId.set(locationRouteId ?? data.activeLocationId ?? null);
     this.loading.set(false);
     this.notFound.set(false);
+    this.documentIcon.applyPropertyIcon({
+      logoUrl: data.logoUrl,
+      businessName: data.businessName,
+      primaryColor: data.theme.colors.primary,
+      accentColor: data.theme.colors.accent,
+    });
   }
 }

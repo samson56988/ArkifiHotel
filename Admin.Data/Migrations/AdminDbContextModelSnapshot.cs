@@ -1442,6 +1442,41 @@ namespace Admin.Data.Migrations
                     b.ToTable("RestaurantOrderPayments", (string)null);
                 });
 
+            modelBuilder.Entity("Admin.Data.Entities.RevokedBusinessAccessToken", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uuid");
+
+                    b.Property<Guid>("BusinessRegistrationId")
+                        .HasColumnType("uuid");
+
+                    b.Property<DateTimeOffset>("ExpiresAtUtc")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<string>("Jti")
+                        .IsRequired()
+                        .HasMaxLength(64)
+                        .HasColumnType("character varying(64)");
+
+                    b.Property<DateTimeOffset>("RevokedAtUtc")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<Guid?>("UserOrganizationId")
+                        .HasColumnType("uuid");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("BusinessRegistrationId");
+
+                    b.HasIndex("ExpiresAtUtc");
+
+                    b.HasIndex("Jti")
+                        .IsUnique();
+
+                    b.ToTable("RevokedBusinessAccessTokens", (string)null);
+                });
+
             modelBuilder.Entity("Admin.Data.Entities.Room", b =>
                 {
                     b.Property<Guid>("Id")
@@ -1449,6 +1484,10 @@ namespace Admin.Data.Migrations
                         .HasColumnType("uuid");
 
                     b.Property<decimal>("BasePricePerNight")
+                        .HasPrecision(12, 2)
+                        .HasColumnType("numeric(12,2)");
+
+                    b.Property<decimal?>("BasePricePerWeek")
                         .HasPrecision(12, 2)
                         .HasColumnType("numeric(12,2)");
 
@@ -1787,13 +1826,13 @@ namespace Admin.Data.Migrations
                         .HasColumnType("boolean")
                         .HasDefaultValue(false);
 
+                    b.Property<DateTimeOffset?>("LastInviteSentAt")
+                        .HasColumnType("timestamp with time zone");
+
                     b.Property<string>("LastName")
                         .IsRequired()
                         .HasMaxLength(100)
                         .HasColumnType("character varying(100)");
-
-                    b.Property<DateTimeOffset?>("LastInviteSentAt")
-                        .HasColumnType("timestamp with time zone");
 
                     b.Property<DateTimeOffset?>("UpdatedAt")
                         .HasColumnType("timestamp with time zone");
@@ -2219,6 +2258,17 @@ namespace Admin.Data.Migrations
                     b.Navigation("BusinessRegistration");
 
                     b.Navigation("RestaurantOrder");
+                });
+
+            modelBuilder.Entity("Admin.Data.Entities.RevokedBusinessAccessToken", b =>
+                {
+                    b.HasOne("Admin.Data.Entities.BusinessRegistration", "BusinessRegistration")
+                        .WithMany()
+                        .HasForeignKey("BusinessRegistrationId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("BusinessRegistration");
                 });
 
             modelBuilder.Entity("Admin.Data.Entities.Room", b =>

@@ -1,0 +1,27 @@
+<div class="host-card" [class.compact]="compact()">
+  <div class="host-card__avatar">
+    <img [src]="host().photoUrl" [alt]="host().name" width="80" height="80" />
+    @if (host().verified) {
+      <span class="host-card__verified" title="Verified host">✓</span>
+    }
+  </div>
+  <div class="host-card__info">
+    <p class="host-card__eyebrow">Hosted by</p>
+    <h3>{{ host().name }}</h3>
+    <p class="host-card__role">{{ host().role }} · {{ host().yearsHosting }} years hosting</p>
+    <div class="host-card__stats">
+      <span>★ {{ host().rating }}</span>
+      <span>{{ host().reviewCount }} reviews</span>
+      <span>{{ host().responseTime }}</span>
+    </div>
+    @if (!compact()) {
+      <p class="host-card__bio">{{ host().bio }}</p>
+      <div class="host-card__langs">
+        @for (lang of host().languages; track lang) {
+          <span>{{ lang }}</span>
+        }
+      </div>
+      <span class="host-card__link">Meet {{ host().name.split(' ')[0] }}</span>
+    }
+  </div>
+</div>

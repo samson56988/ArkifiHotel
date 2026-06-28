@@ -11,6 +11,7 @@ import { PublicStorefrontApiService } from './public-storefront-api.service';
 import { ShortletContextService } from './shortlet-context.service';
 import { StorefrontContextService } from './storefront-context.service';
 import { GuestRoomAvailabilityService } from './guest-room-availability.service';
+import { DocumentIconService } from './document-icon.service';
 
 export type StorefrontKind = 'hotel' | 'shortlet';
 
@@ -20,6 +21,7 @@ export class StorefrontEntryService {
   private readonly hotelCtx = inject(StorefrontContextService);
   private readonly shortletCtx = inject(ShortletContextService);
   private readonly availability = inject(GuestRoomAvailabilityService);
+  private readonly documentIcon = inject(DocumentIconService);
 
   readonly kind = signal<StorefrontKind | null>(null);
   readonly loading = signal(false);
@@ -134,17 +136,30 @@ export class StorefrontEntryService {
     this.hotelCtx.reset();
     this.shortletCtx.reset();
     this.availability.reset();
+    this.documentIcon.resetToDefault();
   }
 
   private applyHotel(data: HotelShowcase, locationRouteId?: string | null): void {
     this.hotelCtx.apply(data, locationRouteId);
     const branch = data.branchName ? ` — ${data.branchName}` : '';
     document.title = `${data.businessName}${branch} — ArkifiStay`;
+    this.documentIcon.applyPropertyIcon({
+      logoUrl: data.logoUrl,
+      businessName: data.businessName,
+      primaryColor: data.theme.colors.primary,
+      accentColor: data.theme.colors.accent,
+    });
   }
 
   private applyShortlet(data: ShortletShowcase, locationRouteId?: string | null): void {
     this.shortletCtx.apply(data, locationRouteId);
     const branch = data.branchName ? ` — ${data.branchName}` : '';
     document.title = `${data.businessName}${branch} — ArkifiStay`;
+    this.documentIcon.applyPropertyIcon({
+      logoUrl: data.logoUrl,
+      businessName: data.businessName,
+      primaryColor: data.theme.colors.primary,
+      accentColor: data.theme.colors.accent,
+    });
   }
 }

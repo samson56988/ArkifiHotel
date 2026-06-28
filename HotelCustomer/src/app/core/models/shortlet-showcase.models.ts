@@ -22,6 +22,7 @@ export interface ShortletListing {
   baths: number;
   guests: number;
   nightlyPrice: number;
+  weeklyPrice?: number | null;
   images: string[];
   highlightAmenities: string[];
   description: string;

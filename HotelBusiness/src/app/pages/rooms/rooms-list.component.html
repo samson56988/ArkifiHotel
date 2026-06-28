@@ -48,6 +48,9 @@
             }
             <th>Guests</th>
             <th>Price / night</th>
+            @if (isShortlet()) {
+              <th>Price / week</th>
+            }
             <th>Amenities</th>
             <th></th>
           </tr>
@@ -82,6 +85,9 @@
               }
               <td>{{ r.maxOccupancy }}</td>
               <td>{{ r.basePricePerNight | number: '1.2-2' }}</td>
+              @if (isShortlet()) {
+                <td>{{ r.basePricePerWeek ? (r.basePricePerWeek | number: '1.2-2') : '—' }}</td>
+              }
               <td>{{ r.amenityCount }}</td>
               <td><a class="link" [routerLink]="['/rooms', r.id]">Edit</a></td>
             </tr>

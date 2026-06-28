@@ -14,6 +14,7 @@ import type { ApiResult } from '../../core/models/api-result.model';
 import type { BusinessProfileDto } from '../../core/models/business-profile.models';
 import {
   createDefaultTheme,
+  createShortletDefaultTheme,
   MAX_ABOUT_STATS,
   MAX_FACILITY_PERKS,
   type PublicStorefront,
@@ -341,7 +342,7 @@ export class StorefrontDesignerComponent implements OnInit {
                   const theme =
                     themeRes.success && themeRes.data
                       ? themeRes.data
-                      : createDefaultTheme(profileRes.data!.businessName);
+                      : this.defaultThemeForBusiness(profileRes.data!.businessName);
                   this.patchTheme(theme);
                   if (slug) {
                     this.loadCatalog(slug);
@@ -357,7 +358,7 @@ export class StorefrontDesignerComponent implements OnInit {
                   const theme =
                     themeRes.success && themeRes.data
                       ? themeRes.data
-                      : createDefaultTheme(profileRes.data!.businessName);
+                      : this.defaultThemeForBusiness(profileRes.data!.businessName);
                   this.patchTheme(theme);
                   if (slug) {
                     this.loadCatalog(slug);
@@ -409,7 +410,7 @@ export class StorefrontDesignerComponent implements OnInit {
 
   resetToDefaults(): void {
     const name = this.profile()?.businessName ?? 'Your hotel';
-    this.patchTheme(createDefaultTheme(name));
+    this.patchTheme(this.defaultThemeForBusiness(name));
     this.toast.info('Defaults loaded — save to apply.', 'Storefront');
   }
 
@@ -659,7 +660,7 @@ export class StorefrontDesignerComponent implements OnInit {
   }
 
   private patchTheme(theme: StorefrontTheme): void {
-    const defaults = createDefaultTheme(this.profile()?.businessName ?? 'Your hotel');
+    const defaults = this.defaultThemeForBusiness(this.profile()?.businessName ?? 'Your hotel');
     const merged: StorefrontTheme = {
       ...defaults,
       ...theme,
@@ -779,6 +780,13 @@ export class StorefrontDesignerComponent implements OnInit {
         contactPhone: social.contactPhone || profile.phoneNumber || null,
       },
     });
+  }
+
+  private defaultThemeForBusiness(businessName: string): StorefrontTheme {
+    const profileType = this.profile()?.businessType ?? this.biz.businessType();
+    return profileType === 'Shortlet'
+      ? createShortletDefaultTheme(businessName)
+      : createDefaultTheme(businessName);
   }
 
   private buildThemeFromForm(): StorefrontTheme {

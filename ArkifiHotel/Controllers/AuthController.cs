@@ -1,8 +1,11 @@
 using Admin.Services.Abstractions;
+using ArkifiHotel.Extensions;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Shared.Data.Api;
 using Shared.Data.Dtos;
+using System.IdentityModel.Tokens.Jwt;
+using System.Security.Claims;
 
 namespace ArkifiHotel.Controllers;
 
@@ -12,13 +15,39 @@ public class AuthController : ControllerBase
 {
     private readonly IBusinessAuthService _authService;
     private readonly IBusinessPasswordResetService _passwordResetService;
+    private readonly IBusinessTokenRevocationService _tokenRevocation;
 
     public AuthController(
         IBusinessAuthService authService,
-        IBusinessPasswordResetService passwordResetService)
+        IBusinessPasswordResetService passwordResetService,
+        IBusinessTokenRevocationService tokenRevocation)
     {
         _authService = authService;
         _passwordResetService = passwordResetService;
+        _tokenRevocation = tokenRevocation;
+    }
+
+    /// <summary>Sign out — revokes the current JWT so it cannot be reused.</summary>
+    [HttpPost("logout")]
+    [Authorize(Roles = "Business")]
+    [ProducesResponseType(typeof(ApiResult), StatusCodes.Status200OK)]
+    [ProducesResponseType(typeof(ApiResult), StatusCodes.Status400BadRequest)]
+    [ProducesResponseType(typeof(ApiResult), StatusCodes.Status401Unauthorized)]
+    public async Task<IActionResult> Logout(CancellationToken cancellationToken)
+    {
+        var businessId = User.GetBusinessId();
+        var jti = User.FindFirstValue(JwtRegisteredClaimNames.Jti);
+        if (businessId is null || string.IsNullOrWhiteSpace(jti))
+        {
+            return BadRequest(ApiResult.Fail("Validation", "Could not identify the active session."));
+        }
+
+        var expiresAtUtc = ResolveTokenExpiryUtc(User);
+        await _tokenRevocation
+            .RevokeAsync(jti, businessId.Value, User.GetUserId(), expiresAtUtc, cancellationToken)
+            .ConfigureAwait(false);
+
+        return Ok(ApiResult.Ok("Signed out."));
     }
 
     /// <summary>Business login — returns JWT and account summary.</summary>
@@ -168,5 +197,16 @@ public class AuthController : ControllerBase
             "AccountBlocked" => StatusCode(StatusCodes.Status403Forbidden, api),
             _ => BadRequest(api),
         };
+    }
+
+    private static DateTimeOffset ResolveTokenExpiryUtc(System.Security.Claims.ClaimsPrincipal user)
+    {
+        var exp = user.FindFirstValue(JwtRegisteredClaimNames.Exp);
+        if (long.TryParse(exp, out var unix))
+        {
+            return DateTimeOffset.FromUnixTimeSeconds(unix);
+        }
+
+        return DateTimeOffset.UtcNow.AddHours(1);
     }
 }

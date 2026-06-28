@@ -117,6 +117,7 @@ function mapListing(
     baths,
     guests: room.maxOccupancy,
     nightlyPrice: room.basePricePerNight,
+    weeklyPrice: room.basePricePerWeek ?? null,
     images,
     highlightAmenities: room.amenityNames ?? [],
     description: desc || `${room.name} — fully furnished with self check-in.`,

@@ -20,6 +20,8 @@ import {
   normalizeLocalPhoneDigits,
 } from '../../core/utils/phone-number';
 import { BusinessWorkspaceComponent } from '../../layouts/business-workspace/business-workspace.component';
+import { BusinessContextService } from '../../core/services/business-context.service';
+import { calculateStayTotal, hasWeeklyRate } from '../../core/utils/room-pricing';
 
 function addDaysIso(base: Date, days: number): string {
   const d = new Date(base.getTime());
@@ -42,6 +44,7 @@ export class BookingFormComponent implements OnInit {
   private readonly router = inject(Router);
   private readonly toast = inject(ToastService);
   private readonly destroyRef = inject(DestroyRef);
+  readonly biz = inject(BusinessContextService);
 
   readonly form = this.fb.nonNullable.group({
     locationFilterId: ['', Validators.required],
@@ -114,16 +117,19 @@ export class BookingFormComponent implements OnInit {
       return null;
     }
 
-    return avail.basePricePerNight * nights;
+    return calculateStayTotal(avail.basePricePerNight, avail.basePricePerWeek, nights);
   }
 
   roomOptionLabel(room: BusinessRoomSummaryDto): string {
     const map = this.availabilityByRoom();
     const avail = map.get(room.id);
     const loc = room.locationName ? ` @ ${room.locationName}` : '';
+    const weekly =
+      hasWeeklyRate(avail?.basePricePerWeek ?? room.basePricePerWeek) &&
+      ` · ${(avail?.basePricePerWeek ?? room.basePricePerWeek)!.toFixed(2)} / week`;
 
     if (!avail) {
-      return `${room.name}${loc} — ${room.basePricePerNight.toFixed(2)} / night`;
+      return `${room.name}${loc} — ${room.basePricePerNight.toFixed(2)} / night${weekly ?? ''}`;
     }
 
     if (!avail.isAvailable) {
@@ -132,7 +138,10 @@ export class BookingFormComponent implements OnInit {
 
     const qty =
       avail.totalQuantity > 1 ? ` (${avail.availableUnits} of ${avail.totalQuantity} free)` : '';
-    return `${room.name}${loc}${qty} — ${room.basePricePerNight.toFixed(2)} / night`;
+    const weekLabel = hasWeeklyRate(avail.basePricePerWeek)
+      ? ` · ${avail.basePricePerWeek!.toFixed(2)} / week`
+      : '';
+    return `${room.name}${loc}${qty} — ${avail.basePricePerNight.toFixed(2)} / night${weekLabel}`;
   }
 
   isRoomSelectable(roomId: string): boolean {

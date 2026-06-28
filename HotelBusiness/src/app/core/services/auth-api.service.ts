@@ -1,7 +1,7 @@
 import { HttpClient, HttpErrorResponse } from '@angular/common/http';
 import { inject, Injectable } from '@angular/core';
 import { Observable, throwError } from 'rxjs';
-import { catchError, map } from 'rxjs/operators';
+import { catchError, finalize, map } from 'rxjs/operators';
 import type { ApiResult } from '../models/api-result.model';
 import type {
   BusinessRegistrationDto,
@@ -25,7 +25,7 @@ import type {
 import { API_BASE_URL } from '../tokens/api-base-url.token';
 import { OrganizationAccessService } from './organization-access.service';
 import { OrganizationLocationService } from './organization-location.service';
-import { parseHttpApiResult } from '../utils/http-api-result';
+import { parseHttpApiResult, normalizeApiResult } from '../utils/http-api-result';
 
 const TOKEN_KEY = 'arkifihub_business_token';
 const TOKEN_EXPIRES_KEY = 'arkifihub_business_token_expires';
@@ -144,6 +144,15 @@ export class AuthApiService {
     localStorage.removeItem(ACCOUNT_KEY);
     this.orgAccess.setAccount(null);
     this.orgLocation.setAccount(null);
+  }
+
+  /** Revokes the JWT on the server, then clears local session storage. */
+  logout(): Observable<ApiResult<unknown>> {
+    return this.http.post<unknown>(`${this.baseUrl}/api/Auth/logout`, {}).pipe(
+      map((body) => normalizeApiResult<unknown>(body)),
+      catchError((err: HttpErrorResponse) => throwError(() => parseHttpApiResult<unknown>(err))),
+      finalize(() => this.clearSession()),
+    );
   }
 
   getAccessToken(): string | null {

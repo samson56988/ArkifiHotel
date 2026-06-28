@@ -20,6 +20,8 @@ public sealed class BusinessRoomDetailDto
 
     public decimal BasePricePerNight { get; set; }
 
+    public decimal? BasePricePerWeek { get; set; }
+
     public int Quantity { get; set; }
 
     public Guid? LocationId { get; set; }

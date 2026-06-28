@@ -145,6 +145,7 @@ export interface PublicStorefrontRoom {
   tagline?: string | null;
   description?: string | null;
   basePricePerNight: number;
+  basePricePerWeek?: number | null;
   maxOccupancy: number;
   bedroomCount?: number | null;
   bathroomCount?: number | null;
@@ -293,6 +294,102 @@ export function createDefaultTheme(businessName: string): StorefrontTheme {
       accent: '#c8dcc8',
       background: '#faf9f6',
       text: '#1f2a1f',
+    },
+  };
+}
+
+/** Defaults aligned with the residential shortlet guest UI (nomad-stays style). */
+export function createShortletDefaultTheme(businessName: string): StorefrontTheme {
+  const year = new Date().getFullYear();
+  return {
+    globalFont: 'warm-hospitality',
+    banner: {
+      style: 'grand-hero',
+      headlineFont: 'display',
+      subheadlineFont: 'body',
+      headline: businessName,
+      subheadline: 'Furnished apartments for comfortable week-long stays',
+      textAlign: 'left',
+      overlayOpacity: 55,
+      badgeText: '',
+    },
+    about: {
+      enabled: true,
+      eyebrow: 'Your host',
+      title: 'Meet your host',
+      description:
+        `Welcome to ${businessName}. We host furnished apartments designed for comfortable week-long stays.`,
+      titleFont: 'display',
+      bodyFont: 'body',
+      layout: 'side-by-side',
+      quote: '',
+      quoteBy: '',
+      showStats: false,
+      stats: [],
+    },
+    rooms: {
+      enabled: true,
+      eyebrow: 'Listings',
+      title: 'All listings',
+      subtitle: 'Furnished apartments — each with full kitchen, Wi‑Fi, and self check-in.',
+      titleFont: 'display',
+      cardStyle: 'elevated',
+      showPrice: true,
+      showFeaturedSection: true,
+      featuredEyebrow: 'Our apartments',
+      featuredTitle: 'Pick your home for the week',
+      showPageStats: false,
+      showPolicies: true,
+      policyBreakfast: '',
+      policyPets: 'No smoking indoors',
+      policyCancellation: 'Quiet hours after 10 PM',
+      ctaTitle: 'Ready to book?',
+      ctaSubtitle: 'Choose an apartment, pick your dates, and get instant confirmation.',
+      ctaButtonText: 'Explore listings',
+    },
+    facilities: {
+      enabled: true,
+      eyebrow: 'Amenities',
+      title: 'Move in, plug in, relax',
+      subtitle: `Every ${businessName} apartment includes these essentials — no extra fees, no surprises.`,
+      gridEyebrow: 'Browse amenities',
+      gridTitle: "What's included",
+      gridSubtitle: 'Tap any amenity to see details.',
+      titleFont: 'display',
+      displayStyle: 'grid',
+      showPageStats: false,
+      supportStatValue: '24/7',
+      supportStatLabel: 'Guest support',
+      showGuestPerks: true,
+      perksEyebrow: 'What’s included',
+      perksTitle: 'Everything you need to settle in',
+      perksSubtitle:
+        'From fast Wi‑Fi to backup power — every unit comes stocked and ready for week-long stays.',
+      perksItems: [
+        'No parties or events',
+        'Quiet hours after 10 PM',
+        'No smoking indoors',
+      ],
+    },
+    footer: {
+      style: 'columns',
+      tagline: 'Your home away from home.',
+      copyrightText: `© ${year} ${businessName}. All rights reserved.`,
+      showContact: true,
+      backgroundStyle: 'dark-band',
+    },
+    contact: {
+      location: '',
+      checkIn: '3:00 PM',
+      checkOut: '11:00 AM',
+      introText: 'Fully furnished apartments · Self check-in',
+    },
+    colors: {
+      preset: 'terracotta-warm',
+      primary: '#3d405b',
+      accent: '#e07a5f',
+      background: '#faf8f5',
+      text: '#1a1a1a',
     },
   };
 }

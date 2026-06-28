@@ -56,6 +56,7 @@ public static class DependencyInjection
         services.AddScoped<IStorefrontAboutImageService, StorefrontAboutImageService>();
         services.AddScoped<IBusinessSocialProfileService, BusinessSocialProfileService>();
         services.AddScoped<IBusinessAuthService, BusinessAuthService>();
+        services.AddScoped<IBusinessTokenRevocationService, BusinessTokenRevocationService>();
         services.AddScoped<IBusinessPasswordResetService, BusinessPasswordResetService>();
         services.AddScoped<IBusinessAmenityService, BusinessAmenityService>();
         services.AddScoped<IBusinessLocationService, BusinessLocationService>();

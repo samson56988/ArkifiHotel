@@ -48,6 +48,7 @@ export class RoomFormComponent implements OnInit {
     isGuestFavorite: [false],
     quantity: [1, [Validators.required, Validators.min(1), Validators.max(500)]],
     basePricePerNight: [0, [Validators.required, Validators.min(0)]],
+    basePricePerWeek: [null as number | null, [Validators.min(0)]],
     locationId: ['', Validators.required],
   });
 
@@ -166,6 +167,7 @@ export class RoomFormComponent implements OnInit {
       isGuestFavorite: false,
       quantity: 1,
       basePricePerNight: 0,
+      basePricePerWeek: null,
       locationId: '',
     });
     this.amenities.set([]);
@@ -357,6 +359,8 @@ export class RoomFormComponent implements OnInit {
       isGuestFavorite: shortlet ? raw.isGuestFavorite : false,
       quantity: shortlet ? 1 : raw.quantity,
       basePricePerNight: raw.basePricePerNight,
+      basePricePerWeek:
+        shortlet && raw.basePricePerWeek && raw.basePricePerWeek > 0 ? raw.basePricePerWeek : null,
       locationId: raw.locationId.trim(),
       amenityIds: [...this.selectedAmenityIds()],
     };
@@ -620,6 +624,7 @@ export class RoomFormComponent implements OnInit {
       isGuestFavorite: room.isGuestFavorite ?? false,
       quantity: room.quantity ?? 1,
       basePricePerNight: room.basePricePerNight,
+      basePricePerWeek: room.basePricePerWeek ?? null,
       locationId: room.locationId ?? '',
     });
     this.images.set([...room.images].sort((a, b) => a.sortOrder - b.sortOrder));

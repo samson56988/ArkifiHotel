@@ -15,6 +15,9 @@
   background: var(--navy);
   padding: 1.25rem 1rem;
   color: rgba(255, 255, 255, 0.85);
+  display: flex;
+  flex-direction: column;
+  min-height: 100dvh;
 }
 
 .brand {
@@ -42,6 +45,7 @@
   display: flex;
   flex-direction: column;
   gap: 0.35rem;
+  flex: 1;
 }
 
 .menu__item {
@@ -62,6 +66,33 @@
 .menu__item--active {
   background: rgba(201, 168, 76, 0.22);
   color: var(--gold-light);
+}
+
+.sidebar-footer {
+  margin-top: auto;
+  padding-top: 1rem;
+  border-top: 1px solid rgba(201, 168, 76, 0.15);
+}
+
+.sign-out-btn {
+  width: 100%;
+  padding: 0.65rem 0.75rem;
+  border: 1px solid rgba(255, 255, 255, 0.14);
+  border-radius: 6px;
+  background: transparent;
+  color: rgba(255, 255, 255, 0.78);
+  font-family: inherit;
+  font-size: 0.875rem;
+  font-weight: 500;
+  text-align: left;
+  cursor: pointer;
+  transition: background 0.15s, color 0.15s, border-color 0.15s;
+}
+
+.sign-out-btn:hover {
+  background: rgba(220, 80, 80, 0.14);
+  border-color: rgba(220, 80, 80, 0.35);
+  color: #ffb4b4;
 }
 
 .content {

@@ -82,6 +82,7 @@ export interface RoomAvailabilityDto {
   availableUnits: number;
   isAvailable: boolean;
   basePricePerNight: number;
+  basePricePerWeek?: number | null;
   maxOccupancy: number;
   locationId: string | null;
   locationName: string | null;

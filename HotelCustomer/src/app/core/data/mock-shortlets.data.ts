@@ -1,4 +1,4 @@
-import { createDefaultTheme } from '../models/storefront-theme.models';
+import { createShortletDefaultTheme } from '../models/storefront-theme.models';
 import type { ShortletShowcase } from '../models/shortlet-showcase.models';
 
 const IMG = {
@@ -19,24 +19,15 @@ const IMG = {
 };
 
 function nomadTheme() {
-  const theme = createDefaultTheme('Nomad Stays');
-  theme.colors = {
-    preset: 'terracotta-warm',
-    primary: '#3d405b',
-    accent: '#e07a5f',
-    background: '#faf8f5',
-    text: '#1a1a1a',
-  };
-  theme.globalFont = 'modern-sans';
+  const theme = createShortletDefaultTheme('Nomad Stays');
   theme.contact.location = 'Victoria Island, Lagos';
-  theme.contact.checkIn = '3:00 PM';
-  theme.contact.checkOut = '11:00 AM';
+  theme.banner.subheadline = 'Curated apartments for week-long stays in Victoria Island';
   theme.footer.tagline = 'Curated apartments for modern travelers.';
   return theme;
 }
 
 function skylineTheme() {
-  const theme = createDefaultTheme('Skyline Apartments');
+  const theme = createShortletDefaultTheme('Skyline Apartments');
   theme.colors = {
     preset: 'sage-luxe',
     primary: '#2d4a3e',
@@ -84,6 +75,7 @@ const NOMAD_STAYS: ShortletShowcase = {
       baths: 2,
       guests: 4,
       nightlyPrice: 95000,
+      weeklyPrice: 595000,
       images: [IMG.loft, IMG.living1, IMG.kitchen, IMG.bedroom],
       highlightAmenities: ['Fast Wi‑Fi', 'Dedicated workspace', 'Smart TV', 'Full kitchen'],
       description:
@@ -99,6 +91,7 @@ const NOMAD_STAYS: ShortletShowcase = {
       baths: 1,
       guests: 2,
       nightlyPrice: 55000,
+      weeklyPrice: 340000,
       images: [IMG.studio, IMG.living2, IMG.kitchen],
       highlightAmenities: ['Self check-in', 'Washer', 'Air conditioning', 'Netflix'],
       description: 'Thoughtfully designed studio with queen bed, kitchenette, and walk-in wardrobe. Steps from restaurants and co-working cafes.',
@@ -113,6 +106,7 @@ const NOMAD_STAYS: ShortletShowcase = {
       baths: 3,
       guests: 6,
       nightlyPrice: 185000,
+      weeklyPrice: 1150000,
       images: [IMG.penthouse, IMG.balcony, IMG.living1, IMG.bedroom],
       highlightAmenities: ['Private terrace', 'Jacuzzi', 'Chef kitchen', '24/7 security'],
       description: 'Our flagship unit — wraparound terrace, three ensuite bedrooms, and sunset views over the lagoon.',
@@ -127,6 +121,7 @@ const NOMAD_STAYS: ShortletShowcase = {
       baths: 1,
       guests: 2,
       nightlyPrice: 72000,
+      weeklyPrice: 450000,
       images: [IMG.bedroom, IMG.living2, IMG.kitchen],
       highlightAmenities: ['Parking', 'Generator backup', 'Housekeeping', 'Coffee machine'],
       description: 'Cozy one-bedroom with separate living area. Popular with business travelers who want a residential feel.',
@@ -140,6 +135,7 @@ const NOMAD_STAYS: ShortletShowcase = {
       baths: 2,
       guests: 4,
       nightlyPrice: 68000,
+      weeklyPrice: 420000,
       images: [IMG.living2, IMG.bedroom, IMG.kitchen],
       highlightAmenities: ['Parking', 'Pool access', 'Wi‑Fi', 'Backup power'],
       description: 'Spacious two-bedroom in a gated Lekki estate — pool, gym, and 24-hour security included.',
@@ -154,6 +150,7 @@ const NOMAD_STAYS: ShortletShowcase = {
       baths: 1,
       guests: 2,
       nightlyPrice: 48000,
+      weeklyPrice: 295000,
       images: [IMG.studio, IMG.kitchen],
       highlightAmenities: ['Self check-in', 'Kitchenette', 'AC', 'Netflix'],
       description: 'Bright studio on Admiralty Way — walkable to cafes, supermarkets, and the cinema.',
@@ -226,6 +223,7 @@ const SKYLINE_APARTMENTS: ShortletShowcase = {
       baths: 2,
       guests: 4,
       nightlyPrice: 78000,
+      weeklyPrice: 485000,
       images: [IMG.abujaLiving, IMG.abujaBed, IMG.kitchen],
       highlightAmenities: ['Garden access', 'Backup power', 'Workspace', 'Netflix'],
       description: 'Spacious two-bedroom with private garden access. Popular with families and extended business stays.',
@@ -239,6 +237,7 @@ const SKYLINE_APARTMENTS: ShortletShowcase = {
       baths: 1,
       guests: 2,
       nightlyPrice: 62000,
+      weeklyPrice: 385000,
       images: [IMG.abujaBed, IMG.abujaLiving],
       highlightAmenities: ['Concierge', 'Daily housekeeping', 'Gym access', 'Parking'],
       description: 'Executive one-bedroom in a secure compound. Walking distance to embassies and restaurants.',
@@ -252,6 +251,7 @@ const SKYLINE_APARTMENTS: ShortletShowcase = {
       baths: 1,
       guests: 2,
       nightlyPrice: 42000,
+      weeklyPrice: 260000,
       images: [IMG.studio, IMG.kitchen],
       highlightAmenities: ['Self check-in', 'Wi‑Fi', 'Kitchenette', 'AC'],
       description: 'Efficient studio layout with everything you need for a short Abuja assignment.',

@@ -32,6 +32,9 @@ public class Room
 
     public decimal BasePricePerNight { get; set; }
 
+    /// <summary>Optional weekly package rate for shortlet stays (7+ nights).</summary>
+    public decimal? BasePricePerWeek { get; set; }
+
     /// <summary>How many physical rooms of this type exist (e.g. 4 Executive rooms).</summary>
     public int Quantity { get; set; } = 1;
 

@@ -1,0 +1,100 @@
+@use 'shortlet-shared' as *;
+
+.sl-nav {
+  position: sticky;
+  top: 0;
+  z-index: 10;
+  background: color-mix(in srgb, var(--sl-surface) 92%, transparent);
+  backdrop-filter: blur(12px);
+  box-shadow: 0 1px 0 color-mix(in srgb, var(--sl-primary) 8%, transparent);
+
+  &__inner {
+    @include sl-container;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 1rem;
+    padding-block: 0.85rem;
+  }
+
+  &__brand {
+    display: flex;
+    align-items: center;
+    gap: 0.65rem;
+    color: var(--sl-ink);
+    min-width: 0;
+    max-width: min(52vw, 320px);
+  }
+
+  &__logo {
+    width: 2.25rem;
+    height: 2.25rem;
+    object-fit: contain;
+    border-radius: 12px;
+    background: color-mix(in srgb, var(--sl-surface) 88%, var(--sl-accent));
+    flex-shrink: 0;
+  }
+
+  &__mark {
+    width: 2.25rem;
+    height: 2.25rem;
+    border-radius: 12px;
+    display: grid;
+    place-items: center;
+    background: var(--sl-accent);
+    color: #fff;
+    font-family: var(--font-display);
+    font-weight: 700;
+    font-size: 1.1rem;
+    flex-shrink: 0;
+  }
+
+  &__name {
+    font-family: var(--font-display);
+    font-weight: 600;
+    font-size: 1.05rem;
+    letter-spacing: -0.02em;
+    display: flex;
+    flex-direction: column;
+    line-height: 1.2;
+    min-width: 0;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+
+  &__branch {
+    font-family: var(--font-body);
+    font-size: 0.72rem;
+    font-weight: 500;
+    opacity: 0.75;
+    margin-top: 0.1rem;
+  }
+
+  &__links {
+    display: flex;
+    gap: 1.25rem;
+
+    span {
+      color: var(--sl-muted);
+      font-size: 0.85rem;
+      font-weight: 500;
+
+      &.active {
+        color: var(--sl-ink);
+        font-weight: 600;
+      }
+    }
+
+    @media (max-width: 720px) {
+      display: none;
+    }
+  }
+
+  &__book {
+    @include sl-btn-primary;
+    padding: 0.55rem 1rem;
+    font-size: 0.8rem;
+    pointer-events: none;
+  }
+}

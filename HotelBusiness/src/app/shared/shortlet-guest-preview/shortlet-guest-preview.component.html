@@ -1,150 +1,223 @@
 <div class="sl-preview" [style]="themeStyle()">
-  <header class="sl-preview__nav">
-    <div class="sl-preview__brand-wrap">
-      @if (data().logoUrl) {
-        <img class="sl-preview__logo" [src]="data().logoUrl!" [alt]="data().businessName + ' logo'" />
-      } @else {
-        <span class="sl-preview__mark">{{ data().businessName.charAt(0) }}</span>
-      }
-      <span class="sl-preview__brand">
-        {{ data().businessName }}
-        @if (data().branchName) {
-          <small>{{ data().branchName }}</small>
-        }
-      </span>
-    </div>
-    <nav>
-      <span [class.on]="page() === 'home'">Home</span>
-      <span [class.on]="page() === 'listings'">Listings</span>
-      <span [class.on]="page() === 'amenities'">Amenities</span>
-      <span [class.on]="page() === 'host'">Host</span>
-    </nav>
-  </header>
+  <app-shortlet-preview-nav [shortlet]="shortlet()" [page]="page()" />
 
   @if (page() === 'home') {
-    <section
-      class="hero"
-      [class.hero--empty]="!data().heroImage"
-      [style.backgroundImage]="data().heroImage ? 'url(' + data().heroImage + ')' : null"
-    >
-      <div class="hero__shade">
-        <p class="eyebrow">{{ data().neighborhood }}</p>
-        <h1>{{ data().tagline || data().headline }}</h1>
-        <p>
-          {{ data().listings.length }} apartment{{ data().listings.length === 1 ? '' : 's' }} · Check-in
-          {{ data().checkIn }}
-        </p>
+    <section class="hero">
+      <div class="hero__bg">
+        <img [src]="shortlet().heroImage" [alt]="shortlet().businessName" />
+        <div class="hero__shade"></div>
+      </div>
+      <div class="hero__content">
+        <p class="hero__loc">{{ shortlet().neighborhood }}</p>
+        <h1>{{ shortlet().tagline }}</h1>
+        <p class="hero__sub">{{ heroSubtitle() }}</p>
+        <div class="hero__actions">
+          <span class="btn-primary">Browse listings</span>
+          <span class="btn-ghost">{{ theme().rooms.ctaButtonText || 'Check availability' }}</span>
+        </div>
+      </div>
+      <div class="hero__card">
+        <div class="hero__card-row">
+          <div>
+            <span class="label">Check-in</span>
+            <strong>{{ shortlet().checkIn }}</strong>
+          </div>
+          <div>
+            <span class="label">Check-out</span>
+            <strong>{{ shortlet().checkOut }}</strong>
+          </div>
+          <div>
+            <span class="label">Min. stay</span>
+            <strong>{{ shortlet().minNights }} nights</strong>
+          </div>
+        </div>
+        <span class="btn-primary full">{{ theme().rooms.ctaButtonText || 'Reserve your stay' }}</span>
       </div>
     </section>
-    <section class="block">
-      <h2>{{ data().featuredTitle }}</h2>
-      @if (featured().length === 0) {
-        <p class="empty">Add apartments under Rooms and assign a branch to see them here.</p>
-      } @else {
-        <div class="cards">
-          @for (l of featured(); track l.id) {
-            <article class="card">
-              @if (l.image) {
-                <img [src]="l.image" [alt]="l.title" />
-              } @else {
-                <div class="card__placeholder">No photo</div>
-              }
-              <div class="card__body">
-                <h3>{{ l.title }}</h3>
-                <p>{{ l.tagline }}</p>
-                <strong>{{ formatPrice(l.nightlyPrice) }}<small>/ night</small></strong>
-              </div>
-            </article>
+
+    @if (theme().rooms.showFeaturedSection) {
+      <section class="featured">
+        <div class="section-head">
+          <div>
+            <p class="eyebrow">{{ theme().rooms.featuredEyebrow }}</p>
+            <h2>{{ theme().rooms.featuredTitle }}</h2>
+          </div>
+          <span class="link">View all {{ shortlet().listings.length }} listings →</span>
+        </div>
+        @if (featured().length === 0) {
+          <p class="empty">Add apartments under Rooms and assign a branch to see them here.</p>
+        } @else {
+          <div class="featured__grid">
+            @for (listing of featured(); track listing.id) {
+              <app-shortlet-preview-listing-card [listing]="listing" />
+            }
+          </div>
+        }
+      </section>
+    }
+
+    @if (theme().facilities.showGuestPerks && topAmenities().length > 0) {
+      <section class="amenities-preview">
+        <div class="amenities-preview__copy">
+          <p class="eyebrow">{{ theme().facilities.perksEyebrow }}</p>
+          <h2>{{ theme().facilities.perksTitle }}</h2>
+          <p>{{ theme().facilities.perksSubtitle }}</p>
+          <span class="link">See full amenities list</span>
+        </div>
+        <div class="amenities-preview__grid">
+          @for (a of topAmenities(); track a.id) {
+            <div class="amenity-chip">
+              <span class="icon">{{ a.icon }}</span>
+              <span>{{ a.label }}</span>
+            </div>
           }
         </div>
-      }
-    </section>
-    <section class="block host-teaser">
-      @if (data().hostPhoto) {
-        <img [src]="data().hostPhoto" [alt]="data().hostName" />
-      } @else {
-        <div class="host-teaser__placeholder">{{ data().hostName.charAt(0) }}</div>
-      }
-      <div>
-        <p class="eyebrow">Your host</p>
-        <h3>{{ data().hostName }}</h3>
-        <p>{{ data().hostBio }}</p>
+      </section>
+    }
+
+    <section class="host-preview">
+      <div class="host-preview__visual">
+        <div class="mosaic">
+          @for (img of shortlet().galleryImages.slice(0, 4); track img; let i = $index) {
+            <img [src]="img" [alt]="'Gallery ' + (i + 1)" loading="lazy" />
+          }
+        </div>
       </div>
+      <div class="host-preview__card">
+        <app-shortlet-preview-host-card [host]="shortlet().host" />
+      </div>
+    </section>
+
+    <section class="cta-band">
+      <h2>{{ theme().rooms.ctaTitle }}</h2>
+      <p>{{ theme().rooms.ctaSubtitle }}</p>
+      <span class="btn-primary">{{ theme().rooms.ctaButtonText }}</span>
     </section>
   }
 
   @if (page() === 'listings') {
-    <section class="block page-head">
-      <h1>{{ data().listingsTitle }}</h1>
-      <p>{{ data().listingsSubtitle }}</p>
-    </section>
-    @if (data().listings.length === 0) {
-      <p class="empty block">No apartments for this branch yet. Create rooms and link them to this location.</p>
-    } @else {
-      <div class="cards cards--grid">
-        @for (l of data().listings; track l.id) {
-          <article class="card">
-            @if (l.image) {
-              <img [src]="l.image" [alt]="l.title" />
-            } @else {
-              <div class="card__placeholder">No photo</div>
-            }
-            <div class="card__body">
-              <span class="meta">{{ l.beds }} bed · {{ l.guests }} guests</span>
-              <h3>{{ l.title }}</h3>
-              <p>{{ l.tagline }}</p>
-              @if (l.amenities.length) {
-                <div class="chips">
-                  @for (a of l.amenities; track a) {
-                    <span>{{ a }}</span>
-                  }
-                </div>
-              }
-              <strong>{{ formatPrice(l.nightlyPrice) }}<small>/ night</small></strong>
-            </div>
-          </article>
+    <div class="page-listings">
+      <section class="page-hero">
+        <p class="eyebrow">{{ theme().rooms.eyebrow || shortlet().neighborhood }}</p>
+        <h1>{{ theme().rooms.title }}</h1>
+        <p>{{ listingsSubtitle() }}</p>
+      </section>
+
+      <div class="filters">
+        <button type="button" [class.active]="bedFilter() === 'all'" (click)="setBedFilter('all')">All</button>
+        <button type="button" [class.active]="bedFilter() === '1'" (click)="setBedFilter('1')">1 bedroom</button>
+        <button type="button" [class.active]="bedFilter() === '2'" (click)="setBedFilter('2')">2 bedrooms</button>
+        <button type="button" [class.active]="bedFilter() === '3+'" (click)="setBedFilter('3+')">3+ bedrooms</button>
+      </div>
+
+      <div class="grid">
+        @for (listing of filteredListings(); track listing.id) {
+          <app-shortlet-preview-listing-card [listing]="listing" />
+        } @empty {
+          <p class="empty">No listings match this filter.</p>
         }
       </div>
-    }
+    </div>
   }
 
   @if (page() === 'amenities') {
-    <section class="block page-head">
-      <h1>{{ data().amenitiesTitle }}</h1>
-      <p>{{ data().amenitiesSubtitle }}</p>
-    </section>
-    @if (data().amenities.length === 0) {
-      <p class="empty block">Add amenities under Room amenities in the sidebar.</p>
-    } @else {
-      <div class="amenity-grid">
-        @for (a of data().amenities; track a.id) {
-          <div class="amenity">
-            <span>{{ a.icon }}</span>
-            <div>
-              <strong>{{ a.label }}</strong>
-              <p>{{ a.description }}</p>
+    <div class="page-amenities">
+      <section class="page-hero">
+        <p class="eyebrow">{{ theme().facilities.eyebrow }}</p>
+        <h1>{{ theme().facilities.title }}</h1>
+        <p>{{ amenitiesPageSubtitle() }}</p>
+      </section>
+
+      @if (groupedAmenities().length === 0) {
+        <p class="empty">Add amenities under Room amenities in the sidebar.</p>
+      } @else {
+        @for (group of groupedAmenities(); track group[0]) {
+          <section class="group">
+            <h2>{{ group[0] }}</h2>
+            <div class="grid">
+              @for (a of group[1]; track a.id) {
+                <article class="card">
+                  <span class="icon">{{ a.icon }}</span>
+                  <div>
+                    <h3>{{ a.label }}</h3>
+                    <p>{{ a.description }}</p>
+                  </div>
+                </article>
+              }
             </div>
-          </div>
+          </section>
         }
-      </div>
-    }
+      }
+
+      <section class="rules">
+        <h2>House rules</h2>
+        <ul>
+          @for (rule of shortlet().houseRules; track rule) {
+            <li>{{ rule }}</li>
+          }
+        </ul>
+      </section>
+    </div>
   }
 
   @if (page() === 'host') {
-    <section class="block host-page">
-      @if (data().hostPhoto) {
-        <img class="host-page__photo" [src]="data().hostPhoto" [alt]="data().hostName" />
-      } @else {
-        <div class="host-page__placeholder">{{ data().hostName.charAt(0) }}</div>
-      }
-      <h1>{{ data().hostName }}</h1>
-      <p>{{ data().hostBio }}</p>
-      <h2>House rules</h2>
-      <ul>
-        @for (rule of data().houseRules; track rule) {
-          <li>{{ rule }}</li>
-        }
-      </ul>
-    </section>
+    <div class="page-host">
+      <section class="page-hero">
+        <p class="eyebrow">{{ theme().about.eyebrow }}</p>
+        <h1>Meet {{ shortlet().host.name.split(' ')[0] }}</h1>
+      </section>
+
+      <div class="host-layout">
+        <div class="host-profile">
+          <div class="host-profile__visual">
+            <img class="avatar" [src]="shortlet().host.photoUrl" [alt]="shortlet().host.name" />
+            @if (shortlet().host.verified) {
+              <span class="badge">Verified host</span>
+            }
+          </div>
+          <div class="host-profile__info">
+            <h2>{{ shortlet().host.name }}</h2>
+            <p class="role">{{ shortlet().host.role }}</p>
+            <div class="stats">
+              <div><strong>★ {{ shortlet().host.rating }}</strong><span>Rating</span></div>
+              <div><strong>{{ shortlet().host.reviewCount }}</strong><span>Reviews</span></div>
+              <div><strong>{{ shortlet().host.yearsHosting }}</strong><span>Years hosting</span></div>
+              <div><strong>{{ shortlet().host.responseTime }}</strong><span>Response</span></div>
+            </div>
+            <p class="bio">{{ shortlet().host.bio }}</p>
+            <div class="langs">
+              <span class="label">Languages</span>
+              @for (lang of shortlet().host.languages; track lang) {
+                <span class="pill">{{ lang }}</span>
+              }
+            </div>
+          </div>
+        </div>
+
+        <section class="reviews">
+          <h2>What guests are saying</h2>
+          <div class="reviews__grid">
+            @for (r of reviews; track r.name) {
+              <article>
+                <div class="review-head">
+                  <strong>{{ r.name }}</strong>
+                  <span>{{ r.date }}</span>
+                </div>
+                <p>{{ r.text }}</p>
+              </article>
+            }
+          </div>
+        </section>
+
+        <section class="rules-block">
+          <h2>House rules</h2>
+          <ul>
+            @for (rule of shortlet().houseRules; track rule) {
+              <li>{{ rule }}</li>
+            }
+          </ul>
+        </section>
+      </div>
+    </div>
   }
 </div>

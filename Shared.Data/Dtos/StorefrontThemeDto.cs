@@ -205,6 +205,8 @@ public sealed class PublicStorefrontRoomDto
 
     public decimal BasePricePerNight { get; set; }
 
+    public decimal? BasePricePerWeek { get; set; }
+
     public int MaxOccupancy { get; set; }
 
     public int? BedroomCount { get; set; }
