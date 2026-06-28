@@ -30,9 +30,24 @@ jobs:
               APP_DIR="${HOME}/arkifihotel"
             fi
             BRANCH="${{ github.ref_name }}"
+            REPO_URL="https://github.com/${{ github.repository }}.git"
+
+            if [[ ! -d "${APP_DIR}/.git" ]]; then
+              echo "First deploy — cloning ${REPO_URL} into ${APP_DIR}"
+              mkdir -p "$(dirname "${APP_DIR}")"
+              git clone -b "${BRANCH}" "${REPO_URL}" "${APP_DIR}"
+            fi
+
             cd "${APP_DIR}"
             git fetch origin
             git checkout "${BRANCH}"
             git pull origin "${BRANCH}"
+
+            if [[ ! -f deploy/.env ]]; then
+              echo "ERROR: Missing deploy/.env on server."
+              echo "SSH in and run: cp deploy/.env.example deploy/.env && nano deploy/.env"
+              exit 1
+            fi
+
             chmod +x deploy/deploy.sh
             ./deploy/deploy.sh
