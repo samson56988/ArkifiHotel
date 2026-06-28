@@ -1,0 +1,47 @@
+@use '../shared/page-shared';
+
+.section {
+  margin-bottom: 2rem;
+}
+
+.section h2 {
+  margin: 0 0 1rem;
+  font-size: 1.1rem;
+}
+
+.plan-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+  gap: 1rem;
+}
+
+.plan-card {
+  background: var(--white);
+  border: 1px solid var(--color-border);
+  border-radius: 0.75rem;
+  padding: 1rem 1.1rem;
+}
+
+.plan-card__tier {
+  margin: 0 0 0.35rem;
+  font-size: 0.72rem;
+  font-weight: 700;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--gold);
+}
+
+.plan-card h3 {
+  margin: 0 0 0.35rem;
+}
+
+.plan-card__price {
+  margin: 0 0 0.5rem;
+  font-weight: 600;
+}
+
+.plan-card__desc {
+  margin: 0;
+  font-size: 0.88rem;
+  color: var(--slate-light);
+}

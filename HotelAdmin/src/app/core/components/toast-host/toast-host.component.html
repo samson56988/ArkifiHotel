@@ -1,0 +1,22 @@
+@if (toast.items().length > 0) {
+  <div class="toast-host" role="region" aria-label="Notifications">
+    @for (t of toast.items(); track t.id) {
+      <div
+        class="toast"
+        [class.toast--success]="t.variant === 'success'"
+        [class.toast--error]="t.variant === 'error'"
+        [class.toast--info]="t.variant === 'info'"
+        [class.toast--warning]="t.variant === 'warning'"
+        role="status"
+      >
+        <div class="toast__body">
+          @if (t.title) {
+            <p class="toast__title">{{ t.title }}</p>
+          }
+          <p class="toast__message">{{ t.message }}</p>
+        </div>
+        <button type="button" class="toast__close" (click)="toast.dismiss(t.id)" aria-label="Dismiss">×</button>
+      </div>
+    }
+  </div>
+}

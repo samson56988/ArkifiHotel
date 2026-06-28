@@ -1,0 +1,64 @@
+<app-platform-workspace>
+  <a routerLink="/businesses" class="back-link">← All businesses</a>
+
+  @if (loading()) {
+    <p class="empty-state">Loading business...</p>
+  } @else if (business(); as b) {
+    <header class="page-header">
+      <h1>{{ b.businessName }}</h1>
+      <p>{{ b.businessType }} · {{ b.status }} · {{ b.planName }}</p>
+    </header>
+
+    <div class="detail-grid">
+      <section class="panel">
+        <h2>Contact</h2>
+        <dl>
+          <dt>Owner</dt>
+          <dd>{{ b.firstName }} {{ b.lastName }}</dd>
+          <dt>Email</dt>
+          <dd>{{ b.contactEmail }}</dd>
+          <dt>Phone</dt>
+          <dd>{{ b.phoneNumber }}</dd>
+          <dt>Slug</dt>
+          <dd>{{ b.slug || '—' }}</dd>
+          <dt>Joined</dt>
+          <dd>{{ b.createdAt | date: 'medium' }}</dd>
+          <dt>Subscription ends</dt>
+          <dd>{{ b.subscriptionExpiresAt ? (b.subscriptionExpiresAt | date: 'mediumDate') : '—' }}</dd>
+        </dl>
+      </section>
+
+      <section class="panel">
+        <h2>Usage</h2>
+        <dl>
+          <dt>Locations</dt>
+          <dd>{{ b.locationCount }}</dd>
+          <dt>Rooms / apartments</dt>
+          <dd>{{ b.roomCount }}</dd>
+          <dt>Bookings</dt>
+          <dd>{{ b.bookingCount }}</dd>
+          <dt>Staff accounts</dt>
+          <dd>{{ b.staffCount }}</dd>
+        </dl>
+      </section>
+
+      <section class="panel panel--wide">
+        <h2>Admin controls</h2>
+        <form [formGroup]="form" (ngSubmit)="save()" class="admin-form">
+          <label>
+            <span>Status</span>
+            <select formControlName="status">
+              <option value="Active">Active</option>
+              <option value="Inactive">Inactive</option>
+            </select>
+          </label>
+          <label>
+            <span>Internal notes</span>
+            <textarea formControlName="adminNotes" rows="4" placeholder="Notes visible only to platform staff"></textarea>
+          </label>
+          <button type="submit" [disabled]="saving()">{{ saving() ? 'Saving...' : 'Save changes' }}</button>
+        </form>
+      </section>
+    </div>
+  }
+</app-platform-workspace>

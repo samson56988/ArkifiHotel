@@ -1,0 +1,39 @@
+<app-platform-workspace>
+  <header class="page-header">
+    <h1>Activity</h1>
+    <p>Audit trail of actions taken by business admins ({{ totalCount() }} total).</p>
+  </header>
+
+  @if (loading()) {
+    <p class="empty-state">Loading activity...</p>
+  } @else if (logs().length === 0) {
+    <p class="empty-state">No activity recorded yet.</p>
+  } @else {
+    <div class="data-table-wrap">
+      <table class="data-table">
+        <thead>
+          <tr>
+            <th>When</th>
+            <th>Business</th>
+            <th>Action</th>
+            <th>Entity</th>
+            <th>Summary</th>
+            <th>Actor</th>
+          </tr>
+        </thead>
+        <tbody>
+          @for (log of logs(); track log.id) {
+            <tr>
+              <td>{{ log.createdAt | date: 'short' }}</td>
+              <td><a class="link-btn" [routerLink]="['/businesses', log.businessId]">{{ log.businessName }}</a></td>
+              <td>{{ log.action }}</td>
+              <td>{{ log.entityType }}</td>
+              <td>{{ log.summary || '—' }}</td>
+              <td>{{ log.actorName || '—' }}</td>
+            </tr>
+          }
+        </tbody>
+      </table>
+    </div>
+  }
+</app-platform-workspace>

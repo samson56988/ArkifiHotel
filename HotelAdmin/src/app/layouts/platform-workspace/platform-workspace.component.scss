@@ -1,0 +1,125 @@
+:host {
+  display: block;
+}
+
+.workspace {
+  min-height: 100dvh;
+  display: grid;
+  grid-template-columns: 250px 1fr;
+  background: var(--off-white);
+  color: var(--navy);
+}
+
+.sidebar {
+  border-right: 1px solid rgba(201, 168, 76, 0.15);
+  background: var(--navy);
+  padding: 1.25rem 1rem;
+  color: rgba(255, 255, 255, 0.85);
+  display: flex;
+  flex-direction: column;
+  min-height: 100dvh;
+}
+
+.brand {
+  display: flex;
+  flex-direction: column;
+  gap: 0.35rem;
+  text-decoration: none;
+  font-family: var(--font-display);
+  font-size: 1.35rem;
+  font-weight: 700;
+  color: var(--white);
+  margin-bottom: 1.4rem;
+}
+
+.brand__accent {
+  color: var(--gold);
+}
+
+.brand__badge {
+  font-family: var(--font-sans);
+  font-size: 0.65rem;
+  font-weight: 600;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--gold-light);
+}
+
+.menu {
+  display: flex;
+  flex-direction: column;
+  gap: 0.35rem;
+  flex: 1;
+}
+
+.menu__item {
+  display: block;
+  padding: 0.55rem 0.75rem;
+  border-radius: 0.45rem;
+  text-decoration: none;
+  font-size: 0.92rem;
+  font-weight: 500;
+  color: rgba(255, 255, 255, 0.72);
+  transition: background 0.15s, color 0.15s;
+}
+
+.menu__item:hover {
+  background: rgba(255, 255, 255, 0.06);
+  color: var(--white);
+}
+
+.menu__item--active {
+  background: rgba(201, 168, 76, 0.18);
+  color: var(--gold-light);
+}
+
+.sidebar-footer {
+  margin-top: 1rem;
+  padding-top: 1rem;
+  border-top: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.staff-name {
+  margin: 0 0 0.15rem;
+  font-size: 0.88rem;
+  font-weight: 600;
+  color: var(--white);
+}
+
+.staff-email {
+  margin: 0 0 0.75rem;
+  font-size: 0.78rem;
+  color: rgba(255, 255, 255, 0.55);
+  word-break: break-all;
+}
+
+.sign-out-btn {
+  width: 100%;
+  padding: 0.55rem 0.75rem;
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  border-radius: 0.45rem;
+  background: transparent;
+  color: rgba(255, 255, 255, 0.85);
+  cursor: pointer;
+  font-size: 0.88rem;
+}
+
+.sign-out-btn:hover {
+  border-color: var(--gold);
+  color: var(--gold-light);
+}
+
+.content {
+  padding: clamp(1.25rem, 3vw, 2rem);
+  min-width: 0;
+}
+
+@media (max-width: 860px) {
+  .workspace {
+    grid-template-columns: 1fr;
+  }
+
+  .sidebar {
+    min-height: auto;
+  }
+}

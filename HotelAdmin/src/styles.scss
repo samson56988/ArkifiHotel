@@ -1,1 +1,59 @@
-/* You can add global styles to this file, and also import other style files */
+/* ArkifiStay platform admin — navy, gold, Playfair + Inter */
+:root {
+  --font-sans: 'Inter', system-ui, -apple-system, sans-serif;
+  --font-display: 'Playfair Display', Georgia, 'Times New Roman', serif;
+
+  --navy: #0b1628;
+  --navy-mid: #162240;
+  --gold: #c9a84c;
+  --gold-light: #e8c96a;
+  --gold-pale: #f5edd6;
+  --off-white: #f7f4ef;
+  --clay: #e8ddd0;
+  --slate: #4a5568;
+  --slate-light: #718096;
+  --white: #ffffff;
+
+  --color-bg: var(--off-white);
+  --color-surface: var(--white);
+  --color-surface-elevated: var(--white);
+  --color-sage-soft: var(--gold-pale);
+  --color-text: var(--navy);
+  --color-heading: var(--navy);
+  --color-muted: var(--slate-light);
+  --color-border: color-mix(in srgb, var(--clay) 70%, var(--slate-light));
+  --color-midnight-deep: var(--navy);
+  --color-accent: var(--gold);
+  --color-sage: var(--gold);
+}
+
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+}
+
+html {
+  scroll-behavior: smooth;
+}
+
+body {
+  margin: 0;
+  font-family: var(--font-sans);
+  font-size: 16px;
+  line-height: 1.55;
+  color: var(--color-text);
+  background: var(--color-bg);
+  -webkit-font-smoothing: antialiased;
+}
+
+a {
+  color: inherit;
+}
+
+button,
+input,
+select,
+textarea {
+  font: inherit;
+}

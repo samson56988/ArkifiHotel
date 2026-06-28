@@ -1,0 +1,43 @@
+<app-platform-workspace>
+  <header class="page-header">
+    <h1>Platform overview</h1>
+    <p>Snapshot of businesses and recent activity across ArkifiStay.</p>
+  </header>
+
+  @if (loading()) {
+    <p class="empty-state">Loading dashboard...</p>
+  } @else if (stats(); as s) {
+    <div class="kpi-grid">
+      <article class="kpi-card">
+        <p class="kpi-card__label">Total businesses</p>
+        <p class="kpi-card__value">{{ s.totalBusinesses }}</p>
+      </article>
+      <article class="kpi-card">
+        <p class="kpi-card__label">Active</p>
+        <p class="kpi-card__value">{{ s.activeBusinesses }}</p>
+      </article>
+      <article class="kpi-card">
+        <p class="kpi-card__label">Hotels</p>
+        <p class="kpi-card__value">{{ s.hotelCount }}</p>
+      </article>
+      <article class="kpi-card">
+        <p class="kpi-card__label">Shortlets</p>
+        <p class="kpi-card__value">{{ s.shortletCount }}</p>
+      </article>
+      <article class="kpi-card">
+        <p class="kpi-card__label">Pro subscriptions</p>
+        <p class="kpi-card__value">{{ s.proSubscriptions }}</p>
+      </article>
+      <article class="kpi-card">
+        <p class="kpi-card__label">Activity (7 days)</p>
+        <p class="kpi-card__value">{{ s.recentActivityCount }}</p>
+      </article>
+    </div>
+
+    <div class="quick-links">
+      <a routerLink="/businesses" class="quick-link">View all businesses</a>
+      <a routerLink="/subscriptions" class="quick-link">Subscription payments</a>
+      <a routerLink="/activity" class="quick-link">Audit activity</a>
+    </div>
+  }
+</app-platform-workspace>

@@ -1,0 +1,23 @@
+@use '../shared/page-shared';
+
+.quick-links {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.75rem;
+}
+
+.quick-link {
+  display: inline-flex;
+  padding: 0.65rem 1rem;
+  border-radius: 0.5rem;
+  background: var(--white);
+  border: 1px solid var(--color-border);
+  text-decoration: none;
+  font-weight: 600;
+  color: var(--navy);
+}
+
+.quick-link:hover {
+  border-color: var(--gold);
+  color: var(--gold);
+}

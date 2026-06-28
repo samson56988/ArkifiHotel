@@ -1,0 +1,27 @@
+<div class="workspace">
+  <aside class="sidebar">
+    <a class="brand" routerLink="/dashboard" aria-label="ArkifiStay platform admin">
+      <span class="brand__text">Arkifi<span class="brand__accent">Stay</span></span>
+      <span class="brand__badge">Platform</span>
+    </a>
+
+    <nav class="menu">
+      <a class="menu__item" routerLink="/dashboard" routerLinkActive="menu__item--active" [routerLinkActiveOptions]="{ exact: true }">Overview</a>
+      <a class="menu__item" routerLink="/businesses" routerLinkActive="menu__item--active">Businesses</a>
+      <a class="menu__item" routerLink="/subscriptions" routerLinkActive="menu__item--active">Subscriptions</a>
+      <a class="menu__item" routerLink="/activity" routerLinkActive="menu__item--active">Activity</a>
+    </nav>
+
+    <div class="sidebar-footer">
+      @if (account) {
+        <p class="staff-name">{{ account.displayName }}</p>
+        <p class="staff-email">{{ account.email }}</p>
+      }
+      <button type="button" class="sign-out-btn" (click)="signOut()">Sign out</button>
+    </div>
+  </aside>
+
+  <main class="content">
+    <ng-content />
+  </main>
+</div>

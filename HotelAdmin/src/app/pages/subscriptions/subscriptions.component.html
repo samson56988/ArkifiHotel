@@ -1,0 +1,60 @@
+<app-platform-workspace>
+  <header class="page-header">
+    <h1>Subscriptions</h1>
+    <p>Plans offered on the platform and recent subscription payments.</p>
+  </header>
+
+  @if (loading()) {
+    <p class="empty-state">Loading subscriptions...</p>
+  } @else {
+    <section class="section">
+      <h2>Plans</h2>
+      <div class="plan-grid">
+        @for (plan of plans(); track plan.id) {
+          <article class="plan-card">
+            <p class="plan-card__tier">{{ plan.tier }}</p>
+            <h3>{{ plan.name }}</h3>
+            <p class="plan-card__price">{{ plan.priceAmount | currency: plan.currency : 'symbol' : '1.0-0' }} / {{ plan.billingInterval }}</p>
+            @if (plan.description) {
+              <p class="plan-card__desc">{{ plan.description }}</p>
+            }
+          </article>
+        }
+      </div>
+    </section>
+
+    <section class="section">
+      <h2>Recent payments</h2>
+      @if (payments().length === 0) {
+        <p class="empty-state">No subscription payments yet.</p>
+      } @else {
+        <div class="data-table-wrap">
+          <table class="data-table">
+            <thead>
+              <tr>
+                <th>Business</th>
+                <th>Plan</th>
+                <th>Amount</th>
+                <th>Status</th>
+                <th>Reference</th>
+                <th>Date</th>
+              </tr>
+            </thead>
+            <tbody>
+              @for (p of payments(); track p.id) {
+                <tr>
+                  <td>{{ p.businessName }}</td>
+                  <td>{{ p.planName }}</td>
+                  <td>{{ p.amount | currency: p.currency : 'symbol' : '1.0-0' }}</td>
+                  <td>{{ p.status }}</td>
+                  <td>{{ p.paymentReference || '—' }}</td>
+                  <td>{{ p.createdAt | date: 'medium' }}</td>
+                </tr>
+              }
+            </tbody>
+          </table>
+        </div>
+      }
+    </section>
+  }
+</app-platform-workspace>

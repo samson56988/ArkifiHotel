@@ -1,0 +1,52 @@
+<app-platform-workspace>
+  <header class="page-header">
+    <h1>Businesses</h1>
+    <p>All registered hotels and shortlets on ArkifiStay.</p>
+  </header>
+
+  @if (loading()) {
+    <p class="empty-state">Loading businesses...</p>
+  } @else if (businesses().length === 0) {
+    <p class="empty-state">No businesses registered yet.</p>
+  } @else {
+    <div class="data-table-wrap">
+      <table class="data-table">
+        <thead>
+          <tr>
+            <th>Name</th>
+            <th>Type</th>
+            <th>Status</th>
+            <th>Plan</th>
+            <th>Contact</th>
+            <th>Joined</th>
+            <th></th>
+          </tr>
+        </thead>
+        <tbody>
+          @for (b of businesses(); track b.id) {
+            <tr>
+              <td>
+                <strong>{{ b.businessName }}</strong>
+                @if (b.slug) {
+                  <div class="sub">{{ b.slug }}</div>
+                }
+              </td>
+              <td>{{ b.businessType }}</td>
+              <td>
+                <span class="badge" [class.badge--active]="b.status === 'Active'" [class.badge--inactive]="b.status !== 'Active'">
+                  {{ b.status }}
+                </span>
+              </td>
+              <td>
+                <span class="badge" [class.badge--pro]="b.planTier === 'Pro'">{{ b.planName }}</span>
+              </td>
+              <td>{{ b.contactEmail }}</td>
+              <td>{{ b.createdAt | date: 'mediumDate' }}</td>
+              <td><a class="link-btn" [routerLink]="['/businesses', b.id]">View</a></td>
+            </tr>
+          }
+        </tbody>
+      </table>
+    </div>
+  }
+</app-platform-workspace>

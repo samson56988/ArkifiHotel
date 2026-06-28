@@ -1,0 +1,35 @@
+# Build stage
+FROM mcr.microsoft.com/dotnet/sdk:10.0 AS build
+WORKDIR /src
+
+COPY ArkifiHotel/ArkifiHotel.csproj ArkifiHotel/
+COPY Admin.Infrastructure/Admin.Infrastructure.csproj Admin.Infrastructure/
+COPY Admin.Services/Admin.Services.csproj Admin.Services/
+COPY Admin.Data/Admin.Data.csproj Admin.Data/
+COPY Shared.Services/Shared.Services.csproj Shared.Services/
+COPY Shared.Data/Shared.Data.csproj Shared.Data/
+
+RUN dotnet restore ArkifiHotel/ArkifiHotel.csproj
+
+COPY ArkifiHotel/ ArkifiHotel/
+COPY Admin.Infrastructure/ Admin.Infrastructure/
+COPY Admin.Services/ Admin.Services/
+COPY Admin.Data/ Admin.Data/
+COPY Shared.Services/ Shared.Services/
+COPY Shared.Data/ Shared.Data/
+
+RUN dotnet publish ArkifiHotel/ArkifiHotel.csproj -c Release -o /app/publish /p:UseAppHost=false
+
+# Runtime stage
+FROM mcr.microsoft.com/dotnet/aspnet:10.0 AS runtime
+WORKDIR /app
+
+ENV ASPNETCORE_URLS=http://+:8080
+EXPOSE 8080
+
+COPY --from=build /app/publish .
+RUN mkdir -p /app/wwwroot/uploads
+
+VOLUME ["/app/wwwroot/uploads"]
+
+ENTRYPOINT ["dotnet", "ArkifiHotel.dll"]

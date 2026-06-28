@@ -48,6 +48,7 @@ public class AdminDbContext : DbContext
     public DbSet<UserOrganizationLocationPermission> UserOrganizationLocationPermissions =>
         Set<UserOrganizationLocationPermission>();
     public DbSet<OrganizationAuditLog> OrganizationAuditLogs => Set<OrganizationAuditLog>();
+    public DbSet<PlatformStaff> PlatformStaff => Set<PlatformStaff>();
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
@@ -86,6 +87,7 @@ public class AdminDbContext : DbContext
         modelBuilder.ApplyConfiguration(new UserOrganizationModulePermissionConfiguration());
         modelBuilder.ApplyConfiguration(new UserOrganizationLocationPermissionConfiguration());
         modelBuilder.ApplyConfiguration(new OrganizationAuditLogConfiguration());
+        modelBuilder.ApplyConfiguration(new PlatformStaffConfiguration());
         DefaultAmenitySeed.Apply(modelBuilder);
         SubscriptionPlanSeed.Apply(modelBuilder);
     }

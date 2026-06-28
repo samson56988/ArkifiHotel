@@ -1,0 +1,116 @@
+.page-header {
+  margin-bottom: 1.5rem;
+}
+
+.page-header h1 {
+  margin: 0 0 0.35rem;
+  font-family: var(--font-display);
+  font-size: clamp(1.5rem, 3vw, 2rem);
+  color: var(--navy);
+}
+
+.page-header p {
+  margin: 0;
+  color: var(--slate-light);
+}
+
+.kpi-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+  gap: 1rem;
+  margin-bottom: 1.5rem;
+}
+
+.kpi-card {
+  background: var(--white);
+  border: 1px solid var(--color-border);
+  border-radius: 0.75rem;
+  padding: 1rem 1.1rem;
+}
+
+.kpi-card__label {
+  margin: 0 0 0.35rem;
+  font-size: 0.8rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  color: var(--slate-light);
+}
+
+.kpi-card__value {
+  margin: 0;
+  font-size: 1.75rem;
+  font-weight: 700;
+  color: var(--navy);
+}
+
+.data-table-wrap {
+  overflow-x: auto;
+  background: var(--white);
+  border: 1px solid var(--color-border);
+  border-radius: 0.75rem;
+}
+
+.data-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 0.9rem;
+}
+
+.data-table th,
+.data-table td {
+  padding: 0.75rem 1rem;
+  text-align: left;
+  border-bottom: 1px solid var(--color-border);
+}
+
+.data-table th {
+  font-size: 0.75rem;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  color: var(--slate-light);
+  background: color-mix(in srgb, var(--off-white) 80%, var(--white));
+}
+
+.data-table tr:last-child td {
+  border-bottom: none;
+}
+
+.badge {
+  display: inline-block;
+  padding: 0.2rem 0.55rem;
+  border-radius: 999px;
+  font-size: 0.75rem;
+  font-weight: 600;
+}
+
+.badge--active {
+  background: color-mix(in srgb, #2d6a4f 15%, var(--white));
+  color: #2d6a4f;
+}
+
+.badge--inactive {
+  background: color-mix(in srgb, #8b3a3f 12%, var(--white));
+  color: #8b3a3f;
+}
+
+.badge--pro {
+  background: color-mix(in srgb, var(--gold) 20%, var(--white));
+  color: #7a5f1e;
+}
+
+.link-btn {
+  color: var(--navy);
+  font-weight: 600;
+  text-decoration: none;
+}
+
+.link-btn:hover {
+  color: var(--gold);
+}
+
+.empty-state {
+  padding: 2rem;
+  text-align: center;
+  color: var(--slate-light);
+}

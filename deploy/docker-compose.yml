@@ -1,0 +1,87 @@
+# Production stack for VPS deployment.
+# Usage (from repo root on server):
+#   cp deploy/.env.example deploy/.env   # fill secrets
+#   docker compose -f deploy/docker-compose.yml --env-file deploy/.env up -d --build
+
+name: arkifistay
+
+services:
+  api:
+    build:
+      context: ..
+      dockerfile: deploy/Dockerfile.api
+    container_name: arkifistay-api
+    restart: unless-stopped
+    ports:
+      - "${API_PORT:-9001}:8080"
+    environment:
+      ASPNETCORE_ENVIRONMENT: Production
+      ConnectionStrings__DefaultConnection: ${ConnectionStrings__DefaultConnection}
+      Jwt__Secret: ${Jwt__Secret}
+      Jwt__Issuer: ${Jwt__Issuer:-ArkifiHub}
+      Jwt__Audience: ${Jwt__Audience:-ArkifiHub.Business}
+      EncryptionSettings__Key: ${EncryptionSettings__Key}
+      CustomerApp__BaseUrl: ${CustomerApp__BaseUrl}
+      Paystack__SecretKey: ${Paystack__SecretKey}
+      Paystack__CallbackUrl: ${Paystack__CallbackUrl}
+      SmtpSettings__Server: ${SmtpSettings__Server}
+      SmtpSettings__Port: ${SmtpSettings__Port:-587}
+      SmtpSettings__SenderName: ${SmtpSettings__SenderName}
+      SmtpSettings__SenderEmail: ${SmtpSettings__SenderEmail}
+      SmtpSettings__Password: ${SmtpSettings__Password}
+      SmtpSettings__SSL: ${SmtpSettings__SSL:-true}
+      SmtpSettings__DefaultCredentials: ${SmtpSettings__DefaultCredentials:-false}
+      SmtpSettings__HostOnly: ${SmtpSettings__HostOnly:-false}
+    volumes:
+      - api_uploads:/app/wwwroot/uploads
+
+  hotel-business:
+    build:
+      context: ..
+      dockerfile: deploy/Dockerfile.angular
+      args:
+        APP_DIR: HotelBusiness
+        DIST_DIR: HotelBusiness
+        API_BASE_URL: ${API_BASE_URL}
+        CUSTOMER_APP_URL: ${CustomerApp__BaseUrl}
+    container_name: arkifistay-business
+    restart: unless-stopped
+    ports:
+      - "${BUSINESS_PORT:-9002}:80"
+    depends_on:
+      - api
+
+  hotel-customer:
+    build:
+      context: ..
+      dockerfile: deploy/Dockerfile.angular
+      args:
+        APP_DIR: HotelCustomer
+        DIST_DIR: HotelCustomer
+        API_BASE_URL: ${API_BASE_URL}
+        CUSTOMER_APP_URL: ${CustomerApp__BaseUrl}
+    container_name: arkifistay-customer
+    restart: unless-stopped
+    ports:
+      - "${CUSTOMER_PORT:-9003}:80"
+    depends_on:
+      - api
+
+  hotel-admin:
+    build:
+      context: ..
+      dockerfile: deploy/Dockerfile.angular
+      args:
+        APP_DIR: HotelAdmin
+        DIST_DIR: HotelAdmin
+        API_BASE_URL: ${API_BASE_URL}
+        CUSTOMER_APP_URL: ${CustomerApp__BaseUrl}
+    container_name: arkifistay-admin
+    restart: unless-stopped
+    ports:
+      - "${ADMIN_PORT:-9004}:80"
+    depends_on:
+      - api
+
+volumes:
+  api_uploads:

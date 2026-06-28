@@ -62,6 +62,31 @@ builder.Services.AddAuthentication(options =>
                 }
             }
 
+            if (context.Principal?.IsInRole("Platform") == true)
+            {
+                var staffIdValue = context.Principal.FindFirst("staff_id")?.Value;
+                if (!Guid.TryParse(staffIdValue, out var staffId))
+                {
+                    context.Fail("Invalid platform session.");
+                    return;
+                }
+
+                var dbPlatform = context.HttpContext.RequestServices.GetRequiredService<AdminDbContext>();
+                var staffActive = await dbPlatform.PlatformStaff
+                    .AsNoTracking()
+                    .Where(s => s.Id == staffId)
+                    .Select(s => s.IsActive)
+                    .FirstOrDefaultAsync(context.HttpContext.RequestAborted)
+                    .ConfigureAwait(false);
+
+                if (!staffActive)
+                {
+                    context.Fail("Account blocked.");
+                }
+
+                return;
+            }
+
             var userIdValue = context.Principal?.FindFirst("user_id")?.Value;
             if (!Guid.TryParse(userIdValue, out var userId))
             {
@@ -88,16 +113,10 @@ builder.Services.AddAuthorization();
 builder.Services.AddCors(options =>
 {
     options.AddDefaultPolicy(policy =>
-    {
         policy
-            .WithOrigins(
-                "http://localhost:4200",
-                "https://localhost:4200",
-                "http://localhost:4201",
-                "https://localhost:4201")
+            .AllowAnyOrigin()
             .AllowAnyHeader()
-            .AllowAnyMethod();
-    });
+            .AllowAnyMethod());
 });
 
 var app = builder.Build();
@@ -116,7 +135,11 @@ if (app.Environment.IsDevelopment())
     });
 }
 
-app.UseHttpsRedirection();
+if (app.Environment.IsDevelopment())
+{
+    app.UseHttpsRedirection();
+}
+
 app.UseStaticFiles();
 app.UseCors();
 app.UseAuthentication();
@@ -126,6 +149,12 @@ app.MapGet("/", () => Results.Ok(new { name = "ArkifiHub API", version = "1.0" }
 
 using (var scope = app.Services.CreateScope())
 {
+    var db = scope.ServiceProvider.GetRequiredService<AdminDbContext>();
+    if (app.Environment.IsProduction())
+    {
+        await db.Database.MigrateAsync().ConfigureAwait(false);
+    }
+
     var menuLocationBackfill = scope.ServiceProvider.GetRequiredService<RestaurantMenuLocationBackfillService>();
     await menuLocationBackfill.BackfillAsync();
 
@@ -134,6 +163,9 @@ using (var scope = app.Services.CreateScope())
 
     var subscriptionSeeder = scope.ServiceProvider.GetRequiredService<BusinessSubscriptionSeedService>();
     await subscriptionSeeder.SeedMissingSubscriptionsAsync();
+
+    var platformStaffSeeder = scope.ServiceProvider.GetRequiredService<PlatformStaffSeedService>();
+    await platformStaffSeeder.SeedDefaultStaffAsync();
 }
 
 app.Run();

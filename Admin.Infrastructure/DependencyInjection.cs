@@ -87,6 +87,11 @@ public static class DependencyInjection
         services.AddScoped<IOrganizationAuditQueryService, OrganizationAuditQueryService>();
         services.AddScoped<IBusinessTeamService, BusinessTeamService>();
         services.AddScoped<BusinessSubscriptionSeedService>();
+        services.AddScoped<IPlatformAuthService, PlatformAuthService>();
+        services.AddScoped<IPlatformBusinessService, PlatformBusinessService>();
+        services.AddScoped<IPlatformActivityService, PlatformActivityService>();
+        services.AddScoped<IPlatformSubscriptionAdminService, PlatformSubscriptionAdminService>();
+        services.AddScoped<PlatformStaffSeedService>();
 
         return services;
     }

@@ -1,0 +1,86 @@
+@use '../shared/page-shared';
+
+.back-link {
+  display: inline-block;
+  margin-bottom: 1rem;
+  text-decoration: none;
+  font-weight: 600;
+  color: var(--slate);
+}
+
+.detail-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+  gap: 1rem;
+}
+
+.panel {
+  background: var(--white);
+  border: 1px solid var(--color-border);
+  border-radius: 0.75rem;
+  padding: 1.1rem 1.2rem;
+}
+
+.panel--wide {
+  grid-column: 1 / -1;
+}
+
+.panel h2 {
+  margin: 0 0 0.85rem;
+  font-size: 1rem;
+}
+
+dl {
+  margin: 0;
+  display: grid;
+  gap: 0.65rem;
+}
+
+dt {
+  font-size: 0.75rem;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  color: var(--slate-light);
+}
+
+dd {
+  margin: 0.1rem 0 0;
+  font-weight: 500;
+}
+
+.admin-form {
+  display: grid;
+  gap: 1rem;
+  max-width: 520px;
+}
+
+.admin-form label {
+  display: flex;
+  flex-direction: column;
+  gap: 0.35rem;
+  font-size: 0.85rem;
+  font-weight: 600;
+}
+
+.admin-form select,
+.admin-form textarea {
+  padding: 0.6rem 0.75rem;
+  border: 1px solid var(--color-border);
+  border-radius: 6px;
+  background: var(--off-white);
+}
+
+.admin-form button {
+  justify-self: start;
+  padding: 0.6rem 1.1rem;
+  border: none;
+  border-radius: 6px;
+  background: var(--navy);
+  color: var(--white);
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.admin-form button:disabled {
+  opacity: 0.65;
+}
