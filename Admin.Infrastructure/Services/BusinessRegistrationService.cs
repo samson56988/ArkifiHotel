@@ -1,6 +1,7 @@
 using Admin.Data;
 using Admin.Data.Entities;
 using Admin.Data.Enums;
+using Admin.Data.Seeding;
 using Admin.Infrastructure.Helpers;
 using Admin.Services.Abstractions;
 using Microsoft.AspNetCore.Identity;
@@ -112,24 +113,17 @@ public sealed class BusinessRegistrationService : IBusinessRegistrationService
             return RegisterBusinessResult.Fail("Validation", "Business type must be Hotel or Shortlet.");
         }
 
-        var planCode = string.IsNullOrWhiteSpace(request.PlanCode)
-            ? "free"
-            : request.PlanCode.Trim().ToLowerInvariant();
-
-        var plan = await _db.SubscriptionPlans
+        var freePlan = await _db.SubscriptionPlans
             .AsNoTracking()
-            .FirstOrDefaultAsync(p => p.Code == planCode && p.IsActive, cancellationToken)
+            .FirstOrDefaultAsync(p => p.Id == SubscriptionPlanSeed.FreePlanId && p.IsActive, cancellationToken)
             .ConfigureAwait(false);
 
-        if (plan is null)
+        if (freePlan is null)
         {
-            return RegisterBusinessResult.Fail("Validation", "Select a valid subscription plan.");
+            return RegisterBusinessResult.Fail("Validation", "The free trial plan is not available. Contact support.");
         }
 
         var now = DateTimeOffset.UtcNow;
-        var subscriptionExpiresAt = plan.Tier == SubscriptionPlanTier.Free
-            ? SubscriptionAccessHelper.ComputeTrialExpiry(now)
-            : SubscriptionAccessHelper.ComputeTrialExpiry(now);
 
         var entity = new BusinessRegistration
         {
@@ -141,13 +135,13 @@ public sealed class BusinessRegistrationService : IBusinessRegistrationService
             HashedPassword = string.Empty,
             IsEmailVerified = false,
             PhoneNumber = phoneNumber,
-            Status = BusinessRegistrationStatus.Inactive,
+            Status = BusinessRegistrationStatus.Active,
             TermsAcceptedAt = now,
             CreatedAt = now,
             Slug = slug,
             BusinessType = businessType,
-            SubscriptionPlanId = plan.Id,
-            SubscriptionExpiresAt = subscriptionExpiresAt,
+            SubscriptionPlanId = freePlan.Id,
+            SubscriptionExpiresAt = SubscriptionAccessHelper.ComputeTrialExpiry(now),
         };
 
         entity.HashedPassword = _passwordHasher.HashPassword(entity, request.Password);

@@ -5,12 +5,11 @@ import { finalize } from 'rxjs/operators';
 import type { BusinessTeamInviteDto } from '../../core/models/team.models';
 import { BusinessTeamApiService } from '../../core/services/business-team-api.service';
 import { ToastService } from '../../core/services/toast.service';
-import { BusinessWorkspaceComponent } from '../../layouts/business-workspace/business-workspace.component';
 
 @Component({
   selector: 'app-team-invites-list',
   standalone: true,
-  imports: [RouterLink, BusinessWorkspaceComponent, DatePipe],
+  imports: [RouterLink, DatePipe],
   templateUrl: './team-invites-list.component.html',
   styleUrl: './team-invites-list.component.scss',
 })

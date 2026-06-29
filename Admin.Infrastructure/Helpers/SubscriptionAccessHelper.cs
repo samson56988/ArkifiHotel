@@ -8,7 +8,7 @@ public static class SubscriptionAccessHelper
     public const int StorefrontGracePeriodDays = 2;
 
     /// <summary>Initial trial length for new and migrated businesses.</summary>
-    public const int TrialDays = 30;
+    public const int TrialDays = 15;
 
     public static bool IsStorefrontAccessible(BusinessRegistration business, DateTimeOffset? atUtc = null)
     {

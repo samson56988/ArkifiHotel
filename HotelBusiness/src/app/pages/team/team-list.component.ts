@@ -11,12 +11,11 @@ import type {
 import { BusinessLocationsApiService } from '../../core/services/business-locations-api.service';
 import { BusinessTeamApiService } from '../../core/services/business-team-api.service';
 import { ToastService } from '../../core/services/toast.service';
-import { BusinessWorkspaceComponent } from '../../layouts/business-workspace/business-workspace.component';
 
 @Component({
   selector: 'app-team-list',
   standalone: true,
-  imports: [ReactiveFormsModule, RouterLink, BusinessWorkspaceComponent],
+  imports: [ReactiveFormsModule, RouterLink],
   templateUrl: './team-list.component.html',
   styleUrl: './team-list.component.scss',
 })
@@ -101,8 +100,7 @@ export class TeamListComponent implements OnInit {
     this.form.controls.username.setValidators([
       Validators.required,
       Validators.minLength(3),
-      Validators.maxLength(64),
-    ]);
+      Validators.maxLength(64)]);
     this.form.controls.username.updateValueAndValidity();
     this.form.reset({
       firstName: '',

@@ -5,12 +5,11 @@ import { finalize } from 'rxjs/operators';
 import type { PlatformActivityLog } from '../../core/models/platform.models';
 import { PlatformApiService } from '../../core/services/platform-api.service';
 import { ToastService } from '../../core/services/toast.service';
-import { PlatformWorkspaceComponent } from '../../layouts/platform-workspace/platform-workspace.component';
 
 @Component({
   selector: 'app-activity',
   standalone: true,
-  imports: [RouterLink, DatePipe, PlatformWorkspaceComponent],
+  imports: [RouterLink, DatePipe],
   templateUrl: './activity.component.html',
   styleUrl: './activity.component.scss',
 })

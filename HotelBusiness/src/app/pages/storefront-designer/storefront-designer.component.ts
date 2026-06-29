@@ -40,7 +40,6 @@ import {
 } from '../../core/models/storefront-banner.models';
 import type { StorefrontAboutImageDto } from '../../core/models/storefront-about.models';
 import type { BusinessLocationDto } from '../../core/models/locations.models';
-import { BusinessWorkspaceComponent } from '../../layouts/business-workspace/business-workspace.component';
 import { StorefrontGuestPreviewComponent, type GuestPreviewPage } from '../../shared/storefront-guest-preview/storefront-guest-preview.component';
 import { ShortletGuestPreviewComponent } from '../../shared/shortlet-guest-preview/shortlet-guest-preview.component';
 import { BusinessContextService } from '../../core/services/business-context.service';
@@ -54,7 +53,7 @@ type PreviewPage = GuestPreviewPage | ShortletPreviewPage;
 @Component({
   selector: 'app-storefront-designer',
   standalone: true,
-  imports: [ReactiveFormsModule, RouterLink, BusinessWorkspaceComponent, StorefrontGuestPreviewComponent, ShortletGuestPreviewComponent],
+  imports: [ReactiveFormsModule, RouterLink, StorefrontGuestPreviewComponent, ShortletGuestPreviewComponent],
   templateUrl: './storefront-designer.component.html',
   styleUrl: './storefront-designer.component.scss',
 })
@@ -111,8 +110,7 @@ export class StorefrontDesignerComponent implements OnInit {
       id: 'quote' as StorefrontTheme['about']['layout'],
       label: 'Quote highlight',
       description: 'Large quote leads the section',
-    },
-  ];
+    }];
 
   readonly bannerImagesForBranch = computed(() => {
     const branchId = this.bannerBranchId();
@@ -188,8 +186,7 @@ export class StorefrontDesignerComponent implements OnInit {
       perksEyebrow: ['Guest Perks'],
       perksTitle: ['Everything included in your stay'],
       perksSubtitle: [
-        'Complimentary access to most on-property amenities for all registered guests.',
-      ],
+        'Complimentary access to most on-property amenities for all registered guests.'],
       perksItems: this.fb.array<FormGroup>([]),
     }),
     footer: this.fb.nonNullable.group({
@@ -204,8 +201,7 @@ export class StorefrontDesignerComponent implements OnInit {
       checkIn: [''],
       checkOut: [''],
       introText: [
-        'Questions about your stay? Send us a message and our team will respond within a few hours.',
-      ],
+        'Questions about your stay? Send us a message and our team will respond within a few hours.'],
     }),
     colors: this.fb.nonNullable.group({
       preset: ['sage-luxe' as StorefrontTheme['colors']['preset']],

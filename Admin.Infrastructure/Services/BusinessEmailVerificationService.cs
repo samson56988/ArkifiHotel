@@ -2,6 +2,7 @@ using System.Security.Cryptography;
 using System.Text;
 using Admin.Data;
 using Admin.Data.Entities;
+using Admin.Data.Enums;
 using Admin.Services.Abstractions;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
@@ -174,6 +175,7 @@ public sealed class BusinessEmailVerificationService : IBusinessEmailVerificatio
         otpEntity.UsedAt = now;
 
         business.IsEmailVerified = true;
+        business.Status = BusinessRegistrationStatus.Active;
         business.UpdatedAt = now;
 
         if (orgUser is not null)

@@ -5,12 +5,11 @@ import { RouterLink } from '@angular/router';
 import type { RestaurantOrderListItemDto } from '../../core/models/restaurant-order.models';
 import { BusinessRestaurantOrdersApiService } from '../../core/services/business-restaurant-orders-api.service';
 import { ToastService } from '../../core/services/toast.service';
-import { BusinessWorkspaceComponent } from '../../layouts/business-workspace/business-workspace.component';
 
 @Component({
   selector: 'app-restaurant-orders-list',
   standalone: true,
-  imports: [BusinessWorkspaceComponent, DatePipe, FormsModule, RouterLink],
+  imports: [ DatePipe, FormsModule, RouterLink],
   templateUrl: './restaurant-orders-list.component.html',
   styleUrl: './restaurant-orders-list.component.scss',
 })

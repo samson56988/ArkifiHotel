@@ -28,7 +28,7 @@
       @if (canAccess('facilities')) {
         <a class="menu__item" routerLink="/facilities" routerLinkActive="menu__item--active">Facilities</a>
       }
-      @if (biz.isHotel()) {
+      @if (showHotelModules()) {
         @if (canAccess('event_halls')) {
           <a class="menu__item" routerLink="/event-halls" routerLinkActive="menu__item--active">Event halls</a>
         }
@@ -83,6 +83,6 @@
   </aside>
 
   <main class="content">
-    <ng-content />
+    <router-outlet />
   </main>
 </div>

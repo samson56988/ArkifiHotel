@@ -18,12 +18,11 @@ import {
   normalizeBusinessSlug,
   suggestSlugFromBusinessName,
 } from '../../core/utils/business-slug';
-import { BusinessWorkspaceComponent } from '../../layouts/business-workspace/business-workspace.component';
 
 @Component({
   selector: 'app-business-profile',
   standalone: true,
-  imports: [ReactiveFormsModule, RouterLink, BusinessWorkspaceComponent],
+  imports: [ReactiveFormsModule, RouterLink],
   templateUrl: './business-profile.component.html',
   styleUrl: './business-profile.component.scss',
 })

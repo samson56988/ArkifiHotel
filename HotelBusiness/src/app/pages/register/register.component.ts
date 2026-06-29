@@ -146,7 +146,7 @@ export class RegisterComponent implements OnInit {
 
   formatPlanPrice(plan: SubscriptionPlanDto | null): string {
     if (!plan || plan.priceAmount <= 0) {
-      return 'Free · 30-day trial';
+      return 'Free · 15-day trial';
     }
     const amount = new Intl.NumberFormat('en-NG', {
       style: 'currency',

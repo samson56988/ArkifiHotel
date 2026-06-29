@@ -6,12 +6,11 @@ import type { ApiResult } from '../../core/models/api-result.model';
 import type { AmenityDto } from '../../core/models/amenities.models';
 import { BusinessAmenitiesApiService } from '../../core/services/business-amenities-api.service';
 import { ToastService } from '../../core/services/toast.service';
-import { BusinessWorkspaceComponent } from '../../layouts/business-workspace/business-workspace.component';
 
 @Component({
   selector: 'app-amenities-list',
   standalone: true,
-  imports: [ReactiveFormsModule, RouterLink, BusinessWorkspaceComponent],
+  imports: [ReactiveFormsModule, RouterLink],
   templateUrl: './amenities-list.component.html',
   styleUrl: './amenities-list.component.scss',
 })

@@ -5,12 +5,11 @@ import { finalize } from 'rxjs/operators';
 import type { PlatformBusinessSummary } from '../../core/models/platform.models';
 import { PlatformApiService } from '../../core/services/platform-api.service';
 import { ToastService } from '../../core/services/toast.service';
-import { PlatformWorkspaceComponent } from '../../layouts/platform-workspace/platform-workspace.component';
 
 @Component({
   selector: 'app-businesses-list',
   standalone: true,
-  imports: [RouterLink, DatePipe, PlatformWorkspaceComponent],
+  imports: [RouterLink, DatePipe],
   templateUrl: './businesses-list.component.html',
   styleUrl: './businesses-list.component.scss',
 })

@@ -7,7 +7,6 @@ import type { ApiResult } from '../../core/models/api-result.model';
 import type { PaymentConfigurationDto, PaymentProvider } from '../../core/models/payment.models';
 import { BusinessPaymentApiService } from '../../core/services/business-payment-api.service';
 import { ToastService } from '../../core/services/toast.service';
-import { BusinessWorkspaceComponent } from '../../layouts/business-workspace/business-workspace.component';
 
 function parseProvider(value: string | null | undefined): PaymentProvider {
   switch (value) {
@@ -29,7 +28,7 @@ const GATEWAY_HINTS: Record<Exclude<PaymentProvider, 'None'>, string> = {
 @Component({
   selector: 'app-payment-configuration',
   standalone: true,
-  imports: [ReactiveFormsModule, RouterLink, BusinessWorkspaceComponent],
+  imports: [ReactiveFormsModule, RouterLink],
   templateUrl: './payment-configuration.component.html',
   styleUrl: './payment-configuration.component.scss',
 })
@@ -82,8 +81,7 @@ export class PaymentConfigurationComponent implements OnInit {
       return [
         { label: 'API key', saved: config.hasApiKey },
         { label: 'Secret key', saved: config.hasSecretKey },
-        { label: 'Contract code', saved: config.hasContractCode },
-      ];
+        { label: 'Contract code', saved: config.hasContractCode }];
     }
 
     return [{ label: 'Secret key', saved: config.hasSecretKey }];

@@ -4,12 +4,11 @@ import { RouterLink } from '@angular/router';
 import type { EventHallSummaryDto } from '../../core/models/event-hall.models';
 import { BusinessEventHallsApiService } from '../../core/services/business-event-halls-api.service';
 import { ToastService } from '../../core/services/toast.service';
-import { BusinessWorkspaceComponent } from '../../layouts/business-workspace/business-workspace.component';
 
 @Component({
   selector: 'app-event-halls-list',
   standalone: true,
-  imports: [RouterLink, BusinessWorkspaceComponent, DecimalPipe],
+  imports: [RouterLink, DecimalPipe],
   templateUrl: './event-halls-list.component.html',
   styleUrl: './event-halls-list.component.scss',
 })

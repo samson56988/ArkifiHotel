@@ -6,12 +6,11 @@ import type { ApiResult } from '../../core/models/api-result.model';
 import type { BusinessSocialProfileDto } from '../../core/models/business-social-profile.models';
 import { BusinessSocialProfileApiService } from '../../core/services/business-social-profile-api.service';
 import { ToastService } from '../../core/services/toast.service';
-import { BusinessWorkspaceComponent } from '../../layouts/business-workspace/business-workspace.component';
 
 @Component({
   selector: 'app-social-profile',
   standalone: true,
-  imports: [ReactiveFormsModule, RouterLink, BusinessWorkspaceComponent],
+  imports: [ReactiveFormsModule, RouterLink],
   templateUrl: './social-profile.component.html',
   styleUrl: './social-profile.component.scss',
 })

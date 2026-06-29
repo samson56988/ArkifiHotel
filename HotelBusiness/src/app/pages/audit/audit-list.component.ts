@@ -5,12 +5,11 @@ import type { BusinessLocationDto } from '../../core/models/locations.models';
 import { BusinessAuditApiService } from '../../core/services/business-audit-api.service';
 import { BusinessLocationsApiService } from '../../core/services/business-locations-api.service';
 import { ToastService } from '../../core/services/toast.service';
-import { BusinessWorkspaceComponent } from '../../layouts/business-workspace/business-workspace.component';
 
 @Component({
   selector: 'app-audit-list',
   standalone: true,
-  imports: [ReactiveFormsModule, BusinessWorkspaceComponent],
+  imports: [ReactiveFormsModule],
   templateUrl: './audit-list.component.html',
   styleUrl: './audit-list.component.scss',
 })

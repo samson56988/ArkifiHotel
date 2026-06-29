@@ -9,12 +9,11 @@ import { BusinessFacilitiesApiService } from '../../core/services/business-facil
 import { BusinessLocationsApiService } from '../../core/services/business-locations-api.service';
 import { ToastService } from '../../core/services/toast.service';
 import { ALLOWED_IMAGE_ACCEPT, filterAllowedImageFiles } from '../../core/utils/image-upload';
-import { BusinessWorkspaceComponent } from '../../layouts/business-workspace/business-workspace.component';
 
 @Component({
   selector: 'app-facility-form',
   standalone: true,
-  imports: [ReactiveFormsModule, RouterLink, BusinessWorkspaceComponent],
+  imports: [ReactiveFormsModule, RouterLink],
   templateUrl: './facility-form.component.html',
   styleUrl: './facility-form.component.scss',
 })

@@ -6,12 +6,11 @@ import { finalize } from 'rxjs/operators';
 import type { ApiResult } from '../../core/models/api-result.model';
 import { BusinessCustomersApiService } from '../../core/services/business-customers-api.service';
 import { ToastService } from '../../core/services/toast.service';
-import { BusinessWorkspaceComponent } from '../../layouts/business-workspace/business-workspace.component';
 
 @Component({
   selector: 'app-customer-form',
   standalone: true,
-  imports: [ReactiveFormsModule, RouterLink, BusinessWorkspaceComponent],
+  imports: [ReactiveFormsModule, RouterLink],
   templateUrl: './customer-form.component.html',
   styleUrl: './customer-form.component.scss',
 })

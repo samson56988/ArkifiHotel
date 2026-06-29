@@ -9,12 +9,11 @@ import { BusinessEventHallsApiService } from '../../core/services/business-event
 import { BusinessLocationsApiService } from '../../core/services/business-locations-api.service';
 import { ToastService } from '../../core/services/toast.service';
 import { ALLOWED_IMAGE_ACCEPT, filterAllowedImageFiles } from '../../core/utils/image-upload';
-import { BusinessWorkspaceComponent } from '../../layouts/business-workspace/business-workspace.component';
 
 @Component({
   selector: 'app-event-hall-form',
   standalone: true,
-  imports: [ReactiveFormsModule, RouterLink, BusinessWorkspaceComponent],
+  imports: [ReactiveFormsModule, RouterLink],
   templateUrl: './event-hall-form.component.html',
   styleUrl: './event-hall-form.component.scss',
 })

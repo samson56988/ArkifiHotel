@@ -22,7 +22,7 @@ public static class SubscriptionPlanSeed
                 Id = FreePlanId,
                 Code = "free",
                 Name = "Free",
-                Description = "Try ArkifiStay with a 30-day trial. Perfect for getting started.",
+                Description = "Try ArkifiStay with a 15-day free trial. Perfect for getting started.",
                 Tier = SubscriptionPlanTier.Free,
                 BillingInterval = SubscriptionBillingInterval.None,
                 PriceAmount = 0m,

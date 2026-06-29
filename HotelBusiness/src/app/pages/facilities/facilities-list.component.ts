@@ -4,12 +4,11 @@ import type { ApiResult } from '../../core/models/api-result.model';
 import type { PropertyFacilitySummaryDto } from '../../core/models/facilities.models';
 import { BusinessFacilitiesApiService } from '../../core/services/business-facilities-api.service';
 import { ToastService } from '../../core/services/toast.service';
-import { BusinessWorkspaceComponent } from '../../layouts/business-workspace/business-workspace.component';
 
 @Component({
   selector: 'app-facilities-list',
   standalone: true,
-  imports: [RouterLink, BusinessWorkspaceComponent],
+  imports: [RouterLink],
   templateUrl: './facilities-list.component.html',
   styleUrl: './facilities-list.component.scss',
 })

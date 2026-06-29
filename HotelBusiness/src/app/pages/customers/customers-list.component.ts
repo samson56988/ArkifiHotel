@@ -4,12 +4,11 @@ import type { ApiResult } from '../../core/models/api-result.model';
 import type { CustomerSummaryDto } from '../../core/models/customers.models';
 import { BusinessCustomersApiService } from '../../core/services/business-customers-api.service';
 import { ToastService } from '../../core/services/toast.service';
-import { BusinessWorkspaceComponent } from '../../layouts/business-workspace/business-workspace.component';
 
 @Component({
   selector: 'app-customers-list',
   standalone: true,
-  imports: [RouterLink, BusinessWorkspaceComponent],
+  imports: [RouterLink],
   templateUrl: './customers-list.component.html',
   styleUrl: './customers-list.component.scss',
 })

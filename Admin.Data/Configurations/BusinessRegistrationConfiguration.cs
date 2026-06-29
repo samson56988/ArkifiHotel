@@ -44,7 +44,7 @@ public class BusinessRegistrationConfiguration : IEntityTypeConfiguration<Busine
         builder.Property(e => e.Status)
             .IsRequired()
             .HasConversion<int>()
-            .HasDefaultValue(BusinessRegistrationStatus.Inactive);
+            .HasDefaultValue(BusinessRegistrationStatus.Active);
 
         builder.Property(e => e.AdminNotes)
             .HasMaxLength(4000);

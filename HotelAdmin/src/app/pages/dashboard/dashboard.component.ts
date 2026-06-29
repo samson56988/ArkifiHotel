@@ -4,12 +4,11 @@ import { finalize } from 'rxjs/operators';
 import type { PlatformDashboardStats } from '../../core/models/platform.models';
 import { PlatformApiService } from '../../core/services/platform-api.service';
 import { ToastService } from '../../core/services/toast.service';
-import { PlatformWorkspaceComponent } from '../../layouts/platform-workspace/platform-workspace.component';
 
 @Component({
   selector: 'app-dashboard',
   standalone: true,
-  imports: [RouterLink, PlatformWorkspaceComponent],
+  imports: [RouterLink],
   templateUrl: './dashboard.component.html',
   styleUrl: './dashboard.component.scss',
 })

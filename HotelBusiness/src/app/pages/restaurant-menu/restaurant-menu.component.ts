@@ -11,14 +11,13 @@ import { OrganizationLocationService } from '../../core/services/organization-lo
 import { BusinessRestaurantMenuApiService } from '../../core/services/business-restaurant-menu-api.service';
 import { ToastService } from '../../core/services/toast.service';
 import { ALLOWED_IMAGE_ACCEPT, filterAllowedImageFiles } from '../../core/utils/image-upload';
-import { BusinessWorkspaceComponent } from '../../layouts/business-workspace/business-workspace.component';
 
 type MenuSection = 'food' | 'drink';
 
 @Component({
   selector: 'app-restaurant-menu',
   standalone: true,
-  imports: [ReactiveFormsModule, RouterLink, BusinessWorkspaceComponent],
+  imports: [ReactiveFormsModule, RouterLink],
   templateUrl: './restaurant-menu.component.html',
   styleUrl: './restaurant-menu.component.scss',
 })

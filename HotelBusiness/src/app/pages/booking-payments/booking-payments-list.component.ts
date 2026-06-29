@@ -5,12 +5,11 @@ import type { ApiResult } from '../../core/models/api-result.model';
 import type { BookingPaymentSummaryDto } from '../../core/models/booking-payments.models';
 import { BusinessBookingPaymentsApiService } from '../../core/services/business-booking-payments-api.service';
 import { ToastService } from '../../core/services/toast.service';
-import { BusinessWorkspaceComponent } from '../../layouts/business-workspace/business-workspace.component';
 
 @Component({
   selector: 'app-booking-payments-list',
   standalone: true,
-  imports: [RouterLink, BusinessWorkspaceComponent, DecimalPipe],
+  imports: [RouterLink, DecimalPipe],
   templateUrl: './booking-payments-list.component.html',
   styleUrl: './booking-payments-list.component.scss',
 })

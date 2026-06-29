@@ -4,14 +4,13 @@ import { RouterLink } from '@angular/router';
 import { BusinessRoomsApiService } from '../../core/services/business-rooms-api.service';
 import { BusinessContextService } from '../../core/services/business-context.service';
 import { ToastService } from '../../core/services/toast.service';
-import { BusinessWorkspaceComponent } from '../../layouts/business-workspace/business-workspace.component';
 import type { ApiResult } from '../../core/models/api-result.model';
 import type { BusinessRoomSummaryDto } from '../../core/models/rooms.models';
 
 @Component({
   selector: 'app-rooms-list',
   standalone: true,
-  imports: [RouterLink, BusinessWorkspaceComponent, DecimalPipe],
+  imports: [RouterLink, DecimalPipe],
   templateUrl: './rooms-list.component.html',
   styleUrl: './rooms-list.component.scss',
 })

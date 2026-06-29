@@ -1,50 +1,6 @@
 import { Routes } from '@angular/router';
 
-export const routes: Routes = [
-  {
-    path: '',
-    loadComponent: () =>
-      import('./pages/home/home.component').then((m) => m.HomeComponent),
-  },
-  {
-    path: 'login',
-    loadComponent: () =>
-      import('./pages/login/login.component').then((m) => m.LoginComponent),
-  },
-  {
-    path: 'register',
-    loadComponent: () =>
-      import('./pages/register/register.component').then((m) => m.RegisterComponent),
-  },
-  {
-    path: 'verify-email',
-    loadComponent: () =>
-      import('./pages/verify-email/verify-email.component').then((m) => m.VerifyEmailComponent),
-  },
-  {
-    path: 'verify-login-otp',
-    loadComponent: () =>
-      import('./pages/verify-login-otp/verify-login-otp.component').then(
-        (m) => m.VerifyLoginOtpComponent,
-      ),
-  },
-  {
-    path: 'change-default-password',
-    loadComponent: () =>
-      import('./pages/change-default-password/change-default-password.component').then(
-        (m) => m.ChangeDefaultPasswordComponent,
-      ),
-  },
-  {
-    path: 'forgot-password',
-    loadComponent: () =>
-      import('./pages/forgot-password/forgot-password.component').then((m) => m.ForgotPasswordComponent),
-  },
-  {
-    path: 'reset-password',
-    loadComponent: () =>
-      import('./pages/reset-password/reset-password.component').then((m) => m.ResetPasswordComponent),
-  },
+const workspaceRoutes: Routes = [
   {
     path: 'dashboard',
     loadComponent: () =>
@@ -204,6 +160,62 @@ export const routes: Routes = [
     path: 'audit',
     loadComponent: () =>
       import('./pages/audit/audit-list.component').then((m) => m.AuditListComponent),
+  },
+];
+
+export const routes: Routes = [
+  {
+    path: '',
+    pathMatch: 'full',
+    loadComponent: () =>
+      import('./pages/home/home.component').then((m) => m.HomeComponent),
+  },
+  {
+    path: 'login',
+    loadComponent: () =>
+      import('./pages/login/login.component').then((m) => m.LoginComponent),
+  },
+  {
+    path: 'register',
+    loadComponent: () =>
+      import('./pages/register/register.component').then((m) => m.RegisterComponent),
+  },
+  {
+    path: 'verify-email',
+    loadComponent: () =>
+      import('./pages/verify-email/verify-email.component').then((m) => m.VerifyEmailComponent),
+  },
+  {
+    path: 'verify-login-otp',
+    loadComponent: () =>
+      import('./pages/verify-login-otp/verify-login-otp.component').then(
+        (m) => m.VerifyLoginOtpComponent,
+      ),
+  },
+  {
+    path: 'change-default-password',
+    loadComponent: () =>
+      import('./pages/change-default-password/change-default-password.component').then(
+        (m) => m.ChangeDefaultPasswordComponent,
+      ),
+  },
+  {
+    path: 'forgot-password',
+    loadComponent: () =>
+      import('./pages/forgot-password/forgot-password.component').then((m) => m.ForgotPasswordComponent),
+  },
+  {
+    path: 'reset-password',
+    loadComponent: () =>
+      import('./pages/reset-password/reset-password.component').then((m) => m.ResetPasswordComponent),
+  },
+  {
+    path: '',
+    loadComponent: () =>
+      import('./layouts/business-workspace/business-workspace.component').then(
+        (m) => m.BusinessWorkspaceComponent,
+      ),
+    children: workspaceRoutes,
   },
   { path: '**', redirectTo: '' },
 ];

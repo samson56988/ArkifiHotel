@@ -4,12 +4,11 @@ import { finalize } from 'rxjs/operators';
 import type { PlatformSubscriptionPayment, SubscriptionPlan } from '../../core/models/platform.models';
 import { PlatformApiService } from '../../core/services/platform-api.service';
 import { ToastService } from '../../core/services/toast.service';
-import { PlatformWorkspaceComponent } from '../../layouts/platform-workspace/platform-workspace.component';
 
 @Component({
   selector: 'app-subscriptions',
   standalone: true,
-  imports: [CurrencyPipe, DatePipe, PlatformWorkspaceComponent],
+  imports: [CurrencyPipe, DatePipe],
   templateUrl: './subscriptions.component.html',
   styleUrl: './subscriptions.component.scss',
 })

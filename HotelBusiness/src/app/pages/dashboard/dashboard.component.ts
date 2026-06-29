@@ -11,7 +11,6 @@ import type { BusinessSubscriptionDto } from '../../core/models/subscription.mod
 import { DashboardApiService } from '../../core/services/dashboard-api.service';
 import { SubscriptionApiService } from '../../core/services/subscription-api.service';
 import { ToastService } from '../../core/services/toast.service';
-import { BusinessWorkspaceComponent } from '../../layouts/business-workspace/business-workspace.component';
 import { DashboardRevenueChartComponent } from './dashboard-revenue-chart.component';
 
 type KpiCard = {
@@ -25,7 +24,7 @@ type KpiCard = {
 @Component({
   selector: 'app-dashboard',
   standalone: true,
-  imports: [RouterLink, FormsModule, BusinessWorkspaceComponent, DashboardRevenueChartComponent],
+  imports: [RouterLink, FormsModule, DashboardRevenueChartComponent],
   templateUrl: './dashboard.component.html',
   styleUrl: './dashboard.component.scss',
 })
@@ -85,8 +84,7 @@ export class DashboardComponent implements OnInit {
         delta: null,
         trend: 'flat',
         hint: `${data.pendingRestaurantOrders} order(s) · ${data.pendingEventHallRequests} event request(s)`,
-      },
-    ];
+      }];
   });
 
   ngOnInit(): void {

@@ -1,11 +1,11 @@
 import { Component, inject } from '@angular/core';
-import { Router, RouterLink, RouterLinkActive } from '@angular/router';
+import { Router, RouterLink, RouterLinkActive, RouterOutlet } from '@angular/router';
 import { AuthApiService } from '../../core/services/auth-api.service';
 
 @Component({
   selector: 'app-platform-workspace',
   standalone: true,
-  imports: [RouterLink, RouterLinkActive],
+  imports: [RouterLink, RouterLinkActive, RouterOutlet],
   templateUrl: './platform-workspace.component.html',
   styleUrl: './platform-workspace.component.scss',
 })

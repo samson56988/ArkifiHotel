@@ -6,12 +6,11 @@ import type { ApiResult } from '../../core/models/api-result.model';
 import type { BusinessLocationDto } from '../../core/models/locations.models';
 import { BusinessLocationsApiService } from '../../core/services/business-locations-api.service';
 import { ToastService } from '../../core/services/toast.service';
-import { BusinessWorkspaceComponent } from '../../layouts/business-workspace/business-workspace.component';
 
 @Component({
   selector: 'app-locations-list',
   standalone: true,
-  imports: [ReactiveFormsModule, RouterLink, BusinessWorkspaceComponent],
+  imports: [ReactiveFormsModule, RouterLink],
   templateUrl: './locations-list.component.html',
   styleUrl: './locations-list.component.scss',
 })

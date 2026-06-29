@@ -1,4 +1,3 @@
-<app-business-workspace>
   <header class="topbar">
     <div>
       <p class="eyebrow">Billing</p>
@@ -72,7 +71,7 @@
               <p class="plan-card__desc">{{ plan.description }}</p>
               <ul class="plan-card__features">
                 @if (plan.tier === 'Free') {
-                  <li>30-day trial</li>
+                  <li>15-day free trial</li>
                   <li>Storefront &amp; bookings</li>
                   <li>Payment configuration</li>
                 } @else {
@@ -145,4 +144,3 @@
       }
     </section>
   }
-</app-business-workspace>

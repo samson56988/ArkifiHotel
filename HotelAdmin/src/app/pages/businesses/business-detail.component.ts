@@ -6,12 +6,11 @@ import { finalize } from 'rxjs/operators';
 import type { PlatformBusinessDetail } from '../../core/models/platform.models';
 import { PlatformApiService } from '../../core/services/platform-api.service';
 import { ToastService } from '../../core/services/toast.service';
-import { PlatformWorkspaceComponent } from '../../layouts/platform-workspace/platform-workspace.component';
 
 @Component({
   selector: 'app-business-detail',
   standalone: true,
-  imports: [RouterLink, DatePipe, ReactiveFormsModule, PlatformWorkspaceComponent],
+  imports: [RouterLink, DatePipe, ReactiveFormsModule],
   templateUrl: './business-detail.component.html',
   styleUrl: './business-detail.component.scss',
 })

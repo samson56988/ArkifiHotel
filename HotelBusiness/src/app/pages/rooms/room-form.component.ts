@@ -18,12 +18,11 @@ import { BusinessLocationsApiService } from '../../core/services/business-locati
 import { BusinessRoomsApiService } from '../../core/services/business-rooms-api.service';
 import { ToastService } from '../../core/services/toast.service';
 import { ALLOWED_IMAGE_ACCEPT, filterAllowedImageFiles } from '../../core/utils/image-upload';
-import { BusinessWorkspaceComponent } from '../../layouts/business-workspace/business-workspace.component';
 
 @Component({
   selector: 'app-room-form',
   standalone: true,
-  imports: [ReactiveFormsModule, RouterLink, BusinessWorkspaceComponent],
+  imports: [ReactiveFormsModule, RouterLink],
   templateUrl: './room-form.component.html',
   styleUrl: './room-form.component.scss',
 })
@@ -90,8 +89,7 @@ export class RoomFormComponent implements OnInit {
     'Premium linens, fast Wi-Fi & 24/7 power',
     'Stylish studio in the heart of the city',
     'Spacious layout ideal for families',
-    'Quiet neighbourhood, minutes from downtown',
-  ];
+    'Quiet neighbourhood, minutes from downtown'];
 
   get isCreateMode(): boolean {
     return this.roomId() === null;

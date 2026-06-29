@@ -9,12 +9,11 @@ import type {
 } from '../../core/models/subscription.models';
 import { SubscriptionApiService } from '../../core/services/subscription-api.service';
 import { ToastService } from '../../core/services/toast.service';
-import { BusinessWorkspaceComponent } from '../../layouts/business-workspace/business-workspace.component';
 
 @Component({
   selector: 'app-subscription',
   standalone: true,
-  imports: [BusinessWorkspaceComponent, DecimalPipe],
+  imports: [ DecimalPipe],
   templateUrl: './subscription.component.html',
   styleUrl: './subscription.component.scss',
 })

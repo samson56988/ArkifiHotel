@@ -8,12 +8,11 @@ import { BusinessBookingPaymentsApiService } from '../../core/services/business-
 import { BusinessBookingsApiService } from '../../core/services/business-bookings-api.service';
 import { BusinessPaymentApiService } from '../../core/services/business-payment-api.service';
 import { ToastService } from '../../core/services/toast.service';
-import { BusinessWorkspaceComponent } from '../../layouts/business-workspace/business-workspace.component';
 
 @Component({
   selector: 'app-booking-payment-form',
   standalone: true,
-  imports: [ReactiveFormsModule, RouterLink, BusinessWorkspaceComponent],
+  imports: [ReactiveFormsModule, RouterLink],
   templateUrl: './booking-payment-form.component.html',
   styleUrl: './booking-payment-form.component.scss',
 })
@@ -46,8 +45,7 @@ export class BookingPaymentFormComponent implements OnInit {
   readonly methodOptions = [
     { value: 'Cash', label: 'Cash', hint: 'Paid at reception on arrival or checkout.' },
     { value: 'BankTransfer', label: 'Bank transfer', hint: 'Guest transferred to the hotel account; confirm when received.' },
-    { value: 'Gateway', label: 'Online gateway', hint: 'Card payment via Paystack, Flutterwave, or Monify.' },
-  ] as const;
+    { value: 'Gateway', label: 'Online gateway', hint: 'Card payment via Paystack, Flutterwave, or Monify.' }] as const;
 
   ngOnInit(): void {
     this.loadBookings();

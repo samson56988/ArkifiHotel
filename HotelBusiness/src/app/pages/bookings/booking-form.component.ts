@@ -19,7 +19,6 @@ import {
   isValidLocalPhoneDigits,
   normalizeLocalPhoneDigits,
 } from '../../core/utils/phone-number';
-import { BusinessWorkspaceComponent } from '../../layouts/business-workspace/business-workspace.component';
 import { BusinessContextService } from '../../core/services/business-context.service';
 import { calculateStayTotal, hasWeeklyRate } from '../../core/utils/room-pricing';
 
@@ -32,7 +31,7 @@ function addDaysIso(base: Date, days: number): string {
 @Component({
   selector: 'app-booking-form',
   standalone: true,
-  imports: [ReactiveFormsModule, RouterLink, BusinessWorkspaceComponent, DecimalPipe],
+  imports: [ReactiveFormsModule, RouterLink, DecimalPipe],
   templateUrl: './booking-form.component.html',
   styleUrl: './booking-form.component.scss',
 })
@@ -77,8 +76,7 @@ export class BookingFormComponent implements OnInit {
 
   readonly paymentMethodOptions = [
     { value: 'Cash', label: 'Cash', hint: 'Guest paid cash at reception.' },
-    { value: 'BankTransfer', label: 'Bank transfer', hint: 'Transfer received and verified at reception.' },
-  ] as const;
+    { value: 'BankTransfer', label: 'Bank transfer', hint: 'Transfer received and verified at reception.' }] as const;
 
   ngOnInit(): void {
     this.loadLocations();
@@ -211,8 +209,7 @@ export class BookingFormComponent implements OnInit {
       this.form.controls.locationFilterId.valueChanges.pipe(startWith(this.form.controls.locationFilterId.value)),
       this.form.controls.roomId.valueChanges.pipe(startWith(this.form.controls.roomId.value)),
       this.form.controls.checkInDate.valueChanges.pipe(startWith(this.form.controls.checkInDate.value)),
-      this.form.controls.checkOutDate.valueChanges.pipe(startWith(this.form.controls.checkOutDate.value)),
-    ])
+      this.form.controls.checkOutDate.valueChanges.pipe(startWith(this.form.controls.checkOutDate.value))])
       .pipe(
         debounceTime(300),
         distinctUntilChanged(

@@ -9,12 +9,11 @@ import type {
 } from '../../core/models/event-hall.models';
 import { BusinessEventHallsApiService } from '../../core/services/business-event-halls-api.service';
 import { ToastService } from '../../core/services/toast.service';
-import { BusinessWorkspaceComponent } from '../../layouts/business-workspace/business-workspace.component';
 
 @Component({
   selector: 'app-event-hall-requests-list',
   standalone: true,
-  imports: [BusinessWorkspaceComponent, DatePipe, FormsModule, RouterLink],
+  imports: [ DatePipe, FormsModule, RouterLink],
   templateUrl: './event-hall-requests-list.component.html',
   styleUrl: './event-hall-requests-list.component.scss',
 })
