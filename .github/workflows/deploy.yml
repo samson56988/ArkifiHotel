@@ -43,11 +43,5 @@ jobs:
             git checkout "${BRANCH}"
             git pull origin "${BRANCH}"
 
-            if [[ ! -f deploy/.env ]]; then
-              echo "ERROR: Missing deploy/.env on server."
-              echo "SSH in and run: cp deploy/.env.example deploy/.env && nano deploy/.env"
-              exit 1
-            fi
-
             chmod +x deploy/deploy.sh
             ./deploy/deploy.sh

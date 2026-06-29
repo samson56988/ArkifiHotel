@@ -13,28 +13,36 @@ PostgreSQL stays on Aiven (or your own host) — only the app containers run on 
 
 ---
 
-## What to commit to Git
+## Configuration (no deploy/.env required)
 
-These files are already in the repo:
+The API uses standard ASP.NET Core config, baked into the Docker image on build:
+
+| File | Purpose |
+|------|---------|
+| `ArkifiHotel/appsettings.json` | DB, JWT, SMTP, Paystack secrets |
+| `ArkifiHotel/appsettings.Production.json` | Production URLs (guest app, Paystack callback) |
+
+Docker sets `ASPNETCORE_ENVIRONMENT=Production`, so the API loads **both** files (Production overrides matching keys).
+
+Angular apps use hardcoded production URLs in `deploy/docker-compose.yml` build args.
+
+**Optional:** `deploy/.env` is legacy and **not used** anymore.
+
+---
+
+## What to commit to Git
 
 ```
 deploy/
-  docker-compose.yml      # orchestrates all 4 services
-  Dockerfile.api          # .NET API image
-  Dockerfile.angular      # shared Angular + nginx image
-  nginx-spa.conf          # SPA routing for Angular apps
-  .env.example            # template for server secrets
-  deploy.sh               # one-command deploy script
+  docker-compose.yml
+  Dockerfile.api
+  Dockerfile.angular
+  deploy.sh
 .github/workflows/deploy.yml
-ArkifiHotel/appsettings.Production.json.example
+ArkifiHotel/appsettings.json
+ArkifiHotel/appsettings.Production.json
 HotelBusiness|HotelCustomer|HotelAdmin/src/environments/
 ```
-
-**Do NOT commit:**
-
-- `deploy/.env` (real secrets)
-- `ArkifiHotel/appsettings.Production.json` with passwords
-- `ArkifiHotel/appsettings.json` if it contains live credentials — use env vars on the server instead
 
 ---
 
@@ -61,11 +69,7 @@ mkdir -p ~/arkifihotel
 cd ~/arkifihotel
 git clone https://github.com/YOUR_ORG/ArkifiHotel.git .
 
-# 4. Create production env file
-cp deploy/.env.example deploy/.env
-nano deploy/.env   # fill ConnectionStrings, Jwt__Secret, SMTP, Paystack, etc.
-
-# 5. First deploy
+# 4. Deploy (uses appsettings.json — no deploy/.env)
 chmod +x deploy/deploy.sh
 ./deploy/deploy.sh
 ```

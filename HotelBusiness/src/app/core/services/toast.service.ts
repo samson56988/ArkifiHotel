@@ -1,6 +1,7 @@
 import { Injectable, signal } from '@angular/core';
 import type { ApiResult } from '../models/api-result.model';
 import { getApiResultMessage } from '../utils/http-api-result';
+import { createClientId } from '../utils/client-id';
 
 export type ToastVariant = 'success' | 'error' | 'info' | 'warning';
 
@@ -69,7 +70,7 @@ export class ToastService {
 
   show(options: ToastShowOptions): ToastRef {
     const variant = options.variant ?? 'info';
-    const id = crypto.randomUUID();
+    const id = createClientId();
     const item: ToastItem = {
       id,
       message: options.message,

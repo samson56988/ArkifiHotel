@@ -1,6 +1,7 @@
 import { Injectable, signal } from '@angular/core';
 import type { ApiResult } from '../models/api-result.model';
 import { getApiResultMessage } from '../utils/http-api-result';
+import { createClientId } from '../utils/client-id';
 
 export type ToastVariant = 'success' | 'error' | 'info' | 'warning';
 
@@ -50,7 +51,7 @@ export class ToastService {
   }
 
   private show(message: string, variant: ToastVariant, title?: string): void {
-    const id = crypto.randomUUID();
+    const id = createClientId();
     this._items.update((list) => [...list.slice(-4), { id, message, title, variant }]);
     const timer = setTimeout(() => this.dismiss(id), DEFAULT_DURATION[variant]);
     this.timers.set(id, timer);
