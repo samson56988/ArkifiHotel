@@ -41,7 +41,9 @@ jobs:
             cd "${APP_DIR}"
             git fetch origin
             git checkout "${BRANCH}"
-            git pull origin "${BRANCH}"
+            # Server must match GitHub exactly — discard local edits to tracked files
+            git reset --hard "origin/${BRANCH}"
+            git clean -fd
 
             chmod +x deploy/deploy.sh
             ./deploy/deploy.sh
